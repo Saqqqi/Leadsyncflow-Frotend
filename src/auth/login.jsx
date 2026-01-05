@@ -277,7 +277,7 @@ export default function LoginPage() {
                     {/* Sign Up Link */}
                     <div className="text-center">
                         <Link
-                            to="/signup"
+                            to="/"
                             className="inline-flex items-center justify-center w-full py-3 rounded-xl text-sm font-semibold transition-all duration-200 border hover:shadow-lg"
                             style={{ 
                                 borderColor: 'var(--border-secondary)',

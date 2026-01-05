@@ -33,8 +33,9 @@ export default function LoginPage() {
 
         if (token && user) {
           localStorage.setItem("token", token);
+          localStorage.setItem("user", JSON.stringify(user));
    
-          navigate("/dashboard", { replace: true });
+          navigate("/gds", { replace: true });
         } else {
           console.error('Missing token or user in response');
           setError("Invalid response from server");

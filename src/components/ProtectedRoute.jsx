@@ -1,27 +1,36 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
 
 const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, user } = useAuth();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      navigate('/login');
-      return;
-    }
+    // Check authentication status
+    const token = localStorage.getItem('token');
+    const userData = localStorage.getItem('user');
 
-    // If authenticated but no user data, redirect to login
-    // This handles page refresh scenarios
-    if (isAuthenticated && !user) {
+    if (token && userData) {
+      try {
+        setIsAuthenticated(true);
+        setUser(JSON.parse(userData));
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        navigate('/login');
+      }
+    } else {
       navigate('/login');
-      return;
     }
-  }, [isAuthenticated, user, navigate]);
+    
+    setLoading(false);
+  }, [navigate]);
 
   // Show loading while checking authentication
-  if (!isAuthenticated || !user) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center" 
            style={{ 
@@ -37,6 +46,11 @@ const ProtectedRoute = ({ children }) => {
         </div>
       </div>
     );
+  }
+
+  // If not authenticated, the useEffect will redirect
+  if (!isAuthenticated || !user) {
+    return null;
   }
 
   return children;

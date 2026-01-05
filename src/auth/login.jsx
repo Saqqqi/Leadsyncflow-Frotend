@@ -33,7 +33,7 @@ export default function LoginPage() {
 
         if (token && user) {
           localStorage.setItem("token", token);
-          localStorage.setItem("userId", user.id); // Store only user ID
+   
           navigate("/dashboard", { replace: true });
         } else {
           console.error('Missing token or user in response');

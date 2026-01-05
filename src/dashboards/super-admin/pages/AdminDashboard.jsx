@@ -8,13 +8,6 @@ export default function AdminDashboard() {
   });
 
   const [pendingUsers, setPendingUsers] = useState([]);
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [showRoleModal, setShowRoleModal] = useState(false);
-  const [roleForm, setRoleForm] = useState({
-    role: '',
-    status: 'pending',
-    department: ''
-  });
 
   useEffect(() => {
     // Mock data for demonstration
@@ -27,54 +20,54 @@ export default function AdminDashboard() {
     // Only pending users for the list
     setPendingUsers([
       { 
-        id: 2, 
+        id: 1, 
         name: 'Jane Smith', 
         email: 'jane.smith@example.com',
         department: 'Marketing',
-        currentRole: 'Marketing Analyst',
-        requestedRole: 'Marketing Manager',
         requestDate: '2024-01-20',
-        requestTime: '10:30 AM'
+        requestTime: '10:30 AM',
+        assignedRole: '',
+        status: 'pending'
       },
       { 
-        id: 4, 
+        id: 2, 
         name: 'Alice Brown', 
         email: 'alice.brown@example.com',
         department: 'HR',
-        currentRole: 'HR Executive',
-        requestedRole: 'HR Manager',
         requestDate: '2024-01-22',
-        requestTime: '02:15 PM'
+        requestTime: '02:15 PM',
+        assignedRole: '',
+        status: 'pending'
       },
       { 
-        id: 6, 
+        id: 3, 
         name: 'David Lee', 
         email: 'david.lee@example.com',
         department: 'Operations',
-        currentRole: 'Operations Executive',
-        requestedRole: 'Operations Manager',
         requestDate: '2024-01-23',
-        requestTime: '09:45 AM'
+        requestTime: '09:45 AM',
+        assignedRole: '',
+        status: 'pending'
       },
       { 
-        id: 8, 
+        id: 4, 
         name: 'Frank Miller', 
         email: 'frank.m@example.com',
         department: 'Sales',
-        currentRole: 'Sales Representative',
-        requestedRole: 'Sales Manager',
         requestDate: '2024-01-21',
-        requestTime: '11:20 AM'
+        requestTime: '11:20 AM',
+        assignedRole: '',
+        status: 'pending'
       },
       { 
-        id: 9, 
+        id: 5, 
         name: 'Sarah Johnson', 
         email: 'sarah.j@example.com',
         department: 'Engineering',
-        currentRole: 'Junior Developer',
-        requestedRole: 'Software Engineer',
         requestDate: '2024-01-24',
-        requestTime: '08:00 AM'
+        requestTime: '08:00 AM',
+        assignedRole: '',
+        status: 'pending'
       },
     ]);
   }, []);
@@ -116,29 +109,53 @@ export default function AdminDashboard() {
     </div>
   );
 
-  const handleRoleClick = (user) => {
-    setSelectedUser(user);
-    setRoleForm({
-      role: user.requestedRole || user.currentRole,
-      status: 'pending',
-      department: user.department
-    });
-    setShowRoleModal(true);
+  const handleRoleChange = (userId, role) => {
+    setPendingUsers(users => 
+      users.map(user => 
+        user.id === userId ? { ...user, assignedRole: role } : user
+      )
+    );
   };
 
-  const handleRoleSubmit = () => {
-    // Remove user from pending list when approved/disapproved
-    setPendingUsers(pendingUsers.filter(user => user.id !== selectedUser.id));
+  const handleApprove = (userId) => {
+    const user = pendingUsers.find(u => u.id === userId);
+    if (user && user.assignedRole) {
+      // Remove from pending list
+      setPendingUsers(users => users.filter(u => u.id !== userId));
+      
+      // Update stats
+      setStats(prev => ({
+        ...prev,
+        totalPendingRequests: prev.totalPendingRequests - 1,
+        totalUsers: prev.totalUsers + 1,
+        activeUsers: prev.activeUsers + 1
+      }));
+    }
+  };
+
+  const handleDisapprove = (userId) => {
+    // Remove from pending list
+    setPendingUsers(users => users.filter(u => u.id !== userId));
     
     // Update stats
     setStats(prev => ({
       ...prev,
-      totalPendingRequests: prev.totalPendingRequests - 1,
-      totalUsers: roleForm.status === 'approved' ? prev.totalUsers + 1 : prev.totalUsers,
-      activeUsers: roleForm.status === 'approved' ? prev.activeUsers + 1 : prev.activeUsers
+      totalPendingRequests: prev.totalPendingRequests - 1
     }));
+  };
+
+  const StatusBadge = ({ status }) => {
+    const colors = {
+      approved: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+      pending: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+      disapproved: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+    };
     
-    setShowRoleModal(false);
+    return (
+      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${colors[status] || 'bg-gray-100 text-gray-800'}`}>
+        {status.charAt(0).toUpperCase() + status.slice(1)}
+      </span>
+    );
   };
 
   return (
@@ -211,7 +228,7 @@ export default function AdminDashboard() {
                 Pending Approval Requests
               </h2>
               <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>
-                Review and assign roles to new user requests
+                Assign roles and approve/disapprove user requests directly
               </p>
             </div>
             <div className="flex items-center gap-3">
@@ -234,27 +251,28 @@ export default function AdminDashboard() {
                   Department
                 </th>
                 <th className="text-left p-6 text-sm font-semibold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
-                  Current Role
-                </th>
-                <th className="text-left p-6 text-sm font-semibold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
-                  Requested Role
-                </th>
-                <th className="text-left p-6 text-sm font-semibold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
                   Requested On
                 </th>
                 <th className="text-left p-6 text-sm font-semibold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
-                  Action
+                  Assign Role
+                </th>
+                <th className="text-left p-6 text-sm font-semibold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
+                  Actions
+                </th>
+                <th className="text-left p-6 text-sm font-semibold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
+                  Status
                 </th>
               </tr>
             </thead>
             <tbody>
               {pendingUsers.map((user) => (
                 <tr key={user.id} 
-                    className="border-b hover:bg-opacity-50 transition-all duration-200 hover:scale-[1.002]"
+                    className="border-b transition-all duration-200 hover:bg-opacity-50"
                     style={{ 
                       borderColor: 'var(--border-primary)',
                       backgroundColor: 'var(--bg-primary)'
                     }}>
+                  {/* User Details */}
                   <td className="p-6">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold text-lg">
@@ -270,22 +288,15 @@ export default function AdminDashboard() {
                       </div>
                     </div>
                   </td>
+                  
+                  {/* Department */}
                   <td className="p-6">
                     <span className="px-4 py-2 rounded-lg bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 text-blue-700 dark:text-blue-300 text-sm font-medium">
                       {user.department}
                     </span>
                   </td>
-                  <td className="p-6">
-                    <span className="text-sm font-medium px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800"
-                          style={{ color: 'var(--text-primary)' }}>
-                      {user.currentRole}
-                    </span>
-                  </td>
-                  <td className="p-6">
-                    <span className="text-sm font-medium px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-50 to-amber-100 dark:from-amber-900/20 dark:to-amber-800/20 text-amber-700 dark:text-amber-300">
-                      {user.requestedRole}
-                    </span>
-                  </td>
+                  
+                  {/* Request Date & Time */}
                   <td className="p-6">
                     <div>
                       <p className="font-medium" style={{ color: 'var(--text-primary)' }}>
@@ -296,16 +307,69 @@ export default function AdminDashboard() {
                       </p>
                     </div>
                   </td>
+                  
+                  {/* Role Dropdown */}
                   <td className="p-6">
-                    <button 
-                      onClick={() => handleRoleClick(user)}
-                      className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white font-medium hover:from-blue-600 hover:to-blue-700 transition-all duration-300 hover:shadow-lg hover:scale-105 active:scale-95 flex items-center gap-2"
-                    >
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                      </svg>
-                      Assign Role
-                    </button>
+                    <div className="relative">
+                      <select 
+                        value={user.assignedRole}
+                        onChange={(e) => handleRoleChange(user.id, e.target.value)}
+                        className="w-full px-4 py-3 rounded-xl border transition-all hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-800 appearance-none bg-no-repeat bg-right pr-12"
+                        style={{ 
+                          borderColor: user.assignedRole ? 'var(--border-primary)' : '#ef4444',
+                          color: 'var(--text-primary)',
+                          backgroundColor: 'var(--bg-primary)',
+                          backgroundImage: 'url("data:image/svg+xml,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 fill=%27none%27 viewBox=%270 0 20 20%27%3e%3cpath stroke=%27%236b7280%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27 stroke-width=%271.5%27 d=%27M6 8l4 4 4-4%27/%3e%3c/svg%3e")',
+                          backgroundSize: '1.5em 1.5em'
+                        }}
+                      >
+                        <option value="">Select Role</option>
+                        <option value="Administrator">Administrator</option>
+                        <option value="Manager">Manager</option>
+                        <option value="Team Lead">Team Lead</option>
+                        <option value="Senior Employee">Senior Employee</option>
+                        <option value="Junior Employee">Junior Employee</option>
+                        <option value="Guest User">Guest User</option>
+                      </select>
+                      {!user.assignedRole && (
+                        <p className="text-xs text-red-500 mt-1">Please select a role</p>
+                      )}
+                    </div>
+                  </td>
+                  
+                  {/* Action Buttons */}
+                  <td className="p-6">
+                    <div className="flex gap-3">
+                      <button 
+                        onClick={() => handleApprove(user.id)}
+                        disabled={!user.assignedRole}
+                        className={`px-5 py-2.5 rounded-xl font-medium transition-all duration-300 flex items-center gap-2 flex-1 justify-center
+                          ${user.assignedRole 
+                            ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 hover:shadow-lg hover:scale-105 active:scale-95' 
+                            : 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed'
+                          }`}
+                      >
+                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Approve
+                      </button>
+                      
+                      <button 
+                        onClick={() => handleDisapprove(user.id)}
+                        className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-red-500 to-rose-600 text-white font-medium hover:from-red-600 hover:to-rose-700 transition-all duration-300 hover:shadow-lg hover:scale-105 active:scale-95 flex items-center gap-2 flex-1 justify-center"
+                      >
+                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                        Disapprove
+                      </button>
+                    </div>
+                  </td>
+                  
+                  {/* Status */}
+                  <td className="p-6">
+                    <StatusBadge status={user.status} />
                   </td>
                 </tr>
               ))}
@@ -328,198 +392,57 @@ export default function AdminDashboard() {
             </p>
           </div>
         )}
-      </div>
 
-      {/* Role Assignment Modal */}
-      {showRoleModal && selectedUser && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fadeIn">
-          <div className="rounded-2xl border w-full max-w-lg transform transition-all duration-300 animate-slideUp"
-               style={{ 
-                 backgroundColor: 'var(--bg-secondary)', 
-                 borderColor: 'var(--border-primary)',
-                 boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)'
-               }}>
-            <div className="p-8 border-b" style={{ borderColor: 'var(--border-primary)' }}>
-              <div className="flex items-center gap-4 mb-6">
-                <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold text-2xl">
-                  {selectedUser.name.charAt(0)}
-                </div>
-                <div>
-                  <h3 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>
-                    Assign Role
-                  </h3>
-                  <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>
-                    {selectedUser.name} • {selectedUser.email}
-                  </p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="p-8 space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold mb-3 uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
-                    Department
-                  </label>
-                  <select 
-                    value={roleForm.department}
-                    onChange={(e) => setRoleForm({...roleForm, department: e.target.value})}
-                    className="w-full p-4 rounded-xl border transition-all hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-800"
-                    style={{ 
-                      borderColor: 'var(--border-primary)',
-                      color: 'var(--text-primary)',
-                      backgroundColor: 'var(--bg-primary)'
-                    }}
-                  >
-                    <option value="Sales">Sales</option>
-                    <option value="Marketing">Marketing</option>
-                    <option value="Engineering">Engineering</option>
-                    <option value="HR">Human Resources</option>
-                    <option value="Finance">Finance</option>
-                    <option value="Operations">Operations</option>
-                    <option value="Customer Support">Customer Support</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold mb-3 uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
-                    Role
-                  </label>
-                  <select 
-                    value={roleForm.role}
-                    onChange={(e) => setRoleForm({...roleForm, role: e.target.value})}
-                    className="w-full p-4 rounded-xl border transition-all hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-800"
-                    style={{ 
-                      borderColor: 'var(--border-primary)',
-                      color: 'var(--text-primary)',
-                      backgroundColor: 'var(--bg-primary)'
-                    }}
-                  >
-                    <option value="Administrator">Administrator</option>
-                    <option value="Manager">Manager</option>
-                    <option value="Team Lead">Team Lead</option>
-                    <option value="Senior">Senior</option>
-                    <option value="Junior">Junior</option>
-                    <option value="Guest">Guest</option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold mb-3 uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
-                  Approval Status
-                </label>
-                <div className="grid grid-cols-3 gap-3">
-                  <button
-                    onClick={() => setRoleForm({...roleForm, status: 'approved'})}
-                    className={`p-4 rounded-xl border-2 transition-all duration-200 flex flex-col items-center justify-center gap-2 ${
-                      roleForm.status === 'approved' 
-                      ? 'border-green-500 bg-gradient-to-b from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-800/30' 
-                      : 'border-gray-200 dark:border-gray-700 hover:border-green-300'
-                    }`}
-                  >
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                      roleForm.status === 'approved' 
-                      ? 'bg-green-500' 
-                      : 'bg-gray-100 dark:bg-gray-800'
-                    }`}>
-                      <svg className={`h-6 w-6 ${roleForm.status === 'approved' ? 'text-white' : 'text-gray-400'}`} 
-                           fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                    <span className={`font-semibold ${roleForm.status === 'approved' ? 'text-green-700 dark:text-green-300' : 'text-gray-600 dark:text-gray-400'}`}>
-                      Approve
-                    </span>
-                  </button>
-                  
-                  <button
-                    onClick={() => setRoleForm({...roleForm, status: 'disapproved'})}
-                    className={`p-4 rounded-xl border-2 transition-all duration-200 flex flex-col items-center justify-center gap-2 ${
-                      roleForm.status === 'disapproved' 
-                      ? 'border-red-500 bg-gradient-to-b from-red-50 to-red-100 dark:from-red-900/30 dark:to-red-800/30' 
-                      : 'border-gray-200 dark:border-gray-700 hover:border-red-300'
-                    }`}
-                  >
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                      roleForm.status === 'disapproved' 
-                      ? 'bg-red-500' 
-                      : 'bg-gray-100 dark:bg-gray-800'
-                    }`}>
-                      <svg className={`h-6 w-6 ${roleForm.status === 'disapproved' ? 'text-white' : 'text-gray-400'}`} 
-                           fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </div>
-                    <span className={`font-semibold ${roleForm.status === 'disapproved' ? 'text-red-700 dark:text-red-300' : 'text-gray-600 dark:text-gray-400'}`}>
-                      Disapprove
-                    </span>
-                  </button>
-                  
-                  <button
-                    onClick={() => setRoleForm({...roleForm, status: 'pending'})}
-                    className={`p-4 rounded-xl border-2 transition-all duration-200 flex flex-col items-center justify-center gap-2 ${
-                      roleForm.status === 'pending' 
-                      ? 'border-amber-500 bg-gradient-to-b from-amber-50 to-amber-100 dark:from-amber-900/30 dark:to-amber-800/30' 
-                      : 'border-gray-200 dark:border-gray-700 hover:border-amber-300'
-                    }`}
-                  >
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                      roleForm.status === 'pending' 
-                      ? 'bg-amber-500' 
-                      : 'bg-gray-100 dark:bg-gray-800'
-                    }`}>
-                      <svg className={`h-6 w-6 ${roleForm.status === 'pending' ? 'text-white' : 'text-gray-400'}`} 
-                           fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                    <span className={`font-semibold ${roleForm.status === 'pending' ? 'text-amber-700 dark:text-amber-300' : 'text-gray-600 dark:text-gray-400'}`}>
-                      Keep Pending
-                    </span>
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div className="p-8 border-t flex justify-end gap-4" 
-                 style={{ borderColor: 'var(--border-primary)' }}>
-              <button 
-                onClick={() => setShowRoleModal(false)}
-                className="px-6 py-3 text-sm font-medium rounded-xl border transition-all hover:scale-105 active:scale-95"
-                style={{ 
-                  borderColor: 'var(--border-primary)',
-                  color: 'var(--text-primary)'
-                }}>
-                Cancel
-              </button>
-              <button 
-                onClick={handleRoleSubmit}
-                className="px-6 py-3 text-sm font-medium rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 transition-all hover:scale-105 active:scale-95 hover:shadow-lg">
-                Confirm & Save
-              </button>
+        {/* Table Footer */}
+        <div className="p-6 border-t flex justify-between items-center" 
+             style={{ borderColor: 'var(--border-primary)' }}>
+          <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+            Showing {pendingUsers.length} pending requests
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+              <span className="inline-block w-3 h-3 bg-amber-500 rounded-full mr-2"></span>
+              Requires role assignment
             </div>
           </div>
         </div>
-      )}
+      </div>
 
-      {/* Add CSS animations */}
-      <style jsx>{`
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        @keyframes slideUp {
-          from { transform: translateY(20px); opacity: 0; }
-          to { transform: translateY(0); opacity: 1; }
-        }
-        .animate-fadeIn {
-          animation: fadeIn 0.3s ease-out;
-        }
-        .animate-slideUp {
-          animation: slideUp 0.4s ease-out;
-        }
-      `}</style>
+      {/* Quick Stats Bar */}
+      <div className="rounded-2xl border p-6" 
+           style={{ 
+             backgroundColor: 'var(--bg-secondary)', 
+             borderColor: 'var(--border-primary)'
+           }}>
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="font-semibold" style={{ color: 'var(--text-primary)' }}>
+              Quick Stats
+            </h3>
+            <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>
+              Today's activity summary
+            </p>
+          </div>
+          <div className="flex gap-6">
+            <div className="text-center">
+              <div className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>
+                {pendingUsers.filter(u => u.assignedRole).length}
+              </div>
+              <div className="text-xs uppercase tracking-wide mt-1" style={{ color: 'var(--text-secondary)' }}>
+                Ready to Approve
+              </div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>
+                {pendingUsers.filter(u => !u.assignedRole).length}
+              </div>
+              <div className="text-xs uppercase tracking-wide mt-1" style={{ color: 'var(--text-secondary)' }}>
+                Need Role
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

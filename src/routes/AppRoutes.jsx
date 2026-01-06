@@ -22,10 +22,8 @@ function AppRoutesWithTokenManagement() {
     const handleTokenExpired = (event) => {
       console.log('Global token expiry handler:', event.detail?.message || 'Token expired');
       
-      // Clear all auth data
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      localStorage.removeItem('tokenExpiry');
+      // Clear all auth data using tokenManager
+      tokenManager.clearAuthData();
       
       // Auto redirect to login immediately for ALL users and dashboards
       const loginUrl = '/login';
@@ -33,50 +31,17 @@ function AppRoutesWithTokenManagement() {
       window.location.href = loginUrl;
     };
 
-    // Periodic check for expired tokens (works for all dashboards, but NOT on login page)
-    const checkTokenExpiry = () => {
-      // Don't check if we're on a public route
-      if (window.location.pathname === '/' || window.location.pathname === '/login') {
-        return;
-      }
-
-      const token = localStorage.getItem('token');
-      if (token) {
-        try {
-          // Parse token to check expiry
-          const base64Url = token.split('.')[1];
-          const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-          const jsonPayload = decodeURIComponent(
-            atob(base64)
-              .split('')
-              .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-              .join('')
-          );
-          const payload = JSON.parse(jsonPayload);
-          
-          // Check if token is expired
-          if (payload.exp && payload.exp * 1000 < Date.now()) {
-            console.log('Expired token detected in global check, redirecting...');
-            handleTokenExpired({ detail: { message: 'Session expired' } });
-          }
-        } catch (error) {
-          console.error('Error checking token in global handler:', error);
-        }
-      }
-    };
-
-    // Check immediately (only if not on public route)
-    checkTokenExpiry();
-    
-    // Listen for token expired events
+    // Listen for token expired events (tokenManager handles periodic checks)
     window.addEventListener('tokenExpired', handleTokenExpired);
     
-    // Check every 10 seconds for expired tokens
-    const interval = setInterval(checkTokenExpiry, 10000);
+    // Check immediately using tokenManager (only if not on public route)
+    const token = tokenManager.getToken();
+    if (token && !tokenManager.isCurrentTokenValid()) {
+      handleTokenExpired({ detail: { message: 'Session expired' } });
+    }
     
     return () => {
       window.removeEventListener('tokenExpired', handleTokenExpired);
-      clearInterval(interval);
     };
   }, [isPublicRoute]);
 

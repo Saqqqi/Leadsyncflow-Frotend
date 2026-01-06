@@ -67,16 +67,11 @@ class TokenManager {
     return 'Less than 1 minute';
   }
 
-  // Save token with expiry info
-  saveToken(token, user = null) {
+  // Save token with expiry info (user data is NOT stored)
+  saveToken(token) {
     const expiry = this.getTokenExpiry(token);
     
     localStorage.setItem('token', token);
-    
-    // Only save user if provided (for backward compatibility)
-    if (user) {
-      localStorage.setItem('user', JSON.stringify(user));
-    }
     
     if (expiry) {
       localStorage.setItem('tokenExpiry', expiry.toString());
@@ -91,10 +86,23 @@ class TokenManager {
     return localStorage.getItem('token');
   }
 
-  // Get current user
+  // Get current user from token payload (not from localStorage)
   getUser() {
-    const userStr = localStorage.getItem('user');
-    return userStr ? JSON.parse(userStr) : null;
+    const token = this.getToken();
+    if (!token) return null;
+    
+    const payload = this.parseToken(token);
+    if (!payload) return null;
+    
+    // Return user info from token payload
+    return {
+      id: payload.id || payload.userId,
+      name: payload.name,
+      email: payload.email,
+      role: payload.role,
+      department: payload.department,
+      // Add any other fields from token payload
+    };
   }
 
   // Check if current token is valid

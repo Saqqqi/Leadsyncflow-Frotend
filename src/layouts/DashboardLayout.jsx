@@ -7,56 +7,20 @@ import tokenManager from '../utils/tokenManager';
 export default function DashboardLayout() {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false); // Only for mobile
 
-  // Check for expired token on component mount and periodically
+  // Check for expired token on component mount
+  // Note: tokenManager already handles periodic checks, so we just verify on mount
   useEffect(() => {
-    const checkAndRedirect = () => {
-      const token = localStorage.getItem('token');
-      if (token) {
-        try {
-          // Parse token to check expiry
-          const base64Url = token.split('.')[1];
-          const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-          const jsonPayload = decodeURIComponent(
-            atob(base64)
-              .split('')
-              .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-              .join('')
-          );
-          const payload = JSON.parse(jsonPayload);
-          
-          // Check if token is expired
-          if (payload.exp && payload.exp * 1000 < Date.now()) {
-            console.log('Expired token detected in DashboardLayout, redirecting...');
-            
-            // Clear all auth data
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            localStorage.removeItem('tokenExpiry');
-            
-            // Redirect to login - works for ALL dashboards
-            window.location.href = '/login';
-          }
-        } catch (error) {
-          console.error('Error checking token:', error);
-          // If token is invalid, redirect to login
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-          localStorage.removeItem('tokenExpiry');
-          window.location.href = '/login';
-        }
-      } else {
-        // No token found, redirect to login
-        window.location.href = '/login';
-      }
-    };
-
-    // Check immediately
-    checkAndRedirect();
+    const token = tokenManager.getToken();
     
-    // Also check every 10 seconds for better responsiveness
-    const interval = setInterval(checkAndRedirect, 10000);
+    // If no token or token is invalid, redirect to login
+    if (!token || !tokenManager.isCurrentTokenValid()) {
+      console.log('Invalid or expired token in DashboardLayout, redirecting...');
+      tokenManager.clearAuthData();
+      window.location.href = '/login';
+    }
     
-    return () => clearInterval(interval);
+    // Ensure monitoring is started (tokenManager handles periodic checks)
+    tokenManager.initializeMonitoring();
   }, []);
 
   return (

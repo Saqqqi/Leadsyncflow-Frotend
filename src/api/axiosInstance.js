@@ -30,7 +30,7 @@ axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
     if (axios.isAxiosError(error) && error.response?.status === 401) {
-      tokenManager.clear();
+      tokenManager.clearAuthData();
       if (window.location.pathname !== '/login') {
         window.location.replace('/login');
       }

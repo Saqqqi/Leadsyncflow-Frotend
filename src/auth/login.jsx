@@ -14,33 +14,10 @@ export default function LoginPage() {
   // Clear expired tokens and stop monitoring on login page
   useEffect(() => {
     // Clear any expired tokens when on login page to prevent redirect loops
-    const token = localStorage.getItem('token');
-    if (token) {
-      try {
-        const base64Url = token.split('.')[1];
-        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-        const jsonPayload = decodeURIComponent(
-          atob(base64)
-            .split('')
-            .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-            .join('')
-        );
-        const payload = JSON.parse(jsonPayload);
-        
-        // If token is expired, clear it
-        if (payload.exp && payload.exp * 1000 < Date.now()) {
-          console.log('Clearing expired token on login page');
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-          localStorage.removeItem('tokenExpiry');
-        }
-      } catch (error) {
-        // If token is invalid, clear it
-        console.log('Invalid token found, clearing it');
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        localStorage.removeItem('tokenExpiry');
-      }
+    const token = tokenManager.getToken();
+    if (token && !tokenManager.isCurrentTokenValid()) {
+      console.log('Clearing expired or invalid token on login page');
+      tokenManager.clearAuthData();
     }
 
     // Stop token monitoring on login page
@@ -80,11 +57,9 @@ export default function LoginPage() {
         console.log('Token expires in:', expiresIn); // Debug log
 
         if (token && user) {
-          // Store only token in localStorage
-          localStorage.setItem("token", token);
-          
-          // Start token monitoring
-          tokenManager.startExpiryMonitoring();
+          // Store only token using tokenManager (starts monitoring automatically)
+          // User data is not stored in localStorage - only token is stored
+          tokenManager.saveToken(token);
           
           // Dispatch login success event to hide any notifications
           window.dispatchEvent(new CustomEvent('loginSuccess', {

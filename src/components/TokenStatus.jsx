@@ -14,7 +14,7 @@ export default function TokenStatus() {
   const [warning, setWarning] = useState(false);
   const [visible, setVisible] = useState(false);
 
-  const clearAuth = () => tokenManager.clear();
+  const clearAuth = () => tokenManager.clearAuthData();
 
   const updateStatus = useCallback(() => {
     if (isPublicRoute()) return;

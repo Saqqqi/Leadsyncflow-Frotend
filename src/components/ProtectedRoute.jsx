@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import tokenManager from '../utils/tokenManager';
 
 const ProtectedRoute = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -8,42 +9,22 @@ const ProtectedRoute = ({ children }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check authentication status and token expiry
-    const token = localStorage.getItem('token');
-    const userData = localStorage.getItem('user');
+    // Check authentication status and token expiry using tokenManager
+    const token = tokenManager.getToken();
 
-    if (token && userData) {
-      try {
-        // Parse token to check expiry
-        const base64Url = token.split('.')[1];
-        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-        const jsonPayload = decodeURIComponent(
-          atob(base64)
-            .split('')
-            .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-            .join('')
-        );
-        const payload = JSON.parse(jsonPayload);
-        
-        // Check if token is expired
-        if (payload.exp && payload.exp * 1000 < Date.now()) {
-          console.log('Expired token detected in ProtectedRoute, redirecting...');
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-          localStorage.removeItem('tokenExpiry');
-          window.location.href = '/login';
-          return;
-        }
-        
-        setIsAuthenticated(true);
-        setUser(JSON.parse(userData));
-      } catch (error) {
-        console.error('Error checking token or parsing user data:', error);
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        localStorage.removeItem('tokenExpiry');
+    if (token) {
+      // Use tokenManager to check if token is valid
+      if (!tokenManager.isCurrentTokenValid()) {
+        console.log('Expired or invalid token detected in ProtectedRoute, redirecting...');
+        tokenManager.clearAuthData();
         window.location.href = '/login';
+        return;
       }
+      
+      setIsAuthenticated(true);
+      // Get user data from token payload if needed
+      const userData = tokenManager.getUser();
+      setUser(userData);
     } else {
       window.location.href = '/login';
     }

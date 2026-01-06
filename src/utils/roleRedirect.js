@@ -11,17 +11,12 @@ export const getRoleBasedRedirect = (userRole) => {
   return roleRedirectMap[userRole] || '/gds/super-admin'; // Default fallback
 };
 
+import tokenManager from './tokenManager';
+
 export const getUserRole = () => {
-  const userStr = localStorage.getItem('user');
-  if (!userStr) return null;
-  
-  try {
-    const user = JSON.parse(userStr);
-    return user.role || user.department || null;
-  } catch (error) {
-    console.error('Error parsing user data:', error);
-    return null;
-  }
+  // Get user role from token payload instead of localStorage
+  const user = tokenManager.getUser();
+  return user ? (user.role || user.department || null) : null;
 };
 
 export const hasRequiredRole = (userRole, requiredRoles) => {

@@ -1,25 +1,82 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import DynamicSidebar from '../components/DynamicSidebar';
+import TokenStatus from '../components/TokenStatus';
+import tokenManager from '../utils/tokenManager';
 
 export default function DashboardLayout() {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false); // Only for mobile
 
+  // Check for expired token on component mount and periodically
+  useEffect(() => {
+    const checkAndRedirect = () => {
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+          // Parse token to check expiry
+          const base64Url = token.split('.')[1];
+          const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+          const jsonPayload = decodeURIComponent(
+            atob(base64)
+              .split('')
+              .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+              .join('')
+          );
+          const payload = JSON.parse(jsonPayload);
+          
+          // Check if token is expired
+          if (payload.exp && payload.exp * 1000 < Date.now()) {
+            console.log('Expired token detected in DashboardLayout, redirecting...');
+            
+            // Clear all auth data
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            localStorage.removeItem('tokenExpiry');
+            
+            // Redirect to login - works for ALL dashboards
+            window.location.href = '/login';
+          }
+        } catch (error) {
+          console.error('Error checking token:', error);
+          // If token is invalid, redirect to login
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          localStorage.removeItem('tokenExpiry');
+          window.location.href = '/login';
+        }
+      } else {
+        // No token found, redirect to login
+        window.location.href = '/login';
+      }
+    };
+
+    // Check immediately
+    checkAndRedirect();
+    
+    // Also check every 10 seconds for better responsiveness
+    const interval = setInterval(checkAndRedirect, 10000);
+    
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div className="min-h-screen flex" style={{ backgroundColor: 'var(--bg-primary)' }}>
-      {/* Dynamic Sidebar - Always visible on large screens */}
+      {/* Token Status Component - Global for all dashboard pages */}
+      <TokenStatus />
+      
+      {/* Dynamic Sidebar - Always visible on large screens, controlled on mobile */}
       <DynamicSidebar 
-        isOpen={true} 
+        isOpen={true} // Always visible on desktop
         onClose={() => setMobileSidebarOpen(false)} 
       />
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col lg:ml-64">
+      <div className="flex-1 flex flex-col lg:ml-64 md:ml-56">
         {/* Header */}
-        <header className="h-16 border-b flex items-center justify-between px-6"
+        <header className="h-16 border-b flex items-center justify-between px-4 md:px-6"
                 style={{ borderColor: 'var(--border-primary)' }}>
           <button
-            onClick={() => setSidebarOpen(true)}
+            onClick={() => setMobileSidebarOpen(true)}
             className="lg:hidden p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
             style={{ color: 'var(--text-primary)' }}
           >

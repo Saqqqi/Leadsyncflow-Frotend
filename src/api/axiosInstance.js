@@ -1,40 +1,44 @@
 import axios from 'axios';
+import tokenManager from '../utils/tokenManager';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://leadsyncflow-2.onrender.com';
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ?? 'https://leadsyncflow-2.onrender.com';
 
 const axiosInstance = axios.create({
   baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  headers: { 'Content-Type': 'application/json' },
+  timeout: 15000,
 });
 
-// Add request interceptor to include auth token
+
 axiosInstance.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
+    const token = tokenManager.getToken();
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+      config.headers = {
+        ...config.headers,
+        Authorization: `Bearer ${token}`,
+      };
     }
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  Promise.reject
 );
 
-// Add response interceptor to handle errors
+
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      // Handle unauthorized access - remove token but don't force page reload
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      // Don't force page reload - let React handle navigation
+    if (axios.isAxiosError(error) && error.response?.status === 401) {
+      tokenManager.clear();
+      if (window.location.pathname !== '/login') {
+        window.location.replace('/login');
+      }
     }
     return Promise.reject(error);
   }
 );
+
+Object.freeze(axiosInstance);
 
 export default axiosInstance;

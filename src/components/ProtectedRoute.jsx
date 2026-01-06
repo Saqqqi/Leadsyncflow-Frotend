@@ -8,22 +8,44 @@ const ProtectedRoute = ({ children }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check authentication status
+    // Check authentication status and token expiry
     const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
 
     if (token && userData) {
       try {
+        // Parse token to check expiry
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(
+          atob(base64)
+            .split('')
+            .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+            .join('')
+        );
+        const payload = JSON.parse(jsonPayload);
+        
+        // Check if token is expired
+        if (payload.exp && payload.exp * 1000 < Date.now()) {
+          console.log('Expired token detected in ProtectedRoute, redirecting...');
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          localStorage.removeItem('tokenExpiry');
+          window.location.href = '/login';
+          return;
+        }
+        
         setIsAuthenticated(true);
         setUser(JSON.parse(userData));
       } catch (error) {
-        console.error('Error parsing user data:', error);
+        console.error('Error checking token or parsing user data:', error);
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        navigate('/login');
+        localStorage.removeItem('tokenExpiry');
+        window.location.href = '/login';
       }
     } else {
-      navigate('/login');
+      window.location.href = '/login';
     }
     
     setLoading(false);

@@ -36,20 +36,20 @@ export default function SignupPage() {
         e.preventDefault();
         setError("");
         setSuccess("");
-        
+
         // Client-side validation
         if (formData.password !== formData.confirmPassword) {
             setError("Passwords do not match!");
             return;
         }
-        
+
         if (formData.password.length < 6) {
             setError("Password must be at least 6 characters long!");
             return;
         }
-        
+
         setLoading(true);
-        
+
         try {
             // Create FormData for file upload
             const submitData = new FormData();
@@ -59,24 +59,24 @@ export default function SignupPage() {
             submitData.append('department', formData.department);
             submitData.append('password', formData.password);
             submitData.append('confirmPassword', formData.confirmPassword);
-     
+
             const response = await authAPI.signup(submitData);
-            
-            setSuccess("Account created successfully! Redirecting to login...");
-            
+
+            setSuccess("Account created But Request is pending for approval");
+
             // Store token if returned
             if (response.token) {
                 localStorage.setItem('token', response.token);
             }
-            
+
             // Redirect to login after 2 seconds
             setTimeout(() => {
                 navigate('/login');
-            }, 2000);
-            
+            }, 5000);
+
         } catch (err) {
             console.error('Signup error:', err);
-            
+
             // Handle different types of errors
             if (err.response?.data?.message) {
                 setError(err.response.data.message);
@@ -164,7 +164,7 @@ export default function SignupPage() {
 
                 {/* Error and Success Messages */}
                 {error && (
-                    <div 
+                    <div
                         className="mb-6 p-4 rounded-lg border"
                         style={{
                             backgroundColor: "rgba(239, 68, 68, 0.1)",
@@ -180,9 +180,9 @@ export default function SignupPage() {
                         </div>
                     </div>
                 )}
-                
+
                 {success && (
-                    <div 
+                    <div
                         className="mb-6 p-4 rounded-lg border"
                         style={{
                             backgroundColor: "rgba(34, 197, 94, 0.1)",
@@ -209,7 +209,7 @@ export default function SignupPage() {
                     }}
                 >
                     <form className="space-y-8" onSubmit={handleSubmit}>
-                        
+
 
                         {/* Form Fields Container - Controls max width */}
                         <div className="max-w-4xl mx-auto space-y-8">
@@ -353,7 +353,7 @@ export default function SignupPage() {
                                             <option value="">Select...</option>
                                             <option value="male">Male</option>
                                             <option value="female">Female</option>
-                                          
+
                                         </select>
                                     </div>
                                 </div>
@@ -582,11 +582,11 @@ export default function SignupPage() {
                                         style={{
                                             width: "100%",
                                             padding: "16px",
-                                            background: loading 
+                                            background: loading
                                                 ? "linear-gradient(135deg, #94a3b8, #64748b)"
                                                 : "linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))",
-                                            boxShadow: loading 
-                                                ? "none" 
+                                            boxShadow: loading
+                                                ? "none"
                                                 : "0 6px 20px rgba(69, 104, 130, 0.4)",
                                             cursor: loading ? "not-allowed" : "pointer",
                                             opacity: loading ? 0.7 : 1

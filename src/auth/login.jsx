@@ -1,6 +1,8 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { authAPI } from "../api/auth.api";
+import { getRoleBasedRedirect } from "../utils/roleRedirect";
+import tokenManager from "../utils/tokenManager";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -8,6 +10,51 @@ export default function LoginPage() {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  // Clear expired tokens and stop monitoring on login page
+  useEffect(() => {
+    // Clear any expired tokens when on login page to prevent redirect loops
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(
+          atob(base64)
+            .split('')
+            .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+            .join('')
+        );
+        const payload = JSON.parse(jsonPayload);
+        
+        // If token is expired, clear it
+        if (payload.exp && payload.exp * 1000 < Date.now()) {
+          console.log('Clearing expired token on login page');
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          localStorage.removeItem('tokenExpiry');
+        }
+      } catch (error) {
+        // If token is invalid, clear it
+        console.log('Invalid token found, clearing it');
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        localStorage.removeItem('tokenExpiry');
+      }
+    }
+
+    // Stop token monitoring on login page
+    tokenManager.stopExpiryMonitoring();
+
+    const handleTokenExpired = (event) => {
+      setError(event.detail?.message || 'Session expired. Please login again.');
+    };
+
+    window.addEventListener('tokenExpired', handleTokenExpired);
+    return () => {
+      window.removeEventListener('tokenExpired', handleTokenExpired);
+    };
+  }, []);
 
   const handleChange = useCallback(({ target }) => {
     const { name, value } = target;
@@ -27,15 +74,30 @@ export default function LoginPage() {
         const response = await authAPI.login(formData);
         console.log('Login response:', response); // Debug log
         
-        const { token, user } = response;
+        const { token, user, expiresIn } = response;
         console.log('Token:', token); // Debug log
         console.log('User data:', user); // Debug log
+        console.log('Token expires in:', expiresIn); // Debug log
 
         if (token && user) {
+          // Store only token in localStorage
           localStorage.setItem("token", token);
-          localStorage.setItem("user", JSON.stringify(user));
+          
+          // Start token monitoring
+          tokenManager.startExpiryMonitoring();
+          
+          // Dispatch login success event to hide any notifications
+          window.dispatchEvent(new CustomEvent('loginSuccess', {
+            detail: { message: 'Login successful', user }
+          }));
+          
+          console.log('Token saved successfully');
+          
+          // Get role-based redirect path
+          const redirectPath = getRoleBasedRedirect(user.role || user.department);
+          console.log('Redirecting to:', redirectPath, 'for role:', user.role || user.department);
    
-          navigate("/gds", { replace: true });
+          navigate(redirectPath, { replace: true });
         } else {
           console.error('Missing token or user in response');
           setError("Invalid response from server");

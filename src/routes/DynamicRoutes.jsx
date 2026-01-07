@@ -19,42 +19,41 @@ const PageLoader = () => (
 export default function DynamicRoutes() {
   return (
     <Routes>
-      {/* Dynamic Dashboard Routes */}
-      {dashboardConfig.map((dashboard) => (
-        <Route key={dashboard.id} path={dashboard.basePath} element={<DashboardLayout />}>
-          {/* Dashboard Pages */}
-          {dashboard.pages.map((page) => {
-            const pagePath = page.path ? dashboard.basePath + '/' + page.path : dashboard.basePath;
-            const PageComponent = page.component;
-            
-            return (
-              <Route
-                key={pagePath}
-                path={page.path || ''}
-                element={
-                  <Suspense fallback={<PageLoader />}>
-                    <PageComponent />
-                  </Suspense>
-                }
-              />
-            );
-          })}
-        </Route>
-      ))}
+      <Route element={<DashboardLayout />}>
+        {/* Dynamic Dashboard Routes */}
+        {dashboardConfig.map((dashboard) => (
+          <Route key={dashboard.id} path={dashboard.basePath}>
+            {dashboard.pages.map((page) => {
+              const PageComponent = page.component;
+              return (
+                <Route
+                  key={page.path || 'index'}
+                  path={page.path || ''}
+                  element={
+                    <Suspense fallback={<PageLoader />}>
+                      <PageComponent />
+                    </Suspense>
+                  }
+                />
+              );
+            })}
+          </Route>
+        ))}
 
-      {/* Fallback route */}
-      <Route path="*" element={
-        <div className="flex items-center justify-center h-screen">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold mb-4" style={{ color: 'var(--text-primary)' }}>
-              404 - Page Not Found
-            </h1>
-            <p style={{ color: 'var(--text-secondary)' }}>
-              The page you're looking for doesn't exist.
-            </p>
+        {/* Fallback route inside DashboardLayout */}
+        <Route path="*" element={
+          <div className="flex items-center justify-center min-h-[60vh]">
+            <div className="text-center">
+              <h1 className="text-2xl font-bold mb-4" style={{ color: 'var(--text-primary)' }}>
+                404 - Page Not Found
+              </h1>
+              <p style={{ color: 'var(--text-secondary)' }}>
+                The page you're looking for doesn't exist within the dashboard.
+              </p>
+            </div>
           </div>
-        </div>
-      } />
+        } />
+      </Route>
     </Routes>
   );
 }

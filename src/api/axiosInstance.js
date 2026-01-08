@@ -15,14 +15,11 @@ axiosInstance.interceptors.request.use(
   (config) => {
     const token = tokenManager.getToken();
     if (token) {
-      config.headers = {
-        ...config.headers,
-        Authorization: `Bearer ${token}`,
-      };
+      config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
-  Promise.reject
+  (error) => Promise.reject(error)
 );
 
 

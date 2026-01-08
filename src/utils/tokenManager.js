@@ -56,11 +56,11 @@ class TokenManager {
   // Format remaining time for display
   formatRemainingTime(remainingMs) {
     if (remainingMs <= 0) return 'Expired';
-    
+
     const minutes = Math.floor(remainingMs / (1000 * 60));
     const hours = Math.floor(minutes / 60);
     const days = Math.floor(hours / 24);
-    
+
     if (days > 0) return `${days} day${days > 1 ? 's' : ''}`;
     if (hours > 0) return `${hours} hour${hours > 1 ? 's' : ''}`;
     if (minutes > 0) return `${minutes} minute${minutes > 1 ? 's' : ''}`;
@@ -70,13 +70,13 @@ class TokenManager {
   // Save token with expiry info (user data is NOT stored)
   saveToken(token) {
     const expiry = this.getTokenExpiry(token);
-    
+
     localStorage.setItem('token', token);
-    
+
     if (expiry) {
       localStorage.setItem('tokenExpiry', expiry.toString());
     }
-    
+
     // Start expiry monitoring
     this.startExpiryMonitoring();
   }
@@ -90,10 +90,10 @@ class TokenManager {
   getUser() {
     const token = this.getToken();
     if (!token) return null;
-    
+
     const payload = this.parseToken(token);
     if (!payload) return null;
-    
+
     // Return user info from token payload
     return {
       id: payload.id || payload.userId,
@@ -122,13 +122,13 @@ class TokenManager {
   // Start monitoring token expiry
   startExpiryMonitoring() {
     this.stopExpiryMonitoring(); // Clear any existing interval
-    
+
     const token = this.getToken();
     if (!token) {
       console.log('No token found, not starting monitoring');
       return;
     }
-    
+
     console.log('Starting token monitoring...');
     this.checkInterval = setInterval(() => {
       const currentToken = this.getToken();
@@ -153,7 +153,7 @@ class TokenManager {
   handleTokenExpired() {
     console.log('Token expired, logging out...');
     this.clearAuthData();
-    
+
     // Don't redirect if already on login or signup page (prevent infinite loops)
     const currentPath = window.location.pathname;
     if (currentPath === '/' || currentPath === '/login') {
@@ -164,23 +164,23 @@ class TokenManager {
       }));
       return;
     }
-    
+
     // Auto redirect to login page - force redirect for all users
     const loginUrl = '/login';
     console.log('Redirecting to:', loginUrl);
-    
+
     // Force redirect using multiple methods
     try {
       // Method 1: Direct assignment
       window.location.href = loginUrl;
-      
+
       // Method 2: If blocked, try replace
       setTimeout(() => {
         if (window.location.pathname !== '/login') {
           window.location.replace(loginUrl);
         }
       }, 100);
-      
+
       // Method 3: If still blocked, try assign again
       setTimeout(() => {
         if (window.location.pathname !== '/login') {
@@ -194,7 +194,7 @@ class TokenManager {
         window.location.href = loginUrl;
       }
     }
-    
+
     // Also dispatch custom event for components that might need it
     window.dispatchEvent(new CustomEvent('tokenExpired', {
       detail: { message: 'Your session has expired. Please log in again.' }
@@ -205,10 +205,10 @@ class TokenManager {
   handleTokenExpiringSoon() {
     const token = this.getToken();
     const remainingTime = this.getTokenRemainingTime(token);
-    
+
     // Dispatch custom event for warning
     window.dispatchEvent(new CustomEvent('tokenExpiringSoon', {
-      detail: { 
+      detail: {
         remainingTime,
         formattedTime: this.formatRemainingTime(remainingTime)
       }
@@ -219,10 +219,10 @@ class TokenManager {
   getTokenStatus() {
     const token = this.getToken();
     if (!token) return { valid: false, expired: true, message: 'No token found' };
-    
+
     const expiry = this.getTokenExpiry(token);
     const remainingTime = this.getTokenRemainingTime(token);
-    
+
     return {
       valid: !this.isTokenExpired(token),
       expired: this.isTokenExpired(token),

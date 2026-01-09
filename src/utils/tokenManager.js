@@ -1,14 +1,12 @@
-// Token Management Utility
 class TokenManager {
   constructor() {
     this.TOKEN_KEY = 'token';
     this.USER_KEY = 'user';
     this.TOKEN_EXPIRY_KEY = 'tokenExpiry';
-    this.WARNING_THRESHOLD = 5 * 60 * 1000; // 5 minutes before expiry
+    this.WARNING_THRESHOLD = 5 * 60 * 1000;
     this.checkInterval = null;
   }
 
-  // Parse JWT token to get expiry time
   parseToken(token) {
     try {
       const base64Url = token.split('.')[1];
@@ -21,43 +19,33 @@ class TokenManager {
       );
       return JSON.parse(jsonPayload);
     } catch (error) {
-      console.error('Error parsing token:', error);
       return null;
     }
   }
 
-  // Get token expiry time
   getTokenExpiry(token) {
     const payload = this.parseToken(token);
-    return payload ? payload.exp * 1000 : null; // Convert to milliseconds
+    return payload ? payload.exp * 1000 : null;
   }
 
-  // Check if token is expired
   isTokenExpired(token) {
     const expiry = this.getTokenExpiry(token);
-    if (!expiry) return true;
-    return Date.now() >= expiry;
+    return !expiry || Date.now() >= expiry;
   }
 
-  // Check if token is about to expire (within warning threshold)
   isTokenExpiringSoon(token) {
     const expiry = this.getTokenExpiry(token);
-    if (!expiry) return true;
-    return Date.now() >= (expiry - this.WARNING_THRESHOLD);
+    return !expiry || Date.now() >= (expiry - this.WARNING_THRESHOLD);
   }
 
-  // Get remaining time in milliseconds
   getTokenRemainingTime(token) {
     const expiry = this.getTokenExpiry(token);
-    if (!expiry) return 0;
-    return Math.max(0, expiry - Date.now());
+    return expiry ? Math.max(0, expiry - Date.now()) : 0;
   }
 
-  // Format remaining time for display
   formatRemainingTime(remainingMs) {
     if (remainingMs <= 0) return 'Expired';
-
-    const minutes = Math.floor(remainingMs / (1000 * 60));
+    const minutes = Math.floor(remainingMs / 60000);
     const hours = Math.floor(minutes / 60);
     const days = Math.floor(hours / 24);
 
@@ -67,81 +55,77 @@ class TokenManager {
     return 'Less than 1 minute';
   }
 
-  // Save token with expiry info (user data is NOT stored)
-  saveToken(token) {
-    const expiry = this.getTokenExpiry(token);
-
-    localStorage.setItem('token', token);
-
-    if (expiry) {
-      localStorage.setItem('tokenExpiry', expiry.toString());
+  saveAuthData(token, user, expiresIn) {
+    if (token) {
+      localStorage.setItem(this.TOKEN_KEY, token);
+      const expiry = this.getTokenExpiry(token);
+      if (expiry) localStorage.setItem(this.TOKEN_EXPIRY_KEY, expiry.toString());
     }
-
-    // Start expiry monitoring
+    if (user) localStorage.setItem(this.USER_KEY, JSON.stringify(user));
+    if (expiresIn) localStorage.setItem('expiresIn', expiresIn.toString());
     this.startExpiryMonitoring();
   }
 
-  // Get current token
-  getToken() {
-    return localStorage.getItem('token');
+  saveToken(token) {
+    this.saveAuthData(token);
   }
 
-  // Get current user from token payload (not from localStorage)
+  getToken() {
+    return localStorage.getItem(this.TOKEN_KEY);
+  }
+
   getUser() {
+    const storedUser = localStorage.getItem(this.USER_KEY);
+    if (storedUser) {
+      try {
+        return JSON.parse(storedUser);
+      } catch (e) {
+        console.error('User parse error:', e);
+      }
+    }
+
     const token = this.getToken();
     if (!token) return null;
 
     const payload = this.parseToken(token);
-    if (!payload) return null;
-
-    // Return user info from token payload
-    return {
+    return payload ? {
       id: payload.id || payload.userId,
       name: payload.name,
       email: payload.email,
       role: payload.role,
-      department: payload.department,
-      // Add any other fields from token payload
-    };
+      department: payload.department
+    } : null;
   }
 
-  // Check if current token is valid
   isCurrentTokenValid() {
     const token = this.getToken();
-    return token && !this.isTokenExpired(token);
+    return !!token && !this.isTokenExpired(token);
   }
 
-  // Clear all auth data
   clearAuthData() {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    localStorage.removeItem('tokenExpiry');
+    localStorage.removeItem(this.TOKEN_KEY);
+    localStorage.removeItem(this.USER_KEY);
+    localStorage.removeItem(this.TOKEN_EXPIRY_KEY);
+    localStorage.removeItem('expiresIn');
     this.stopExpiryMonitoring();
   }
 
-  // Start monitoring token expiry
   startExpiryMonitoring() {
-    this.stopExpiryMonitoring(); // Clear any existing interval
-
+    this.stopExpiryMonitoring();
     const token = this.getToken();
-    if (!token) {
-      console.log('No token found, not starting monitoring');
-      return;
-    }
+    if (!token) return;
 
-    console.log('Starting token monitoring...');
     this.checkInterval = setInterval(() => {
+      console.log(`[TokenManager] Running periodic check at ${new Date().toLocaleTimeString()}`);
       const currentToken = this.getToken();
       if (!currentToken || this.isTokenExpired(currentToken)) {
-        console.log('Token expired detected in monitoring');
         this.handleTokenExpired();
       } else if (this.isTokenExpiringSoon(currentToken)) {
         this.handleTokenExpiringSoon();
       }
-    }, 30000); // Check every 30 seconds for better responsiveness
+    }, 30000);
   }
 
-  // Stop monitoring token expiry
   stopExpiryMonitoring() {
     if (this.checkInterval) {
       clearInterval(this.checkInterval);
@@ -149,64 +133,28 @@ class TokenManager {
     }
   }
 
-  // Handle token expired
   handleTokenExpired() {
-    console.log('Token expired, logging out...');
     this.clearAuthData();
-
-    // Don't redirect if already on login or signup page (prevent infinite loops)
     const currentPath = window.location.pathname;
-    if (currentPath === '/' || currentPath === '/login') {
-      console.log('Already on login/signup page, skipping redirect');
-      // Just dispatch event, don't redirect
+
+    const dispatchExpired = () => {
       window.dispatchEvent(new CustomEvent('tokenExpired', {
         detail: { message: 'Your session has expired. Please log in again.' }
       }));
+    };
+
+    if (currentPath === '/' || currentPath === '/login') {
+      dispatchExpired();
       return;
     }
 
-    // Auto redirect to login page - force redirect for all users
-    const loginUrl = '/login';
-    console.log('Redirecting to:', loginUrl);
-
-    // Force redirect using multiple methods
-    try {
-      // Method 1: Direct assignment
-      window.location.href = loginUrl;
-
-      // Method 2: If blocked, try replace
-      setTimeout(() => {
-        if (window.location.pathname !== '/login') {
-          window.location.replace(loginUrl);
-        }
-      }, 100);
-
-      // Method 3: If still blocked, try assign again
-      setTimeout(() => {
-        if (window.location.pathname !== '/login') {
-          window.location.assign(loginUrl);
-        }
-      }, 200);
-    } catch (error) {
-      console.error('Redirect error:', error);
-      // Fallback: force reload with login URL
-      if (window.location.pathname !== '/login') {
-        window.location.href = loginUrl;
-      }
-    }
-
-    // Also dispatch custom event for components that might need it
-    window.dispatchEvent(new CustomEvent('tokenExpired', {
-      detail: { message: 'Your session has expired. Please log in again.' }
-    }));
+    window.location.href = '/login';
+    dispatchExpired();
   }
 
-  // Handle token expiring soon
   handleTokenExpiringSoon() {
     const token = this.getToken();
     const remainingTime = this.getTokenRemainingTime(token);
-
-    // Dispatch custom event for warning
     window.dispatchEvent(new CustomEvent('tokenExpiringSoon', {
       detail: {
         remainingTime,
@@ -215,7 +163,6 @@ class TokenManager {
     }));
   }
 
-  // Get token status
   getTokenStatus() {
     const token = this.getToken();
     if (!token) return { valid: false, expired: true, message: 'No token found' };
@@ -233,17 +180,10 @@ class TokenManager {
     };
   }
 
-  // Initialize token monitoring if token exists
   initializeMonitoring() {
-    const token = this.getToken();
-    if (token) {
-      console.log('Token found on initialization, starting monitoring');
-      this.startExpiryMonitoring();
-    }
+    if (this.getToken()) this.startExpiryMonitoring();
   }
 }
 
-// Create singleton instance
 const tokenManager = new TokenManager();
-
 export default tokenManager;

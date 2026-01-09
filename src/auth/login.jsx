@@ -5,116 +5,115 @@ import { getRoleBasedRedirect } from "../utils/roleRedirect";
 import tokenManager from "../utils/tokenManager";
 
 export default function LoginPage() {
-  const navigate = useNavigate();
+    const navigate = useNavigate();
 
-  const [formData, setFormData] = useState({ email: "", password: "" });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+    const [formData, setFormData] = useState({ email: "", password: "" });
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
 
-  // Clear expired tokens and stop monitoring on login page
-  useEffect(() => {
-    // Clear any expired tokens when on login page to prevent redirect loops
-    const token = tokenManager.getToken();
-    if (token && !tokenManager.isCurrentTokenValid()) {
-      console.log('Clearing expired or invalid token on login page');
-      tokenManager.clearAuthData();
-    }
-
-    // Stop token monitoring on login page
-    tokenManager.stopExpiryMonitoring();
-
-    const handleTokenExpired = (event) => {
-      setError(event.detail?.message || 'Session expired. Please login again.');
-    };
-
-    window.addEventListener('tokenExpired', handleTokenExpired);
-    return () => {
-      window.removeEventListener('tokenExpired', handleTokenExpired);
-    };
-  }, []);
-
-  const handleChange = useCallback(({ target }) => {
-    const { name, value } = target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  }, []);
-
-  const handleSubmit = useCallback(
-    async e => {
-      e.preventDefault();
-
-      if (loading) return;
-
-      setError(null);
-      setLoading(true);
-
-      try {
-        const response = await authAPI.login(formData);
-        console.log('Login response:', response); // Debug log
-        
-        const { token, user, expiresIn } = response;
-        console.log('Token:', token); // Debug log
-        console.log('User data:', user); // Debug log
-        console.log('Token expires in:', expiresIn); // Debug log
-
-        if (token && user) {
-          // Store only token using tokenManager (starts monitoring automatically)
-          // User data is not stored in localStorage - only token is stored
-          tokenManager.saveToken(token);
-          
-          // Dispatch login success event to hide any notifications
-          window.dispatchEvent(new CustomEvent('loginSuccess', {
-            detail: { message: 'Login successful', user }
-          }));
-          
-          console.log('Token saved successfully');
-          
-          // Get role-based redirect path
-          const redirectPath = getRoleBasedRedirect(user.role || user.department);
-          console.log('Redirecting to:', redirectPath, 'for role:', user.role || user.department);
-   
-          navigate(redirectPath, { replace: true });
-        } else {
-          console.error('Missing token or user in response');
-          setError("Invalid response from server");
+    // Clear expired tokens and stop monitoring on login page
+    useEffect(() => {
+        // Clear any expired tokens when on login page to prevent redirect loops
+        const token = tokenManager.getToken();
+        if (token && !tokenManager.isCurrentTokenValid()) {
+            console.log('Clearing expired or invalid token on login page');
+            tokenManager.clearAuthData();
         }
-      } catch (err) {
-        setError(
-          err?.response?.data?.message ||
-            err?.response?.data?.error ||
-            err?.message ||
-            "Login failed"
-        );
-      } finally {
-        setLoading(false);
-      }
-    },
-    [formData, loading, navigate]
-  );
+
+        // Stop token monitoring on login page
+        tokenManager.stopExpiryMonitoring();
+
+        const handleTokenExpired = (event) => {
+            setError(event.detail?.message || 'Session expired. Please login again.');
+        };
+
+        window.addEventListener('tokenExpired', handleTokenExpired);
+        return () => {
+            window.removeEventListener('tokenExpired', handleTokenExpired);
+        };
+    }, []);
+
+    const handleChange = useCallback(({ target }) => {
+        const { name, value } = target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+    }, []);
+
+    const handleSubmit = useCallback(
+        async e => {
+            e.preventDefault();
+
+            if (loading) return;
+
+            setError(null);
+            setLoading(true);
+
+            try {
+                const response = await authAPI.login(formData);
+                console.log('Login response:', response); // Debug log
+
+                const { token, user, expiresIn } = response;
+                console.log('Token:', token); // Debug log
+                console.log('User data:', user); // Debug log
+                console.log('Token expires in:', expiresIn); // Debug log
+
+                if (token && user) {
+                    // Store token, user data and expiry in localStorage
+                    tokenManager.saveAuthData(token, user, expiresIn);
+
+                    // Dispatch login success event to hide any notifications
+                    window.dispatchEvent(new CustomEvent('loginSuccess', {
+                        detail: { message: 'Login successful', user }
+                    }));
+
+                    console.log('Token saved successfully');
+
+                    // Get role-based redirect path
+                    const redirectPath = getRoleBasedRedirect(user.role || user.department);
+                    console.log('Redirecting to:', redirectPath, 'for role:', user.role || user.department);
+
+                    navigate(redirectPath, { replace: true });
+                } else {
+                    console.error('Missing token or user in response');
+                    setError("Invalid response from server");
+                }
+            } catch (err) {
+                setError(
+                    err?.response?.data?.message ||
+                    err?.response?.data?.error ||
+                    err?.message ||
+                    "Login failed"
+                );
+            } finally {
+                setLoading(false);
+            }
+        },
+        [formData, loading, navigate]
+    );
 
 
     return (
-        <div className="min-h-screen flex items-center justify-center p-6" 
-             style={{ 
-                 backgroundColor: 'var(--bg-primary)',
-                 backgroundImage: 'linear-gradient(135deg, rgba(27, 60, 83, 0.95) 0%, rgba(35, 76, 106, 0.9) 100%)'
-             }}>
-            
+        <div className="min-h-screen flex items-center justify-center p-6"
+            style={{
+                backgroundColor: 'var(--bg-primary)',
+                backgroundImage: 'linear-gradient(135deg, rgba(27, 60, 83, 0.95) 0%, rgba(35, 76, 106, 0.9) 100%)'
+            }}>
+
             {/* Main Container */}
             <div className="w-full max-w-lg">
                 {/* Logo Header */}
                 <div className="text-center mb-10">
                     <div className="flex items-center justify-center gap-3 mb-4">
-                        <div className="flex h-14 w-14 items-center justify-center rounded-xl" 
-                             style={{ 
-                                 background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
-                                 boxShadow: '0 10px 25px rgba(69, 104, 130, 0.3)'
-                             }}>
+                        <div className="flex h-14 w-14 items-center justify-center rounded-xl"
+                            style={{
+                                background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
+                                boxShadow: '0 10px 25px rgba(69, 104, 130, 0.3)'
+                            }}>
                             <svg
                                 className="h-8 w-8 text-white"
                                 fill="none"
                                 viewBox="0 0 24 24"
                                 stroke="currentColor"
-                            >   
+                            >
                                 <path
                                     strokeLinecap="round"
                                     strokeLinejoin="round"
@@ -130,12 +129,12 @@ export default function LoginPage() {
                 </div>
 
                 {/* Login Card */}
-                <div className="rounded-2xl p-6" 
-                     style={{ 
-                         backgroundColor: 'var(--bg-secondary)',
-                         boxShadow: '0 20px 40px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(69, 104, 130, 0.2)'
-                     }}>
-                    
+                <div className="rounded-2xl p-6"
+                    style={{
+                        backgroundColor: 'var(--bg-secondary)',
+                        boxShadow: '0 20px 40px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(69, 104, 130, 0.2)'
+                    }}>
+
                     {/* Header */}
                     <div className="text-center mb-6">
                         <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
@@ -147,31 +146,31 @@ export default function LoginPage() {
                     </div>
 
                     {/* Error Message */}
-                {error && (
-                    <div 
-                        className="mb-6 p-4 rounded-lg border"
-                        style={{
-                            backgroundColor: "rgba(239, 68, 68, 0.1)",
-                            borderColor: "rgba(239, 68, 68, 0.3)",
-                            color: "#ef4444"
-                        }}
-                    >
-                        <div className="flex items-center">
-                            <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            <span className="text-sm font-medium">{error}</span>
+                    {error && (
+                        <div
+                            className="mb-6 p-4 rounded-lg border"
+                            style={{
+                                backgroundColor: "rgba(239, 68, 68, 0.1)",
+                                borderColor: "rgba(239, 68, 68, 0.3)",
+                                color: "#ef4444"
+                            }}
+                        >
+                            <div className="flex items-center">
+                                <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <span className="text-sm font-medium">{error}</span>
+                            </div>
                         </div>
-                    </div>
-                )}
+                    )}
 
-                {/* Login Form */}
+                    {/* Login Form */}
                     <form className="space-y-4" onSubmit={handleSubmit}>
                         {/* Email Field */}
                         <div>
                             <label
                                 htmlFor="email"
-                                className="block text-sm font-medium mb-2" 
+                                className="block text-sm font-medium mb-2"
                                 style={{ color: 'var(--text-secondary)' }}
                             >
                                 Email Address
@@ -191,7 +190,7 @@ export default function LoginPage() {
                                     value={formData.email}
                                     onChange={handleChange}
                                     className="block w-full pl-12 rounded-xl border px-4 py-3 focus:outline-none focus:ring-2 transition-all duration-200"
-                                    style={{ 
+                                    style={{
                                         borderColor: 'var(--border-primary)',
                                         backgroundColor: 'rgba(255, 255, 255, 0.05)',
                                         color: 'var(--text-primary)',
@@ -208,12 +207,12 @@ export default function LoginPage() {
                             <div className="flex items-center justify-between mb-3">
                                 <label
                                     htmlFor="password"
-                                    className="block text-sm font-medium" 
+                                    className="block text-sm font-medium"
                                     style={{ color: 'var(--text-secondary)' }}
                                 >
                                     Password
                                 </label>
-                              
+
                             </div>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -230,7 +229,7 @@ export default function LoginPage() {
                                     value={formData.password}
                                     onChange={handleChange}
                                     className="block w-full pl-12 rounded-xl border px-4 py-3 focus:outline-none focus:ring-2 transition-all duration-200"
-                                    style={{ 
+                                    style={{
                                         borderColor: 'var(--border-primary)',
                                         backgroundColor: 'rgba(255, 255, 255, 0.05)',
                                         color: 'var(--text-primary)',
@@ -250,7 +249,7 @@ export default function LoginPage() {
                                     name="remember-me"
                                     type="checkbox"
                                     className="h-5 w-5 rounded border focus:ring-2 focus:ring-offset-0 transition-all duration-200"
-                                    style={{ 
+                                    style={{
                                         borderColor: 'var(--border-primary)',
                                         backgroundColor: 'rgba(255, 255, 255, 0.05)',
                                         color: 'var(--accent-primary)'
@@ -264,17 +263,17 @@ export default function LoginPage() {
                                     Keep me signed in
                                 </label>
                             </div>
-                            
+
                             <button
                                 type="submit"
                                 disabled={loading}
                                 className="px-8 py-3 rounded-xl text-sm font-semibold text-white transition-all duration-200 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-offset-2 transform hover:-translate-y-1 hover:scale-105 active:scale-95"
-                                style={{ 
-                                    background: loading 
+                                style={{
+                                    background: loading
                                         ? "linear-gradient(135deg, #94a3b8, #64748b)"
                                         : "linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))",
-                                    boxShadow: loading 
-                                        ? "none" 
+                                    boxShadow: loading
+                                        ? "none"
                                         : "0 10px 20px rgba(69, 104, 130, 0.4)",
                                     focusRingColor: 'var(--accent-primary)',
                                     focusRingOffsetColor: 'var(--bg-secondary)',
@@ -309,7 +308,7 @@ export default function LoginPage() {
                         <div className="absolute inset-0 flex items-center">
                             <div className="w-full border-t" style={{ borderColor: 'var(--border-primary)' }}></div>
                         </div>
-                       
+
                     </div>
 
                     {/* Sign Up Link */}
@@ -317,7 +316,7 @@ export default function LoginPage() {
                         <Link
                             to="/"
                             className="inline-flex items-center justify-center w-full py-3 rounded-xl text-sm font-semibold transition-all duration-200 border hover:shadow-lg"
-                            style={{ 
+                            style={{
                                 borderColor: 'var(--border-secondary)',
                                 color: 'var(--text-primary)',
                                 backgroundColor: 'rgba(69, 104, 130, 0.1)'

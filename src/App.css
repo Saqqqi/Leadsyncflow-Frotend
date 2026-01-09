@@ -2,30 +2,46 @@
 
 :root {
   /* Your 4 Colors - Dark Theme */
-  --color-primary: #1B3C53;          /* Primary (dark blue) */
-  --color-secondary: #234C6A;        /* Secondary (medium blue) */
-  --color-accent: #456882;           /* Accent (light blue) */
-  --color-light: #E3E3E3;            /* Light (light gray) */
-  
+  --color-primary: #1B3C53;
+  /* Primary (dark blue) */
+  --color-secondary: #234C6A;
+  /* Secondary (medium blue) */
+  --color-accent: #456882;
+  /* Accent (light blue) */
+  --color-light: #E3E3E3;
+  /* Light (light gray) */
+
   /* Background Colors - Dark Theme */
-  --background: var(--color-primary);            /* Dark blue background */
-  --foreground: var(--color-light);              /* Light gray text */
-  --bg-primary: var(--color-primary);            /* Main - dark blue */
-  --bg-secondary: #0f2a3f;                       /* Forms - darker blue */
-  --bg-tertiary: var(--color-secondary);         /* Cards - medium blue */
+  --background: var(--color-primary);
+  /* Dark blue background */
+  --foreground: var(--color-light);
+  /* Light gray text */
+  --bg-primary: var(--color-primary);
+  /* Main - dark blue */
+  --bg-secondary: #0f2a3f;
+  /* Forms - darker blue */
+  --bg-tertiary: var(--color-secondary);
+  /* Cards - medium blue */
 
   /* Text Colors */
-  --text-primary: var(--color-light);            /* Light gray on dark */
-  --text-secondary: #a8c6df;                     /* Light blue-gray */
-  --text-tertiary: #8db3d1;                      /* Lighter blue-gray */
+  --text-primary: var(--color-light);
+  /* Light gray on dark */
+  --text-secondary: #a8c6df;
+  /* Light blue-gray */
+  --text-tertiary: #8db3d1;
+  /* Lighter blue-gray */
 
   /* Border Colors */
-  --border-primary: rgba(69, 104, 130, 0.4);     /* Light blue transparent */
-  --border-secondary: var(--color-accent);       /* Light blue solid */
+  --border-primary: rgba(69, 104, 130, 0.4);
+  /* Light blue transparent */
+  --border-secondary: var(--color-accent);
+  /* Light blue solid */
 
   /* Accent Colors - MODIFIED */
-  --accent-primary: #00be9b;                     /* Changed from light blue to teal */
-  --accent-secondary: var(--color-secondary);    /* Medium blue */
+  --accent-primary: #00be9b;
+  /* Changed from light blue to teal */
+  --accent-secondary: var(--color-secondary);
+  /* Medium blue */
   --accent-success: #34d399;
   --accent-warning: #fbbf24;
   --accent-error: #f87171;
@@ -42,4 +58,35 @@ body {
   background: var(--bg-primary);
   color: var(--text-primary);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+/* Premium Animations */
+@keyframes slideDown {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-slideDown {
+  animation: slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out forwards;
 }

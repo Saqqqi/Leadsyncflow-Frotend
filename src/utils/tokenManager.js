@@ -143,12 +143,12 @@ class TokenManager {
       }));
     };
 
-    if (currentPath === '/' || currentPath === '/login') {
+    if (currentPath === '/' || currentPath === '/login' || currentPath === '/signup') {
       dispatchExpired();
       return;
     }
 
-    window.location.href = '/login';
+    window.location.href = '/';
     dispatchExpired();
   }
 

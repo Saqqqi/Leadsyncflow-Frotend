@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-route
 import { useEffect } from 'react';
 import SignupPage from '../auth/Signup';
 import LoginPage from '../auth/login';
+import LandingPage from '../pages/LandingPage';
 import DynamicRoutes from './DynamicRoutes';
 import TokenStatus from '../components/TokenStatus';
 import tokenManager from '../utils/tokenManager';
@@ -9,14 +10,16 @@ import tokenManager from '../utils/tokenManager';
 function AppRoutesWithTokenManagement() {
   const location = useLocation();
   const isPublicRoute =
-    location.pathname === '/' || location.pathname === '/login';
+    location.pathname === '/' ||
+    location.pathname === '/login' ||
+    location.pathname === '/signup';
 
   // Token validation & expiry handling (protected routes only)
   useEffect(() => {
     const redirectToLogin = (message) => {
-      console.log('Redirecting to login:', message);
+      console.log('Redirecting to home:', message);
       tokenManager.clearAuthData();
-      window.location.href = '/login';
+      window.location.href = '/';
     };
 
     if (isPublicRoute) {
@@ -47,8 +50,9 @@ function AppRoutesWithTokenManagement() {
     <>
       {/* Public & protected route handling */}
       <Routes>
-        <Route path="/" element={<SignupPage />} />
+        <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
         <Route path="/*" element={<DynamicRoutes />} />
       </Routes>
 

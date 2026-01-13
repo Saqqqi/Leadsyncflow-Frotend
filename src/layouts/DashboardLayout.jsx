@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Outlet, useLocation } from 'react-router-dom';
+
 import DynamicSidebar from '../components/DynamicSidebar';
 import TokenStatus from '../components/TokenStatus';
 import tokenManager from '../utils/tokenManager';
@@ -8,82 +9,98 @@ import { dashboardConfig } from '../dashboards/dashboardConfig';
 export default function DashboardLayout() {
   const navigate = useNavigate();
   const location = useLocation();
+
+  /* Theme Management */
+  const [theme, setTheme] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('theme') || 'dark';
+    }
+    return 'dark';
+  });
+
+  useEffect(() => {
+    const root = window.document.documentElement;
+    root.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+  };
+
   const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth >= 1024);
   const [user, setUser] = useState(null);
 
-  // Find current dashboard and page for header info
+  // Find current dashboard & page
   const currentDashboard = dashboardConfig.find(db =>
     location.pathname.startsWith(db.basePath)
   );
 
   const currentPage = currentDashboard?.pages.find(page => {
-    const pagePath = `${currentDashboard.basePath}${page.path ? '/' + page.path : ''}`;
-    return location.pathname === pagePath || location.pathname === pagePath + '/';
+    const fullPath = `${currentDashboard.basePath}${page.path ? '/' + page.path : ''}`;
+    return (
+      location.pathname === fullPath ||
+      location.pathname === fullPath + '/'
+    );
   });
 
+  // Load user data
   useEffect(() => {
-    // Get user data on mount
     const userData = tokenManager.getUser();
     setUser(userData);
   }, []);
 
-  // Sync sidebar state with window resizing
+  // Handle responsive sidebar
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth >= 1024) {
-        setIsSidebarOpen(true);
-      } else {
-        setIsSidebarOpen(false);
-      }
+      setIsSidebarOpen(window.innerWidth >= 1024);
     };
 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Check for expired token on component mount
-  // Note: tokenManager already handles periodic checks, so we just verify on mount
+  // Token validation & redirect
   useEffect(() => {
-    const token = tokenManager.getToken();
-
-    // If no token or token is invalid, redirect to login
-    if (!token || !tokenManager.isCurrentTokenValid()) {
-      console.log('Invalid or expired token in DashboardLayout, redirecting...');
+    if (!tokenManager.getToken() || !tokenManager.isCurrentTokenValid()) {
       tokenManager.clearAuthData();
       window.location.href = '/login';
+      return;
     }
 
-    // Ensure monitoring is started (tokenManager handles periodic checks)
     tokenManager.initializeMonitoring();
   }, [navigate]);
 
-  // Handle Logout
   const handleLogout = () => {
     tokenManager.clearAuthData();
     navigate('/login');
   };
 
   return (
-    <div className="min-h-screen flex" style={{ backgroundColor: 'var(--bg-primary)' }}>
-      {/* Token Status Component - Global for all dashboard pages */}
+    <div className="min-h-screen flex bg-[var(--bg-primary)] transition-colors duration-300">
       <TokenStatus />
 
-      {/* Dynamic Sidebar - Always visible on large screens, controlled on mobile */}
       <DynamicSidebar
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
-        onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+        onToggle={() => setIsSidebarOpen(prev => !prev)}
+        user={user}
       />
 
-      {/* Main Content */}
-      <div className={`flex-1 flex flex-col transition-all duration-300 ease-in-out ${isSidebarOpen ? 'lg:ml-64' : 'lg:ml-0'}`}>
+      <div
+        className={`flex-1 flex flex-col transition-all duration-300 ${isSidebarOpen ? 'lg:ml-64' : 'lg:ml-0'
+          }`}
+      >
         {/* Header */}
-        <header className="h-16 border-b flex items-center justify-between px-4 md:px-6"
-          style={{ borderColor: 'var(--border-primary)' }}>
+        <header
+          className="h-16 border-b flex items-center justify-between px-4 md:px-6 transition-colors duration-300"
+          style={{ borderColor: 'var(--border-primary)', backgroundColor: 'var(--bg-primary)' }}
+        >
           <div className="flex items-center gap-4">
+            {/* Mobile menu toggle */}
             <button
-              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className={`${isSidebarOpen ? 'lg:hidden' : 'flex'} p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-300`}
+              onClick={() => setIsSidebarOpen(prev => !prev)}
+              className={`p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 lg:hidden`}
               style={{ color: 'var(--text-primary)' }}
             >
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -91,85 +108,116 @@ export default function DashboardLayout() {
               </svg>
             </button>
 
-            {/* Breadcrumbs / Dashboard Name */}
-            <div className="hidden sm:flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-600">
-                {currentDashboard?.icon || "📊"}
+            {/* Dashboard info */}
+            {currentDashboard && (
+              <div className="hidden sm:flex items-center gap-3">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-600">
+                  {currentDashboard.icon || '📊'}
+                </div>
+                <div>
+                  <div className="text-xs font-medium uppercase tracking-wider opacity-60" style={{ color: 'var(--text-secondary)' }}>
+                    Dashboard
+                  </div>
+                  <div className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
+                    {currentDashboard.name}
+                  </div>
+                </div>
               </div>
-              <div className="flex flex-col">
-                <span className="text-xs font-medium uppercase tracking-wider opacity-50" style={{ color: 'var(--text-primary)' }}>
-                  Dashboard
-                </span>
-                <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
-                  {currentDashboard?.name || "Leadsync Flow"}
-                </span>
-              </div>
-            </div>
+            )}
           </div>
 
+          <div className="flex items-center gap-4">
 
-          <div className="flex items-center gap-3">
-            {/* Dashboard Context Pill */}
-            <div className="hidden sm:flex flex-col items-end px-3 py-1 rounded-lg bg-gray-100/50 dark:bg-gray-800/40 border border-blue-500/10 mr-2">
-              <span className="text-[8px] font-bold text-blue-600 uppercase tracking-tighter leading-none mb-0.5">
-                Workspace
-              </span>
-              <div className="flex items-center gap-1.5">
-                <span className="text-[11px] font-extrabold whitespace-nowrap" style={{ color: 'var(--text-primary)' }}>
-                  {currentDashboard?.name || "Loading..."}
-                </span>
-                <div className="w-1 h-1 rounded-full bg-blue-400"></div>
-                <span className="text-[11px] font-medium opacity-60 whitespace-nowrap" style={{ color: 'var(--text-primary)' }}>
-                  {currentPage?.name || 'Overview'}
-                </span>
-              </div>
-            </div>
-
-            {/* Notification Button */}
-            <button className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 relative transition-colors"
-              style={{ color: 'var(--text-primary)' }}>
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-              </svg>
-              <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-gray-900"></span>
+            {/* Theme Toggle Button */}
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-lg hover:bg-[var(--bg-secondary)] transition-colors"
+              style={{ color: 'var(--text-primary)' }}
+              title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+            >
+              {theme === 'dark' ? (
+                // Sun Icon for Dark Mode (to switch to Light)
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+              ) : (
+                // Moon Icon for Light Mode (to switch to Dark)
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                </svg>
+              )}
             </button>
 
-            {/* User Profile Section */}
+            {/* Current context pill */}
+            {currentDashboard && (
+              <div className="hidden sm:flex flex-col items-end px-3 py-1 rounded-lg border"
+                style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}>
+                <span className="text-[8px] font-bold uppercase tracking-widest" style={{ color: 'var(--accent-primary)' }}>
+                  Workspace
+                </span>
+                <div className="flex items-center gap-2 text-[11px]" style={{ color: 'var(--text-primary)' }}>
+                  <span className="font-extrabold">{currentDashboard.name}</span>
+                  <div className="w-1 h-1 rounded-full" style={{ backgroundColor: 'var(--accent-primary)' }} />
+                  <span className="opacity-70">{currentPage?.name || 'Overview'}</span>
+                </div>
+              </div>
+            )}
+
+            {/* Notification */}
+            <button
+              className="p-2 rounded-lg hover:bg-[var(--bg-secondary)] relative transition-colors"
+              style={{ color: 'var(--text-primary)' }}
+            >
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                />
+              </svg>
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-[var(--bg-primary)]" />
+            </button>
+
+            {/* User profile & logout */}
             <div className="flex items-center gap-3 pl-4 border-l" style={{ borderColor: 'var(--border-primary)' }}>
-              <div className="flex flex-col items-end">
-                <span className="text-sm font-bold leading-tight" style={{ color: 'var(--text-primary)' }}>
-                  {user?.name || 'User'}
-                </span>
-                <span className="text-[10px] font-medium uppercase tracking-tight px-1.5 py-0.5 rounded-md bg-green-500/10 text-green-600 border border-green-500/20">
+              <div className="text-right">
+                <div className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{user?.name || 'User'}</div>
+                <div className="text-[10px] font-medium uppercase tracking-wide px-2 py-0.5 mt-0.5 rounded bg-green-500/10 text-green-400 border border-green-500/20">
                   {user?.department || user?.role || 'Team'}
-                </span>
+                </div>
               </div>
 
-              <div className="group relative">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-black text-lg transition-transform hover:scale-105 cursor-pointer shadow-lg"
-                  style={{ background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))' }}>
-                  {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
-                </div>
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-black text-lg shadow-lg transition-transform hover:scale-105 cursor-pointer"
+                style={{
+                  background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
+                }}
+              >
+                {user?.name?.[0]?.toUpperCase() || 'U'}
               </div>
 
               <button
                 onClick={handleLogout}
-                className="ml-1 p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/10 text-gray-400 hover:text-red-500 transition-all duration-200"
+                className="p-2 rounded-lg hover:bg-red-500/10 text-gray-400 hover:text-red-400 transition-colors"
                 title="Logout"
               >
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                  />
                 </svg>
               </button>
             </div>
           </div>
         </header>
 
-        {/* Page Content */}
-        <main className="flex-1 overflow-auto">
-          <div className="p-6">
-            <Outlet />
-          </div>
+        {/* Content */}
+        <main className="flex-1 overflow-auto p-6" style={{ backgroundColor: 'var(--bg-primary)' }}>
+          <Outlet />
         </main>
       </div>
     </div>

@@ -4,8 +4,7 @@ export const getRoleBasedRedirect = (userRole) => {
     'Super Admin': '/gds/super-admin',
     'Lead qualifiers': '/gds/lead-qualifier',
     'Team lead( Lead qualifiers,)': '/gds/lead-qualifier',
-    'data minors': '/gds/data-minor',
-    'Team lead (data minors )': '/gds/data-minor'
+    'Data Minors': '/gds/data-minor'
   };
 
   return roleRedirectMap[userRole] || '/gds/super-admin'; // Default fallback

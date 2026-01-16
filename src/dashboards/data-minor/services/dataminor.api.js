@@ -71,7 +71,14 @@ const dataMinerService = {
             };
         }
 
-        // Validate email format
+        // Validate email format and limit
+        if (data.emails.length > 10) {
+            return {
+                ok: false,
+                message: "Maximum 10 emails allowed"
+            };
+        }
+
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         for (const email of data.emails) {
             if (!emailRegex.test(email)) {

@@ -149,7 +149,7 @@ const InputFiles = () => {
     };
 
     const addField = (type) => {
-        if ((type === "email" && emailFields.length >= 49) ||
+        if ((type === "email" && emailFields.length >= 9) ||
             (type === "phone" && phoneFields.length >= 9)) return;
 
         const id = `additional-${type}-${Date.now()}`;
@@ -479,7 +479,7 @@ const InputFiles = () => {
                                         <div className="group/field space-y-1 col-span-2">
                                             <div className="flex justify-between items-center pr-2">
                                                 <span className="text-[12px] font-black text-blue-500/80 uppercase tracking-widest ml-1">Primary Email</span>
-                                                {emailFields.length < 49 && (
+                                                {emailFields.length < 9 && (
                                                     <button
                                                         type="button"
                                                         onClick={() => addField('email')}

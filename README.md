@@ -73,45 +73,61 @@ src/
 
 ---
 
-## 📊 Dashboards & Roles
+## 📊 Dashboards & Operational Flow
 
-The system utilizes a modular **Configuration-First** approach:
+The system follows a strict linear pipeline ensuring high data quality at every stage:
 
-| Dashboard | Core Responsibility | Key Features |
-|-----------|----------------------|--------------|
-| **Super Admin** | Platform Governance | User Approval, Role Assignment, Global Stats |
-| **Manager** | Strategic Oversight | Team History, Lead Distribution, Performance Tracking |
-| **Verifier** | Data Integrity | Email Status Updates, Lead Cleansing, Batch Move |
-| **Lead Qualifier** | Lead Maturity | Lead Scoring, Status Pipelines, Client Assignment |
-| **Data Minor** | Acquisition | Bulk Uploads, Lead Entry, Real-time Duplicate Check |
+### 1️⃣ Data Minor (The Entry Point)
+*   **Dashboard**: Overview of submission stats and real-time activity.
+*   **Input Files**: Advanced lead entry system with multi-field validation and **instant duplicate detection** for emails and phone numbers.
+*   **Employee Listing**: Manage internal staff records associated with data acquisition.
+
+### 2️⃣ Verifier (The Filter)
+*   **Verifier Dashboard**: Performance tracking for verification accuracy and batch processing controls.
+*   **Verifier Leads**: Dedicated interface for cleansing data. Verifiers review raw submissions, update email statuses (Active, Bounced, Dead), and use the **Batch Move** tool to push qualified data forward.
+
+### 3️⃣ Lead Qualifier (The Strategist)
+*   **LQ Dashboard**: High-level view of lead maturity and conversion rates.
+*   **Leads Management**: Advanced filtering by status and date. Lead qualifiers score leads, verify intent, and move them into the final "Manager-Ready" pipeline.
+
+### 4️⃣ Manager (The Executor)
+*   **Manager Dashboard**: Overview of new assignments and team performance.
+*   **New Leads**: Interface for receiving fresh, qualified leads for immediate action.
+*   **History**: A comprehensive archive of all historical lead interactions and outcomes.
+
+### 5️⃣ Super Admin (The Governor)
+*   **Admin Dashboard**: Central hub for system health and **Pending User Approvals**.
+*   **User Management**: Full CRUD operations on users across all departments.
+*   **Global Leads**: Master view of every lead in the system.
+*   **Analytics**: Advanced visualization of the entire pipeline performance.
+*   **System Settings**: Global configuration for roles, security, and API endpoints.
 
 ---
 
-## 🚀 Technical Architecture
+## � Application Architecture
 
-### 📄 Config-Based Routing
-The application uses a centralized `dashboardConfig.jsx` which defines:
-- **Roles**: Allowed departments for each dashboard.
-- **Base Paths**: Root URL for each module.
-- **Pages**: Dynamic list of views with path, component, and sidebar visibility.
+### 📄 Config-Based Routing Hub
+The application's skeleton is defined in `src/dashboards/dashboardConfig.jsx`. This centralized file acts as the single source of truth for:
+*   **Sidebar Navigation**: Icons and labels are dynamically pulled from the config.
+*   **Access Control**: Only users with the matching `role` can access specific base paths.
+*   **Route Generation**: All pages are automatically registered in the `DynamicRoutes.jsx` engine.
 
-This allows adding new pages or entire dashboards without modifying the main routing logic.
-
-### 🔌 API Integration
-- **Axios Instance**: Standardized headers and error handling.
-- **Modular APIs**: Segregated logic for Admin, Data Minor, and shared services.
-- **Token Manager**: Centralized handling of React-to-Storage security.
+### � Enterprise Security
+*   **Auth Interceptors**: Every API call is automatically injected with high-security JWT tokens.
+*   **Session Watchdog**: The `TokenStatus` component monitors token age and warns users before session expiry.
+*   **Department Guards**: Users are locked into their specific departmental layouts, preventing cross-role unauthorized access.
 
 ---
 
-## 🛠️ Technology Stack
+## 🏗️ Technical Architecture Breakdown
 
-- **Core**: React 18, Vite (for blazing fast builds)
-- **Routing**: React Router 6 (with nested & dynamic configurations)
-- **Styling**: TailwindCSS & Custom CSS Environment Variables
-- **API**: Axios (with custom interceptors)
-- **Icons**: Custom SVG Icons & Lucide React
-- **Security**: JWT, localStorage Token Handling, Role Hierarchy
+| Layer | Responsibility | Technology |
+|-------|----------------|------------|
+| **View Layer** | Premium Glassmorphism UI | React 18 / TailwindCSS |
+| **Routing** | Dynamic RBAC Routing | React Router 6 (Nested) |
+| **API Layer** | Standardized Data Fetching | Axios with Custom Instances |
+| **State** | High-performance sync | React Hooks (Memoized) |
+| **Security** | Identity & Access | JWT / LocalStorage Encapsulation |
 
 ---
 

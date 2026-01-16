@@ -96,8 +96,8 @@ export default function LoginPage() {
     return (
         <div className="min-h-screen flex items-center justify-center p-6"
             style={{
-                backgroundColor: 'var(--bg-primary)',
-                backgroundImage: 'linear-gradient(135deg, rgba(27, 60, 83, 0.95) 0%, rgba(35, 76, 106, 0.9) 100%)'
+                backgroundColor: 'var(--color-primary)',
+                backgroundImage: 'linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%)'
             }}>
             <AuthHeader />
 
@@ -108,42 +108,32 @@ export default function LoginPage() {
                     <div className="flex items-center justify-center gap-3 mb-4">
                         <div className="flex h-14 w-14 items-center justify-center rounded-xl"
                             style={{
-                                background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
-                                boxShadow: '0 10px 25px rgba(69, 104, 130, 0.3)'
+                                background: 'linear-gradient(135deg, var(--accent-success), var(--color-secondary))',
+                                boxShadow: '0 10px 25px rgba(52, 211, 153, 0.3)'
                             }}>
-                            <svg
-                                className="h-8 w-8 text-white"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M13 10V3L4 14h7v7l9-11h-7z"
-                                />
+                            <svg className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                             </svg>
                         </div>
                         <div className="text-left">
-                            <span className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>Lead Sync</span>
+                            <span className="text-3xl font-black tracking-tighter" style={{ color: 'var(--text-primary)' }}>Lead<span style={{ color: 'var(--accent-success)' }}>Sync</span></span>
                         </div>
                     </div>
                 </div>
 
                 {/* Login Card */}
-                <div className="rounded-2xl p-6"
+                <div className="rounded-[2.5rem] p-8 md:p-10 border shadow-2xl animate-fadeIn"
                     style={{
                         backgroundColor: 'var(--bg-secondary)',
-                        boxShadow: '0 20px 40px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(69, 104, 130, 0.2)'
+                        borderColor: 'var(--border-primary)'
                     }}>
 
                     {/* Header */}
-                    <div className="text-center mb-6">
-                        <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
+                    <div className="text-center mb-8">
+                        <h2 className="text-3xl font-black mb-2 uppercase tracking-tight" style={{ color: 'var(--text-primary)' }}>
                             Welcome Back
                         </h2>
-                        <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                        <p className="text-sm font-bold opacity-60" style={{ color: 'var(--text-secondary)' }}>
                             Sign in to access your dashboard
                         </p>
                     </div>
@@ -151,170 +141,91 @@ export default function LoginPage() {
                     {/* Error Message */}
                     {error && (
                         <div
-                            className="mb-6 p-4 rounded-lg border"
+                            className="mb-8 p-4 rounded-2xl border flex items-center gap-3"
                             style={{
                                 backgroundColor: "rgba(239, 68, 68, 0.1)",
-                                borderColor: "rgba(239, 68, 68, 0.3)",
-                                color: "#ef4444"
+                                borderColor: "rgba(239, 68, 68, 0.2)",
+                                color: "var(--accent-error)"
                             }}
                         >
-                            <div className="flex items-center">
-                                <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                <span className="text-sm font-medium">{error}</span>
-                            </div>
+                            <svg className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span className="text-xs font-black uppercase tracking-wider">{error}</span>
                         </div>
                     )}
 
                     {/* Login Form */}
-                    <form className="space-y-4" onSubmit={handleSubmit}>
+                    <form className="space-y-6" onSubmit={handleSubmit}>
                         {/* Email Field */}
-                        <div>
-                            <label
-                                htmlFor="email"
-                                className="block text-sm font-medium mb-2"
-                                style={{ color: 'var(--text-secondary)' }}
-                            >
-                                Email Address
-                            </label>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                    <svg className="h-5 w-5" style={{ color: 'var(--text-tertiary)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60 ml-1" style={{ color: 'var(--text-secondary)' }}>Email Address</label>
+                            <div className="relative group">
+                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors group-focus-within:text-[var(--accent-success)]" style={{ color: 'var(--text-tertiary)' }}>
+                                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                                     </svg>
                                 </div>
-                                <input
-                                    id="email"
-                                    name="email"
-                                    type="email"
-                                    autoComplete="email"
-                                    required
-                                    value={formData.email}
-                                    onChange={handleChange}
-                                    className="block w-full pl-12 rounded-xl border px-4 py-3 focus:outline-none focus:ring-2 transition-all duration-200"
-                                    style={{
-                                        borderColor: 'var(--border-primary)',
-                                        backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                                        color: 'var(--text-primary)',
-                                        focusBorderColor: 'var(--border-secondary)',
-                                        focusRingColor: 'var(--accent-primary)'
-                                    }}
-                                    placeholder="you@company.com"
-                                />
+                                <input name="email" type="email" required value={formData.email} onChange={handleChange}
+                                    className="w-full pl-12 pr-4 py-4 rounded-2xl border border-[var(--border-primary)] bg-[var(--bg-tertiary)]/30 focus:bg-transparent focus:outline-none focus:ring-2 focus:ring-[var(--accent-success)]/20 focus:border-[var(--accent-success)] transition-all font-bold text-sm"
+                                    style={{ color: "var(--text-primary)" }}
+                                    placeholder="you@company.com" />
                             </div>
                         </div>
 
                         {/* Password Field */}
-                        <div>
-                            <div className="flex items-center justify-between mb-3">
-                                <label
-                                    htmlFor="password"
-                                    className="block text-sm font-medium"
-                                    style={{ color: 'var(--text-secondary)' }}
-                                >
-                                    Password
-                                </label>
-
-                            </div>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                    <svg className="h-5 w-5" style={{ color: 'var(--text-tertiary)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60 ml-1" style={{ color: 'var(--text-secondary)' }}>Password</label>
+                            <div className="relative group">
+                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors group-focus-within:text-[var(--accent-success)]" style={{ color: 'var(--text-tertiary)' }}>
+                                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                                     </svg>
                                 </div>
-                                <input
-                                    id="password"
-                                    name="password"
-                                    type={showPassword ? "text" : "password"}
-                                    autoComplete="current-password"
-                                    required
-                                    value={formData.password}
-                                    onChange={handleChange}
-                                    className="block w-full pl-12 pr-12 rounded-xl border px-4 py-3 focus:outline-none focus:ring-2 transition-all duration-200"
-                                    style={{
-                                        borderColor: 'var(--border-primary)',
-                                        backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                                        color: 'var(--text-primary)',
-                                        focusBorderColor: 'var(--border-secondary)',
-                                        focusRingColor: 'var(--accent-primary)'
-                                    }}
-                                    placeholder="••••••••"
-                                />
-                                <button
-                                    type="button"
-                                    className="absolute inset-y-0 right-0 pr-4 flex items-center"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                    style={{ color: 'var(--text-tertiary)' }}
-                                >
+                                <input name="password" type={showPassword ? "text" : "password"} required value={formData.password} onChange={handleChange}
+                                    className="w-full pl-12 pr-12 py-4 rounded-2xl border border-[var(--border-primary)] bg-[var(--bg-tertiary)]/30 focus:bg-transparent focus:outline-none focus:ring-2 focus:ring-[var(--accent-success)]/20 focus:border-[var(--accent-success)] transition-all font-bold text-sm"
+                                    style={{ color: "var(--text-primary)" }}
+                                    placeholder="••••••••" />
+                                <button type="button" onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 opacity-40 hover:opacity-100 transition-opacity" style={{ color: 'var(--text-tertiary)' }}>
                                     {showPassword ? (
-                                        <svg className="h-5 w-5 hover:text-teal-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                                        </svg>
+                                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
                                     ) : (
-                                        <svg className="h-5 w-5 hover:text-teal-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                        </svg>
+                                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
                                     )}
                                 </button>
                             </div>
                         </div>
 
-                        {/* Remember Me & Submit */}
-                        <div className="flex items-center justify-between pt-2">
-                            <div className="flex items-center">
-                                <input
-                                    id="remember-me"
-                                    name="remember-me"
-                                    type="checkbox"
-                                    className="h-5 w-5 rounded border focus:ring-2 focus:ring-offset-0 transition-all duration-200"
-                                    style={{
-                                        borderColor: 'var(--border-primary)',
-                                        backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                                        color: 'var(--accent-primary)'
-                                    }}
-                                />
-                                <label
-                                    htmlFor="remember-me"
-                                    className="ml-3 block text-sm"
-                                    style={{ color: 'var(--text-secondary)' }}
-                                >
-                                    Keep me signed in
-                                </label>
-                            </div>
-
+                        {/* Submit Button */}
+                        <div className="pt-4">
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="px-8 py-3 rounded-xl text-sm font-semibold text-white transition-all duration-200 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-offset-2 transform hover:-translate-y-1 hover:scale-105 active:scale-95"
+                                className="w-full py-4 rounded-2xl text-xs font-black uppercase tracking-[0.2em] text-white transition-all duration-300 hover:shadow-2xl focus:outline-none transform hover:-translate-y-1 active:scale-95 disabled:opacity-50"
                                 style={{
                                     background: loading
-                                        ? "linear-gradient(135deg, #94a3b8, #64748b)"
-                                        : "linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))",
+                                        ? "var(--text-tertiary)"
+                                        : "linear-gradient(135deg, var(--accent-success), #10b981)",
                                     boxShadow: loading
                                         ? "none"
-                                        : "0 10px 20px rgba(69, 104, 130, 0.4)",
-                                    focusRingColor: 'var(--accent-primary)',
-                                    focusRingOffsetColor: 'var(--bg-secondary)',
-                                    cursor: loading ? 'not-allowed' : 'pointer',
-                                    opacity: loading ? 0.7 : 1
+                                        : "0 15px 30px -10px rgba(52,211,153,0.4)",
                                 }}
                             >
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center justify-center gap-3">
                                     {loading ? (
                                         <>
                                             <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
                                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                             </svg>
-                                            <span>Signing In...</span>
+                                            <span>Processing...</span>
                                         </>
                                     ) : (
                                         <>
-                                            <span>Sign In</span>
+                                            <span>Authentication Secure</span>
                                             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                                             </svg>
                                         </>
                                     )}
@@ -323,33 +234,20 @@ export default function LoginPage() {
                         </div>
                     </form>
 
-                    {/* Divider */}
-                    <div className="my-6 relative">
-                        <div className="absolute inset-0 flex items-center">
-                            <div className="w-full border-t" style={{ borderColor: 'var(--border-primary)' }}></div>
-                        </div>
-
-                    </div>
-
-                    {/* Sign Up Link */}
-                    <div className="text-center">
+                    {/* Footer Links */}
+                    <div className="mt-10 pt-8 border-t" style={{ borderColor: 'var(--border-primary)' }}>
                         <Link
                             to="/signup"
-                            className="inline-flex items-center justify-center w-full py-3 rounded-xl text-sm font-semibold transition-all duration-200 border hover:shadow-lg"
-                            style={{
-                                borderColor: 'var(--border-secondary)',
-                                color: 'var(--text-primary)',
-                                backgroundColor: 'rgba(69, 104, 130, 0.1)'
-                            }}
+                            className="flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] transition-colors hover:text-[var(--accent-success)]"
+                            style={{ color: 'var(--text-secondary)' }}
                         >
-                            <span>Create a free account</span>
-                            <svg className="ml-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            <span>Need an account? Request access</span>
+                            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 4v16m8-8H4" />
                             </svg>
                         </Link>
                     </div>
                 </div>
-
             </div>
         </div>
     );

@@ -48,13 +48,19 @@ const LeadQualifierDashboard = lazy(() => import("../dashboards/lead-qualifier/p
 const DataMinorDashboard = lazy(() => import("../dashboards/data-minor/pages/DataMinorDashboard"));
 const InputFiles = lazy(() => import("../dashboards/data-minor/pages/InputFiles"));
 const Employees = lazy(() => import("../dashboards/data-minor/pages/EmployeeListing"));
+const VerifierDashboard = lazy(() => import("../dashboards/verifier/pages/VerifierDashboard"));
+const VerifierLeads = lazy(() => import("../dashboards/verifier/pages/VerifierLeads"));
+const LeadQualifierLeads = lazy(() => import("../dashboards/lead-qualifier/pages/LeadQualifierLeads"));
+const ManagerDashboard = lazy(() => import("../dashboards/manager/pages/ManagerDashboard"));
+const ManagerNewLeads = lazy(() => import("../dashboards/manager/pages/ManagerNewLeads"));
+const ManagerHistory = lazy(() => import("../dashboards/manager/pages/ManagerHistory"));
 
 // Centralized Configuration
 export const dashboardConfig = [
   {
     id: 'super-admin',
     name: 'Super Admin',
-    role: 'SUPER_ADMIN',
+    role: 'Super Admin',
     basePath: '/gds/super-admin',
     icon: <SettingsIcon />,
     pages: [
@@ -68,24 +74,48 @@ export const dashboardConfig = [
   {
     id: 'lead-qualifier',
     name: 'Lead Qualifier',
-    role: 'LEAD_QUALIFIER',
+    role: 'Lead Qualifiers',
     basePath: '/gds/lead-qualifier',
     icon: <DashboardIcon />,
     pages: [
       { name: 'Dashboard', path: '', component: LeadQualifierDashboard, icon: <DashboardIcon />, showInSidebar: true },
-      { name: 'Leads', path: 'leads', component: SuperAdminLeads, icon: <LeadsIcon />, showInSidebar: true },
+      { name: 'Leads', path: 'leads', component: LeadQualifierLeads, icon: <LeadsIcon />, showInSidebar: true },
     ],
   },
   {
     id: 'data-minor',
     name: 'Data Minor',
-    role: 'DATA_MINOR',
+    role: 'Data Minors',
     basePath: '/gds/data-minor',
     icon: <LeadsIcon />,
     pages: [
       { name: 'Dashboard', path: '', component: DataMinorDashboard, icon: <DashboardIcon />, showInSidebar: true },
       { name: 'Input Files', path: 'input-files', component: InputFiles, icon: <FilesIcon />, showInSidebar: true },
-      { name: 'Employees', path: 'employees', component: Employees, icon: <UsersIcon />, showInSidebar: true },
+      // { name: 'Employees', path: 'employees', component: Employees, icon: <UsersIcon />, showInSidebar: true },
+      // { name: 'Leads', path: 'leads', component: VerifierLeads, icon: <LeadsIcon />, showInSidebar: true, allowedRoles: ['Verifier'] },
+    ],
+  },
+  {
+    id: 'verifier',
+    name: 'Verifier',
+    role: 'Verifier',
+    basePath: '/gds/verifier',
+    icon: <LeadsIcon />,
+    pages: [
+      { name: 'Dashboard', path: '', component: VerifierDashboard, icon: <DashboardIcon />, showInSidebar: true },
+      { name: 'Leads', path: 'leads', component: VerifierLeads, icon: <LeadsIcon />, showInSidebar: true },
+    ],
+  },
+  {
+    id: 'manager',
+    name: 'Manager',
+    role: 'Manager',
+    basePath: '/gds/manager',
+    icon: <LeadsIcon />,
+    pages: [
+      { name: 'Dashboard', path: '', component: ManagerDashboard, icon: <DashboardIcon />, showInSidebar: true },
+      { name: 'New Leads', path: 'new-leads', component: ManagerNewLeads, icon: <LeadsIcon />, showInSidebar: true },
+      { name: 'History', path: 'history', component: ManagerHistory, icon: <FilesIcon />, showInSidebar: true },
     ],
   },
 ];

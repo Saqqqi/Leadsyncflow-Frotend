@@ -50,7 +50,19 @@ export const dataMinorAPI = {
 
     updateLeadEmailStatus: async (leadId, emailData) => {
         const token = tokenManager.getToken();
-        const response = await axiosInstance.patch(`/api/verifier/leads/${leadId}/emails/status`, emailData, {
+        const response = await axiosInstance.post(`/api/verifier/leads/${leadId}/update-emails`, {
+            emails: [emailData]
+        }, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+        return response.data;
+    },
+
+    moveLeadToLeadQualifiers: async (leadId) => {
+        const token = tokenManager.getToken();
+        const response = await axiosInstance.post(`/api/verifier/leads/${leadId}/move-to-lq`, {}, {
             headers: {
                 Authorization: `Bearer ${token}`,
             },

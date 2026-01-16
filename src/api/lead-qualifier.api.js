@@ -43,9 +43,9 @@ export const lqAPI = {
             `/api/lq/leads/${leadId}/assign-manager`,
             { managerId, commentText, responseType, responseValue },
             {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
             }
         );
         return response.data;

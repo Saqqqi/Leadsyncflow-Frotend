@@ -3,11 +3,44 @@ export const getRoleBasedRedirect = (userRole) => {
   const roleRedirectMap = {
     'Super Admin': '/gds/super-admin',
     'Lead qualifiers': '/gds/lead-qualifier',
+    'Lead Qualifiers': '/gds/lead-qualifier',
     'Team lead( Lead qualifiers,)': '/gds/lead-qualifier',
-    'Data Minors': '/gds/data-minor'
+    'Data Minors': '/gds/data-minor',
+    'Team lead (data minors )': '/gds/data-minor',
+    'Verifier': '/gds/verifier',
+    'Manager': '/gds/manager'
   };
 
+
   return roleRedirectMap[userRole] || '/gds/super-admin'; // Default fallback
+};
+
+export const getRoleDisplayName = (userRole) => {
+  const roleNameMap = {
+    'Super Admin': 'Super Admin',
+    'Lead qualifiers': 'Lead Qualifier',
+    'Lead Qualifiers': 'Lead Qualifier',
+    'Team lead( Lead qualifiers,)': 'Lead Qualifier',
+    'Data Minors': 'Data Minor',
+    'Team lead (data minors )': 'Data Minor',
+    'Verifier': 'Verifier',
+    'Manager': 'Manager'
+  };
+
+  return roleNameMap[userRole] || 'Dashboard';
+};
+
+export const getDashboardTitleFromPath = (pathname) => {
+  const pathTitleMap = {
+    '/gds/super-admin': 'Super Admin Dashboard',
+    '/gds/lead-qualifier': 'Lead Qualifier Dashboard',
+    '/gds/data-minor': 'Data Minor Dashboard',
+    '/gds/verifier': 'Verifier Dashboard',
+    '/gds/manager': 'Manager Dashboard'
+  };
+
+  const match = Object.keys(pathTitleMap).find(base => pathname?.startsWith(base));
+  return match ? pathTitleMap[match] : 'Dashboard';
 };
 
 import tokenManager from './tokenManager';

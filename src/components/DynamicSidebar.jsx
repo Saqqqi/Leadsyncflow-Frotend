@@ -1,9 +1,12 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { dashboardConfig } from '../dashboards/dashboardConfig';
+import { useLeadCounts } from '../hooks/useLeadCounts';
 
-export default function DynamicSidebar({ isOpen, onClose, onToggle }) {
+export default function DynamicSidebar({ isOpen, onClose, onToggle, user }) {
   const location = useLocation();
+  const userRole = user?.role || user?.department;
+  const counts = useLeadCounts(userRole);
 
   // Find current dashboard and page
   const currentPath = location.pathname;
@@ -34,33 +37,32 @@ export default function DynamicSidebar({ isOpen, onClose, onToggle }) {
         }}>
 
         {/* Sidebar Header */}
-        <div className="h-16 border-b flex items-center px-4 md:px-6"
+        <div className="h-20 border-b flex items-center justify-center px-4 md:px-6"
           style={{ borderColor: 'var(--border-primary)' }}>
-          <div className="flex items-center gap-2 md:gap-3">
-            <div className="flex h-7 w-7 md:h-8 md:w-8 items-center justify-center rounded-lg"
-              style={{
-                background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
-                boxShadow: '0 4px 12px rgba(69, 104, 130, 0.3)'
-              }}>
-              <svg className="h-4 w-4 md:h-5 md:w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-            </div>
-            <span className="text-base md:text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
-              Lead Sync Flow
-            </span>
-          </div>
-
           {/* Mobile close button */}
           <button
             onClick={onToggle}
-            className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            className="absolute left-4 md:left-6 p-1.5 rounded-lg hover:bg-[var(--bg-tertiary)] transition-all active:scale-95"
             style={{ color: 'var(--text-primary)' }}
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
+
+          {/* Logo */}
+          <div className="flex items-center justify-center">
+            <img 
+              src="/Logo - Lead Sync.(Lght Mode).svg" 
+              alt="Lead Sync Flow Logo" 
+              className="h-20 w-20 md:h-24 md:w-24 dark:hidden"
+            />
+            <img 
+              src="/Logo - Lead Sync.(Dark Mode).svg" 
+              alt="Lead Sync Flow Logo" 
+              className="h-20 w-20 md:h-24 md:w-24 hidden dark:block"
+            />
+          </div>
         </div>
 
         {/* Sidebar Expansion Toggle Line (Desktop) */}
@@ -90,16 +92,27 @@ export default function DynamicSidebar({ isOpen, onClose, onToggle }) {
             <div className="space-y-2">
               {/* Current Dashboard Header */}
               <div className="mb-3 md:mb-4">
-                <div className="flex items-center gap-2 md:gap-3 px-3 py-2 rounded-lg bg-blue-50 dark:bg-blue-900/20">
-                  <span className="flex-shrink-0 text-lg md:text-xl">{currentDashboard.icon}</span>
-                  <span className="font-semibold text-sm md:text-base" style={{ color: 'var(--accent-primary)' }}>
+                <div className="flex items-center gap-2 md:gap-3 px-3 py-2 rounded-xl"
+                  style={{ backgroundColor: 'var(--bg-tertiary)', border: '1px solid var(--border-primary)' }}>
+                  <span className="flex-shrink-0 text-lg md:text-xl text-[var(--accent-primary)]">{currentDashboard.icon}</span>
+                  <span className="font-black text-sm md:text-base uppercase tracking-wider" style={{ color: 'var(--accent-primary)' }}>
                     {currentDashboard.name}
                   </span>
                 </div>
               </div>
 
               {/* Current Dashboard Pages */}
-              {currentDashboard.pages.filter(page => page.showInSidebar !== false).map((page) => {
+              {currentDashboard.pages.filter(page => {
+                // Check if page should be shown in sidebar
+                if (page.showInSidebar === false) return false;
+
+                // Check role permissions if defined
+                if (page.allowedRoles && (!userRole || !page.allowedRoles.includes(userRole))) {
+                  return false;
+                }
+
+                return true;
+              }).map((page) => {
                 const pagePath = `${currentDashboard.basePath}${page.path ? '/' + page.path : ''}`;
                 const isPageActive = currentPath === pagePath;
                 const showInSidebar = page.showInSidebar !== false; // Default to true
@@ -111,22 +124,26 @@ export default function DynamicSidebar({ isOpen, onClose, onToggle }) {
                     onClick={() => {
                       if (window.innerWidth < 1024) onClose();
                     }}
-                    className={`
-                      flex items-center gap-2 md:gap-3 px-3 py-2 rounded-lg transition-all duration-200
-                      ${isPageActive
-                        ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                        : 'hover:bg-gray-100 dark:hover:bg-gray-800'
-                      }
-                    `}
+                    className="flex items-center gap-2 md:gap-3 px-3 py-2.5 rounded-xl transition-all duration-300 group/item"
                     style={{
-                      color: isPageActive ? 'var(--accent-primary)' : 'var(--text-secondary)'
+                      backgroundColor: isPageActive ? 'var(--accent-primary)' : 'transparent',
+                      color: isPageActive ? '#FFFFFF' : 'var(--text-secondary)',
+                      boxShadow: isPageActive ? '0 10px 20px -5px var(--accent-primary)' : 'none'
                     }}
                   >
-                    <span className="flex-shrink-0 text-base md:text-lg">{page.icon}</span>
-                    <span className="text-sm md:text-base">{page.name}</span>
-                    {isPageActive && (
-                      <div className="ml-auto w-1.5 h-1.5 md:w-2 md:h-2 rounded-full"
-                        style={{ backgroundColor: 'var(--accent-primary)' }}></div>
+                    <span className={`flex-shrink-0 text-base md:text-lg ${isPageActive ? 'text-white' : 'group-hover/item:text-[var(--accent-primary)]'}`}>
+                      {page.icon}
+                    </span>
+                    <span className={`text-sm md:text-base font-bold ${isPageActive ? 'text-white' : 'group-hover/item:text-[var(--text-primary)]'}`}>
+                      {page.name}
+                    </span>
+                    {page.name === 'New Leads' && counts.newLeads > 0 && (
+                      <span className="ml-auto bg-rose-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full animate-pulse shadow-lg shadow-rose-500/40">
+                        {counts.newLeads}
+                      </span>
+                    )}
+                    {isPageActive && !(page.name === 'New Leads' && counts.newLeads > 0) && (
+                      <div className="ml-auto w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_8px_white]" />
                     )}
                   </Link>
                 );

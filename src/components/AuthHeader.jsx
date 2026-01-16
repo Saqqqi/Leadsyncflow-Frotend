@@ -1,29 +1,44 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
+import tokenManager from '../utils/tokenManager';
+import { getRoleBasedRedirect } from '../utils/roleRedirect';
 
-const AuthHeader = () => {
+const AuthHeader = ({ isLandingPage = false }) => {
     const { theme, toggleTheme } = useTheme();
+    const navigate = useNavigate();
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [user, setUser] = useState(null);
+
+    useEffect(() => {
+        const token = tokenManager.getToken();
+        if (token && tokenManager.isCurrentTokenValid()) {
+            setIsLoggedIn(true);
+            setUser(tokenManager.getUser());
+        } else {
+            setIsLoggedIn(false);
+            setUser(null);
+        }
+    }, []);
+
+    const handleGoToDashboard = () => {
+        if (user) {
+            const path = getRoleBasedRedirect(user.role || user.department);
+            navigate(path);
+        }
+    };
 
     return (
-        <header className="fixed top-0 left-0 w-full z-50 py-6 px-8 flex items-center justify-between transition-all duration-300 backdrop-blur-md border-b"
+        <header className="fixed top-0 w-full z-50 py-6 px-8 flex items-center justify-between transition-all duration-300 backdrop-blur-md border-b"
             style={{
                 borderColor: 'var(--border-primary)',
                 backgroundColor: theme === 'dark' ? 'rgba(27, 60, 83, 0.7)' : 'rgba(255, 255, 255, 0.7)'
             }}>
-            <Link to="/" className="flex items-center gap-3 group">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center transition-transform group-hover:rotate-12"
-                    style={{ background: 'linear-gradient(135deg, var(--accent-success), var(--color-secondary))', boxShadow: '0 8px 20px -5px var(--accent-success)' }}>
-                    <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                </div>
-                <span className="text-2xl font-black tracking-tighter" style={{ color: 'var(--text-primary)' }}>
-                    Lead<span style={{ color: 'var(--accent-success)' }}>Sync</span>
-                </span>
+            <Link to="/" className="flex items-center gap-4 group pl-4"> {/* Added pl-4 for left padding */}
+                <img src="/Logo - Lead Sync.(Dark Mode).svg" alt="LeadSync Logo" className="h-16 w-auto transition-transform group-hover:scale-105" />
             </Link>
 
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-6 pr-8"> {/* Increased pr-4 to pr-8 */}
                 {/* Theme Toggle */}
                 <button
                     onClick={toggleTheme}
@@ -42,12 +57,29 @@ const AuthHeader = () => {
                     )}
                 </button>
 
-                <Link to="/" className="flex items-center gap-2 text-sm font-bold opacity-70 hover:opacity-100 transition-opacity" style={{ color: 'var(--text-primary)' }}>
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                    </svg>
-                    Back to Home
-                </Link>
+                {isLandingPage ? (
+                    isLoggedIn ? (
+                        <button onClick={handleGoToDashboard} className="px-6 py-2.5 rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-lg shadow-[var(--accent-primary)]/20"
+                            style={{ backgroundColor: 'var(--accent-primary)', color: 'white' }}>
+                            Dashboard
+                        </button>
+                    ) : (
+                        <>
+                            <Link to="/login" className="text-sm font-bold opacity-70 hover:opacity-100 transition-opacity">Sign In</Link>
+                            <Link to="/signup" className="px-6 py-2.5 rounded-full border font-bold text-sm transition-all hover:bg-[var(--accent-primary)]/10"
+                                style={{ color: 'var(--accent-primary)', borderColor: 'var(--accent-primary)' }}>
+                                Start Flow
+                            </Link>
+                        </>
+                    )
+                ) : (
+                    <Link to="/" className="flex items-center gap-2 text-sm font-bold opacity-70 hover:opacity-100 transition-opacity" style={{ color: 'var(--text-primary)' }}>
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        </svg>
+                        Back to Home
+                    </Link>
+                )}
             </div>
         </header>
     );

@@ -1,35 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import tokenManager from '../utils/tokenManager';
-import { getRoleBasedRedirect } from '../utils/roleRedirect';
+import React from 'react';
+import { Link } from 'react-router-dom';
+import AuthHeader from '../components/AuthHeader';
 
 const LandingPage = () => {
-    const navigate = useNavigate();
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
-    const [user, setUser] = useState(null);
-    const [scrolled, setScrolled] = useState(false);
-
-    useEffect(() => {
-        const token = tokenManager.getToken();
-        if (token && tokenManager.isCurrentTokenValid()) {
-            setIsLoggedIn(true);
-            setUser(tokenManager.getUser());
-        }
-
-        const handleScroll = () => {
-            setScrolled(window.scrollY > 50);
-        };
-        window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
-    }, []);
-
-    const handleGoToDashboard = () => {
-        if (user) {
-            const path = getRoleBasedRedirect(user.role || user.department);
-            navigate(path);
-        }
-    };
-
     return (
         <div className="min-h-screen font-sans selection:bg-[var(--accent-primary)]/30 selection:text-[var(--text-primary)]" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
             {/* Dynamic Background */}
@@ -40,45 +13,7 @@ const LandingPage = () => {
                     style={{ background: 'radial-gradient(circle, var(--accent-secondary) 0%, transparent 70%)' }}></div>
             </div>
 
-            {/* Navigation */}
-            <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${scrolled ? 'py-4 backdrop-blur-lg border-b' : 'py-6'}`}
-                style={{
-                    borderColor: scrolled ? 'var(--border-primary)' : 'transparent',
-                    backgroundColor: scrolled ? 'var(--bg-primary)' : 'transparent',
-                    opacity: scrolled ? 0.95 : 1
-                }}>
-                <div className="container mx-auto px-6 flex items-center justify-between">
-                    <div className="flex items-center gap-3 group cursor-pointer" onClick={() => navigate('/')}>
-                        <div className="w-10 h-10 rounded-xl flex items-center justify-center transition-transform group-hover:rotate-12"
-                            style={{
-                                background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
-                                boxShadow: '0 8px 20px -5px var(--accent-primary)'
-                            }}>
-                            <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                            </svg>
-                        </div>
-                        <span className="text-2xl font-black tracking-tighter">Lead<span style={{ color: 'var(--accent-primary)' }}>Sync</span></span>
-                    </div>
-
-                    <div className="flex items-center gap-6">
-                        {isLoggedIn ? (
-                            <button onClick={handleGoToDashboard} className="px-6 py-2.5 rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-lg shadow-[var(--accent-primary)]/20"
-                                style={{ backgroundColor: 'var(--accent-primary)', color: 'white' }}>
-                                Dashboard
-                            </button>
-                        ) : (
-                            <>
-                                <Link to="/login" className="text-sm font-bold opacity-70 hover:opacity-100 transition-opacity">Sign In</Link>
-                                <Link to="/signup" className="px-6 py-2.5 rounded-full border font-bold text-sm transition-all hover:bg-[var(--accent-primary)]/10"
-                                    style={{ color: 'var(--accent-primary)', borderColor: 'var(--accent-primary)' }}>
-                                    Start Flow
-                                </Link>
-                            </>
-                        )}
-                    </div>
-                </div>
-            </nav>
+            <AuthHeader isLandingPage={true} />
 
             {/* Hero Section */}
             <main className="relative z-10 container mx-auto px-6 pt-40 pb-20">

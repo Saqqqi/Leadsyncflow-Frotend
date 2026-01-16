@@ -105,20 +105,7 @@ export default function LoginPage() {
             <div className="w-full max-w-lg">
                 {/* Logo Header */}
                 <div className="text-center mb-10">
-                    <div className="flex items-center justify-center gap-3 mb-4">
-                        <div className="flex h-14 w-14 items-center justify-center rounded-xl"
-                            style={{
-                                background: 'linear-gradient(135deg, var(--accent-success), var(--color-secondary))',
-                                boxShadow: '0 10px 25px rgba(52, 211, 153, 0.3)'
-                            }}>
-                            <svg className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                            </svg>
-                        </div>
-                        <div className="text-left">
-                            <span className="text-3xl font-black tracking-tighter" style={{ color: 'var(--text-primary)' }}>Lead<span style={{ color: 'var(--accent-success)' }}>Sync</span></span>
-                        </div>
-                    </div>
+                    <img src="/Logo - Lead Sync.(Dark Mode).svg" alt="LeadSync Logo" className="h-14 w-auto mx-auto mb-6" />
                 </div>
 
                 {/* Login Card */}

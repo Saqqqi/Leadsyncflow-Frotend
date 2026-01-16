@@ -1,32 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Outlet, useLocation } from 'react-router-dom';
+import { useTheme } from '../context/ThemeContext';
 
 import DynamicSidebar from '../components/DynamicSidebar';
 import TokenStatus from '../components/TokenStatus';
 import tokenManager from '../utils/tokenManager';
 import { dashboardConfig } from '../dashboards/dashboardConfig';
+import { getRoleDisplayName, getDashboardTitleFromPath } from '../utils/roleRedirect';
 
 export default function DashboardLayout() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  /* Theme Management */
-  const [theme, setTheme] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('theme') || 'dark';
-    }
-    return 'dark';
-  });
-
-  useEffect(() => {
-    const root = window.document.documentElement;
-    root.setAttribute('data-theme', theme);
-    localStorage.setItem('theme', theme);
-  }, [theme]);
-
-  const toggleTheme = () => {
-    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
-  };
+  /* Global Theme Management */
+  const { theme, toggleTheme } = useTheme();
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth >= 1024);
   const [user, setUser] = useState(null);
@@ -49,6 +36,23 @@ export default function DashboardLayout() {
     const userData = tokenManager.getUser();
     setUser(userData);
   }, []);
+
+  // Dynamic page title (tab title)
+  useEffect(() => {
+    const role = user?.role || user?.department;
+    const roleLabel = role ? getRoleDisplayName(role) : null;
+
+    const baseTitle = 'Lead Sync ';
+    const dashboardLabel = currentDashboard?.name || getDashboardTitleFromPath(location.pathname);
+    const pageLabel = currentPage?.name;
+
+    const parts = [baseTitle];
+    if (dashboardLabel) parts.push(dashboardLabel);
+    if (pageLabel && pageLabel !== dashboardLabel) parts.push(pageLabel);
+    if (roleLabel) parts.push(roleLabel);
+
+    document.title = parts.filter(Boolean).join(' • ');
+  }, [location.pathname, currentDashboard?.name, currentPage?.name, user?.role, user?.department]);
 
   // Handle responsive sidebar
   useEffect(() => {

@@ -48,8 +48,8 @@ const LeadQualifierDashboard = lazy(() => import("../dashboards/lead-qualifier/p
 const DataMinorDashboard = lazy(() => import("../dashboards/data-minor/pages/DataMinorDashboard"));
 const InputFiles = lazy(() => import("../dashboards/data-minor/pages/InputFiles"));
 const Employees = lazy(() => import("../dashboards/data-minor/pages/EmployeeListing"));
-const VerifierDashboard = lazy(() => import("../dashboards/verifier/pages/VerifierDashboard"));
-const VerifierLeads = lazy(() => import("../dashboards/verifier/pages/VerifierLeads"));
+const VerifierDashboard = lazy(() => import("../dashboards/Verifier/pages/VerifierDashboard"));
+const VerifierLeads = lazy(() => import("../dashboards/Verifier/pages/VerifierLeads"));
 const LeadQualifierLeads = lazy(() => import("../dashboards/lead-qualifier/pages/LeadQualifierLeads"));
 const ManagerDashboard = lazy(() => import("../dashboards/manager/pages/ManagerDashboard"));
 const ManagerNewLeads = lazy(() => import("../dashboards/manager/pages/ManagerNewLeads"));

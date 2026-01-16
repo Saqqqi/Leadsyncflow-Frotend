@@ -25,107 +25,93 @@
 
 ## 💡 Overview
 
-**Lead Sync Flow** is a sophisticated platform designed to streamline lead acquisition, management, and conversion. It features a modern design system with a premium "Glassmorphism" aesthetic, providing a seamless user experience across multiple administrative and operational roles.
+**Lead Sync Flow** is a sophisticated platform designed to streamline lead acquisition, management, and conversion. It features a modern design system with a premium "Glassmorphism" aesthetic, providing a seamless user experience across a strictly role-based operational environment.
 
 ---
 
-## ✨ Features
+## ✨ Key Features
 
-### 🔐 Advanced Authentication & Security
-- **Multi-Role System**: Support for Super Admin, Admin, Manager, Lead Qualifier, Data Minor, and more.
-- **Request-Based Signup**: New users register with a department; accounts must be approved by Super Admin before access is granted.
-- **JWT Session Management**: Secure token-based authentication with automatic expiry monitoring and auto-logout.
-- **Middleware Protection**: Robust server-side verification with detailed audit logging for security events.
+### 🔐 Multi-Tier Security & Access
+- **Dynamic Role-Based Access Control (RBAC)**: Secure access for Super Admin, Manager, Verifier, Lead Qualifier, and Data Minor.
+- **Request-Based Signup**: New users register by department; accounts require manual Super Admin approval for activation.
+- **Managed Session Security**: JWT-based authentication with high-integrity token management and auto-logout.
+- **Protected Routing**: Advanced route guards ensuring users only see content authorized for their specific role.
 
-### 🎨 Premium UI/UX
-- **Modern Aesthetic**: High-contrast dark mode with vibrant glassmorphism effects and fluid gradients.
-- **Responsive Layout**: Fully optimized for Desktop, Tablet, and Mobile devices.
-- **Micro-interactions**: Smooth transitions, hover effects, and loading states for an elite user experience.
-- **Real-time Feedback**: Interactive notifications and status badges.
+### 🎨 Elite UI/UX Architecture
+- **Glassmorphism Aesthetic**: Modern dark-themed interface with vibrant gradients, frosted glass effects, and depth.
+- **Fully Responsive Core**: Seamless transition between Desktop, Tablet, and Mobile views.
+- **Micro-animations**: Fluid transitions and interactive elements for a premium software feel.
+- **Real-time UI Sync**: Instant feedback on actions with custom state management.
 
-### 🛠️ Operation Features
-- **Centralized Dashboard Configuration**: Easily manageable dynamic routing system.
-- **Lead Pipeline**: Visual tracking of leads across different stages.
-- **User Management**: Comprehensive tools for approving, rejecting, and promoting users.
-- **Analytics Engine**: Visual data representation for performance tracking.
+### ⚙️ Operational Excellence
+- **Config-Driven Dashboards**: Centralized routing system in `dashboardConfig.jsx` for rapid scaling.
+- **Dynamic Routing Engine**: Automatic route generation based on role configuration.
+- **Lead Pipeline**: Multi-stage validation from entry (Data Minor) to verification (Verifier) to qualification (Lead Qualifier).
+- **Real-time Duplicate Prevention**: Email and phone duplicate checking during data entry.
+- **Audit & Analytics**: Visual performance metrics for supervisors and admins.
 
 ---
 
 ## 🏗️ Directory Structure
 
 ```
-leadsyncflow/
-├── 📁 leadsyncflow/           # 🔙 Backend (Node.js/Express)
-│   ├── 📁 config/             # Database & environment config
-│   ├── 📁 controllers/        # Business logic for auth & admin
-│   ├── 📁 middlewares/        # Auth guards & Super Admin verification
-│   ├── 📁 models/             # Mongoose schemas (User, etc.)
-│   └── 📁 routes/             # API endpoint definitions
-└── 📁 src/                    # 🔜 Frontend (React/Vite)
-    ├── 📁 api/                # Axios instance & centralized API calls
-    ├── 📁 auth/               # Signup/Login flows with approval logic
-    ├── 📁 components/         # Reusable UI & Token Status monitoring
-    ├── 📁 dashboards/         # Role-specific dashboard pages
-    │   ├── 📁 super-admin/    # Master control panel
-    │   ├── 📁 data-minor/     # Data entry & file management
-    │   └── 📁 lead-qualifier/ # Lead verification workflows
-    ├── 📁 layouts/            # Shared Dashboard Layout with sidebar/header
-    ├── 📁 routes/             # Dynamic and Protected route management
-    └── 📁 utils/              # Token manager & role-based helpers
+src/
+├── 📁 api/                # 🌐 Centralized API layer (admin, data-minor, etc.)
+├── 📁 auth/               # 🔑 Login/Signup flows & Authentication UI
+├── 📁 components/         # 🧱 Shared UI components & Status monitoring
+├── 📁 layouts/            # 🖼️ Persistent Dashboard & Auth layouts
+├── 📁 routes/             # 🚦 Dynamic & Role-based routing logic
+├── 📁 dashboards/         # 📊 Feature-rich role-specific modules
+│   ├── 📁 super-admin/    # Governance: User approvals, roles, global stats
+│   ├── 📁 data-minor/     # Operations: Lead entry, duplicate checks, uploads
+│   ├── 📁 Verifier/       # Validation: Email verification, lead cleansing
+│   ├── 📁 lead-qualifier/ # Qualification: Lead assignment, scoring, history
+│   ├── 📁 manager/        # Leadership: Distribution tracking, team history
+│   └── 📄 dashboardConfig.jsx # 🎯 The "Brain" of the dynamic routing system
+└── 📁 utils/              # 🛠️ Token managers, role helpers & formatters
 ```
 
 ---
 
 ## 📊 Dashboards & Roles
 
-The system is built on a modular configuration allowing dedicated environments for each role:
+The system utilizes a modular **Configuration-First** approach:
 
-| Dashboard | Key Responsibilities | Primary Features |
-|-----------|----------------------|------------------|
-| **Super Admin** | Platform Governance | User Approval, Role Assignment, Global Analytics |
-| **Admin** | Operations Oversight | Reporting, Team Management, Data Review |
-| **Manager** | Team Leadership | Performance Tracking, Team Coordination |
-| **Lead Qualifier** | Lead Validation | Qualification Pipeline, Status Updates |
-| **Data Minor** | Data Management | Bulk File Uploads, Lead Entry, Employee Lists |
-| **Support** | System Assistance | Ticket Management, User Support |
+| Dashboard | Core Responsibility | Key Features |
+|-----------|----------------------|--------------|
+| **Super Admin** | Platform Governance | User Approval, Role Assignment, Global Stats |
+| **Manager** | Strategic Oversight | Team History, Lead Distribution, Performance Tracking |
+| **Verifier** | Data Integrity | Email Status Updates, Lead Cleansing, Batch Move |
+| **Lead Qualifier** | Lead Maturity | Lead Scoring, Status Pipelines, Client Assignment |
+| **Data Minor** | Acquisition | Bulk Uploads, Lead Entry, Real-time Duplicate Check |
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Technical Architecture
 
-### 📋 Prerequisites
-- **Node.js**: v18.0+
-- **MongoDB**: Account or local installation
-- **npm**: v9.0+
+### 📄 Config-Based Routing
+The application uses a centralized `dashboardConfig.jsx` which defines:
+- **Roles**: Allowed departments for each dashboard.
+- **Base Paths**: Root URL for each module.
+- **Pages**: Dynamic list of views with path, component, and sidebar visibility.
 
-### ⚡ Installation
+This allows adding new pages or entire dashboards without modifying the main routing logic.
 
-#### 1️⃣ Environment Configuration
-Create a `.env` file in both `leadsyncflow/` (Backend) and the root (Frontend) directories based on the project requirements.
-
-#### 2️⃣ Backend Setup
-```bash
-cd leadsyncflow
-npm install
-npm run start # Typically runs on port 5000
-```
-
-#### 3️⃣ Frontend Setup
-```bash
-# In the root directory
-npm install
-npm run dev # Typically runs on port 5173
-```
+### 🔌 API Integration
+- **Axios Instance**: Standardized headers and error handling.
+- **Modular APIs**: Segregated logic for Admin, Data Minor, and shared services.
+- **Token Manager**: Centralized handling of React-to-Storage security.
 
 ---
 
 ## 🛠️ Technology Stack
 
-- **Frontend**: React 18, Vite, TailwindCSS, React Router 6, Axios
-- **Backend**: Node.js, Express, Mongoose, JWT (JsonWebToken)
-- **State Management**: React Hooks & Context
-- **Icons**: Lucide React / Custom SVG
-- **Styling**: Modern CSS Variables & Utility-first CSS
+- **Core**: React 18, Vite (for blazing fast builds)
+- **Routing**: React Router 6 (with nested & dynamic configurations)
+- **Styling**: TailwindCSS & Custom CSS Environment Variables
+- **API**: Axios (with custom interceptors)
+- **Icons**: Custom SVG Icons & Lucide React
+- **Security**: JWT, localStorage Token Handling, Role Hierarchy
 
 ---
 

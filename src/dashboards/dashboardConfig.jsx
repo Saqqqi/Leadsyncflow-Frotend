@@ -55,8 +55,27 @@ const ManagerDashboard = lazy(() => import("../dashboards/manager/pages/ManagerD
 const ManagerNewLeads = lazy(() => import("../dashboards/manager/pages/ManagerNewLeads"));
 const ManagerHistory = lazy(() => import("../dashboards/manager/pages/ManagerHistory"));
 
+// Admin Pages
+const AdminDashboard = lazy(() => import("../dashboards/admin/pages/AdminDashboard"));
+const AdminDataMinerLeads = lazy(() => import("../dashboards/admin/pages/DataMinerLeads"));
+const AdminLeadQualifierLeads = lazy(() => import("../dashboards/admin/pages/LeadQualifierLeads"));
+const AdminManagerLeads = lazy(() => import("../dashboards/admin/pages/ManagerLeads"));
+
 // Centralized Configuration
 export const dashboardConfig = [
+  {
+    id: 'admin',
+    name: 'Admin',
+    role: 'Admin',
+    basePath: '/gds/admin',
+    icon: <DashboardIcon />,
+    pages: [
+      { name: 'Dashboard', path: '', component: AdminDashboard, icon: <DashboardIcon />, showInSidebar: true },
+      { name: 'Data Miners', path: 'data-miner-leads', component: AdminDataMinerLeads, icon: <FilesIcon />, showInSidebar: true },
+      { name: 'Lead Qualifiers', path: 'lead-qualifier-leads', component: AdminLeadQualifierLeads, icon: <UsersIcon />, showInSidebar: true },
+      { name: 'Managers', path: 'manager-leads', component: AdminManagerLeads, icon: <LeadsIcon />, showInSidebar: true },
+    ],
+  },
   {
     id: 'super-admin',
     name: 'Super Admin',

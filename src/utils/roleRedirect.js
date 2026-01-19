@@ -1,6 +1,7 @@
 // Role-based routing utility
 export const getRoleBasedRedirect = (userRole) => {
   const roleRedirectMap = {
+    'Admin': '/gds/admin',
     'Super Admin': '/gds/super-admin',
     'Lead qualifiers': '/gds/lead-qualifier',
     'Lead Qualifiers': '/gds/lead-qualifier',
@@ -12,11 +13,12 @@ export const getRoleBasedRedirect = (userRole) => {
   };
 
 
-  return roleRedirectMap[userRole] || '/gds/super-admin'; // Default fallback
+  return roleRedirectMap[userRole] || '/gds/admin'; // Default fallback
 };
 
 export const getRoleDisplayName = (userRole) => {
   const roleNameMap = {
+    'Admin': 'Admin',
     'Super Admin': 'Super Admin',
     'Lead qualifiers': 'Lead Qualifier',
     'Lead Qualifiers': 'Lead Qualifier',
@@ -32,6 +34,7 @@ export const getRoleDisplayName = (userRole) => {
 
 export const getDashboardTitleFromPath = (pathname) => {
   const pathTitleMap = {
+    '/gds/admin': 'Admin Dashboard',
     '/gds/super-admin': 'Super Admin Dashboard',
     '/gds/lead-qualifier': 'Lead Qualifier Dashboard',
     '/gds/data-minor': 'Data Minor Dashboard',

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { managerAPI } from '../../manager/api/manager.api';
+import { managerAPI } from '../../../api/manager.api';
 
 export default function ManagerLeads() {
     const [leads, setLeads] = useState([]);

@@ -95,7 +95,11 @@ export const useLeadManager = () => {
                 responseValue
             );
             if (response.success) {
-                setLeads(prev => prev.filter(l => l._id !== leadId));
+                setLeads(prev => prev.map(l =>
+                    l._id === leadId
+                        ? { ...l, stage: 'MANAGER', assignedTo: managerId, lqUpdatedBy: 'me' } // Simplified for local update
+                        : l
+                ));
                 return true;
             }
         } catch (err) {

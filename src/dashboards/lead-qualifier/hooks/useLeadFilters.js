@@ -5,6 +5,7 @@ export const useLeadFilters = (leads) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [activeTab, setActiveTab] = useState('ALL');
     const [dateFilter, setDateFilter] = useState('ALL');
+    const [customDate, setCustomDate] = useState('');
 
     const counts = useMemo(() => {
         const initialCounts = { ALL: 0, PENDING: 0, IN_CONVERSATION: 0, QUALIFIED: 0, DEAD: 0, TODAY: 0, THIS_WEEK: 0, PREVIOUS_WEEKS: 0, THIS_MONTH: 0 };
@@ -12,8 +13,13 @@ export const useLeadFilters = (leads) => {
             const submittedDate = new Date(lead.submittedDate);
 
             // Status counts
-            const status = lead.lqStatus || 'PENDING';
-            acc[status] = (acc[status] || 0) + 1;
+            // If lead is at MANAGER stage, it counts as QUALIFIED for this unified view
+            if (lead.stage === 'MANAGER' || lead.lqStatus === 'QUALIFIED') {
+                acc['QUALIFIED'] = (acc['QUALIFIED'] || 0) + 1;
+            } else {
+                const status = lead.lqStatus || 'PENDING';
+                acc[status] = (acc[status] || 0) + 1;
+            }
             acc['ALL'] = (acc['ALL'] || 0) + 1;
 
             // Date counts
@@ -31,23 +37,37 @@ export const useLeadFilters = (leads) => {
             const matchesSearch = (lead.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
                 (lead.emails?.some(e => (e.value || '').toLowerCase().includes(searchTerm.toLowerCase())));
 
-            const currentStatus = lead.lqStatus || 'PENDING';
-            const matchesStatus = activeTab === 'ALL' || currentStatus === activeTab;
+            let matchesStatus = false;
+            if (activeTab === 'ALL') {
+                matchesStatus = true;
+            } else if (activeTab === 'QUALIFIED') {
+                // Show both leads marked as qualified AND leads already assigned to managers
+                matchesStatus = lead.lqStatus === 'QUALIFIED' || lead.stage === 'MANAGER';
+            } else {
+                // For other tabs (PENDING, DEAD, etc), exclude leads that have moved to MANAGER stage
+                const currentStatus = lead.lqStatus || 'PENDING';
+                matchesStatus = lead.stage !== 'MANAGER' && currentStatus === activeTab;
+            }
 
             const submittedDate = new Date(lead.submittedDate);
             let matchesDate = true;
 
-            switch (dateFilter) {
-                case 'TODAY': matchesDate = isToday(submittedDate); break;
-                case 'THIS_WEEK': matchesDate = isThisWeek(submittedDate); break;
-                case 'PREVIOUS_WEEKS': matchesDate = isPreviousWeeks(submittedDate); break;
-                case 'THIS_MONTH': matchesDate = isThisMonth(submittedDate); break;
-                default: matchesDate = true;
+            if (customDate) {
+                const rowDate = submittedDate.toISOString().split('T')[0];
+                matchesDate = rowDate === customDate;
+            } else {
+                switch (dateFilter) {
+                    case 'TODAY': matchesDate = isToday(submittedDate); break;
+                    case 'THIS_WEEK': matchesDate = isThisWeek(submittedDate); break;
+                    case 'PREVIOUS_WEEKS': matchesDate = isPreviousWeeks(submittedDate); break;
+                    case 'THIS_MONTH': matchesDate = isThisMonth(submittedDate); break;
+                    default: matchesDate = true;
+                }
             }
 
             return matchesSearch && matchesStatus && matchesDate;
         });
-    }, [leads, searchTerm, activeTab, dateFilter]);
+    }, [leads, searchTerm, activeTab, dateFilter, customDate]);
 
     return {
         searchTerm,
@@ -56,6 +76,8 @@ export const useLeadFilters = (leads) => {
         setActiveTab,
         dateFilter,
         setDateFilter,
+        customDate,
+        setCustomDate,
         counts,
         filteredLeads
     };

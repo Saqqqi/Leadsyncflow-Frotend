@@ -107,67 +107,74 @@ export default function DataMinerLeads() {
     return (
         <div className="p-4 sm:p-6 md:p-8 space-y-6 min-h-screen animate-fadeIn max-w-[1800px] mx-auto">
             {/* Header Area */}
-            <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-6 bg-[var(--bg-secondary)] p-8 rounded-[40px] border border-[var(--border-primary)] shadow-2xl relative overflow-hidden">
+            <div className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-[32px] p-6 shadow-xl relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--accent-primary)] opacity-5 rounded-full blur-[100px] -mr-32 -mt-32" />
 
-                <div className="relative z-10">
-                    <div className="flex items-center gap-4 mb-2">
-                        <div className="p-3 bg-[var(--accent-primary)]/10 rounded-2xl text-[var(--accent-primary)]">
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+                <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6 relative z-10">
+                    <div>
+                        <div className="flex items-center gap-4 mb-2">
+                            <div className="p-2.5 bg-[var(--accent-primary)]/10 rounded-xl text-[var(--accent-primary)]">
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                                </svg>
+                            </div>
+                            <h1 className="text-3xl font-black tracking-tight text-[var(--text-primary)]">
+                                Master <span className="text-[var(--accent-primary)]">Lead Repository</span>
+                            </h1>
                         </div>
-                        <h1 className="text-4xl font-black tracking-tighter text-[var(--text-primary)]">
-                            Master <span className="text-[var(--accent-primary)]">Lead Repository</span>
-                        </h1>
+                        <p className="text-[13px] font-bold text-[var(--text-secondary)] opacity-70">
+                            {view === 'TEAM' ? 'Browse Data Miners' : `Viewing ${view === 'ALL_LEADS' ? 'All System' : selectedUser?.name} Leads • ${filteredLeads.length} records`}
+                        </p>
                     </div>
-                    <p className="text-[var(--text-secondary)] font-medium">
-                        {view === 'TEAM' ? 'Browse Data Miners' : `Viewing ${view === 'ALL_LEADS' ? 'All System' : selectedUser?.name} Leads (${filteredLeads.length} records)`}
-                    </p>
-                </div>
 
-                <div className="flex flex-wrap items-center gap-4 relative z-10">
-                    <div className="flex p-1.5 bg-[var(--bg-tertiary)] rounded-2xl border border-[var(--border-primary)]">
+                    <div className="flex flex-wrap items-center gap-4">
+                        {/* View Switcher */}
+                        <div className="flex p-1 bg-[var(--bg-tertiary)] rounded-2xl border border-[var(--border-primary)]">
+                            <button
+                                onClick={() => { setView('ALL_LEADS'); setSelectedUser(null); }}
+                                className={`px-6 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${view === 'ALL_LEADS' ? 'bg-[var(--bg-secondary)] text-[var(--accent-primary)] shadow-sm' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}
+                            >
+                                All Leads
+                            </button>
+                            <button
+                                onClick={() => { setView('TEAM'); setSelectedUser(null); }}
+                                className={`px-6 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${view === 'TEAM' ? 'bg-[var(--bg-secondary)] text-[var(--accent-primary)] shadow-sm' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}
+                            >
+                                Team
+                            </button>
+                        </div>
+
+                        {view !== 'TEAM' && (
+                            <input
+                                type="date"
+                                value={filterDate}
+                                onChange={e => setFilterDate(e.target.value)}
+                                className="px-4 py-2.5 rounded-xl border border-[var(--border-primary)] bg-[var(--bg-tertiary)] text-xs font-bold focus:ring-2 ring-[var(--accent-primary)]/20 outline-none text-[var(--text-primary)]"
+                            />
+                        )}
+
+                        <div className="relative w-64 md:w-72">
+                            <input
+                                type="text"
+                                placeholder={view === 'TEAM' ? "Search miners..." : "Search leads..."}
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full bg-[var(--bg-tertiary)] border border-[var(--border-primary)] rounded-xl px-4 py-2.5 pl-10 text-xs font-bold focus:ring-2 ring-[var(--accent-primary)]/20 outline-none"
+                            />
+                            <svg className="absolute left-3.5 top-3 h-4 w-4 text-[var(--text-tertiary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </div>
+
                         <button
-                            onClick={() => { setView('ALL_LEADS'); setSelectedUser(null); }}
-                            className={`px-8 py-2.5 rounded-xl text-sm font-black transition-all ${view === 'ALL_LEADS' ? 'bg-[var(--bg-secondary)] text-[var(--accent-primary)] shadow-xl' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}
+                            onClick={() => view === 'TEAM' ? fetchTeam() : (selectedUser ? fetchUserLeads(selectedUser) : fetchAllLeads())}
+                            className="p-2.5 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-primary)] transition-all active:scale-95 hover:bg-[var(--accent-primary)] group"
                         >
-                            All Leads
-                        </button>
-                        <button
-                            onClick={() => { setView('TEAM'); setSelectedUser(null); }}
-                            className={`px-8 py-2.5 rounded-xl text-sm font-black transition-all ${view === 'TEAM' ? 'bg-[var(--bg-secondary)] text-[var(--accent-primary)] shadow-xl' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}
-                        >
-                            Team
+                            <svg className="w-4 h-4 text-[var(--text-secondary)] group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
                         </button>
                     </div>
-
-                    {view !== 'TEAM' && (
-                        <input
-                            type="date"
-                            value={filterDate}
-                            onChange={e => setFilterDate(e.target.value)}
-                            className="px-5 py-3 rounded-2xl border border-[var(--border-primary)] bg-[var(--bg-tertiary)] text-sm font-bold focus:ring-2 ring-[var(--accent-primary)]/20 outline-none text-[var(--text-primary)]"
-                        />
-                    )}
-
-                    <div className="relative w-72">
-                        <input
-                            type="text"
-                            placeholder={view === 'TEAM' ? "Search miners..." : "Search leads..."}
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full bg-[var(--bg-tertiary)] border border-[var(--border-primary)] rounded-[20px] px-6 py-3 pl-12 text-sm font-medium focus:ring-2 ring-[var(--accent-primary)]/20 outline-none"
-                        />
-                        <svg className="absolute left-4 top-3.5 h-5 w-5 text-[var(--text-tertiary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                    </div>
-
-                    <button
-                        onClick={() => view === 'TEAM' ? fetchTeam() : (selectedUser ? fetchUserLeads(selectedUser) : fetchAllLeads())}
-                        className="p-3 rounded-2xl bg-[var(--bg-tertiary)] border border-[var(--border-primary)] transition-all active:scale-95 hover:bg-[var(--accent-primary)] group"
-                    >
-                        <svg className="w-5 h-5 text-[var(--text-secondary)] group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-                    </button>
                 </div>
             </div>
 
@@ -238,9 +245,9 @@ export default function DataMinerLeads() {
                                         </td>
                                         <td className="px-6 py-4">
                                             <span className={`px-3 py-1.5 rounded-xl text-[10px] font-black tracking-widest uppercase border ${lead.stage === 'DM' ? 'bg-blue-500/10 text-blue-500 border-blue-500/20' :
-                                                    lead.stage === 'LQ' ? 'bg-purple-500/10 text-purple-500 border-purple-500/20' :
-                                                        lead.stage === 'MANAGER' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' :
-                                                            'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
+                                                lead.stage === 'LQ' ? 'bg-purple-500/10 text-purple-500 border-purple-500/20' :
+                                                    lead.stage === 'MANAGER' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' :
+                                                        'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
                                                 }`}>
                                                 {lead.stage}
                                             </span>

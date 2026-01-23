@@ -136,62 +136,74 @@ export default function AdminDashboard() {
     return (
         <div className="p-4 md:p-6 space-y-4 max-w-[1400px] mx-auto animate-fadeIn min-h-screen">
             {/* Header + Date Filters */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 px-2 mb-2">
-                <div>
-                    <h1 className="text-xl font-black text-[var(--text-primary)] tracking-tight">
-                        Admin <span className="text-[var(--accent-primary)]">Hub</span>
-                    </h1>
-                </div>
+            <div className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-[32px] p-6 shadow-xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--accent-primary)] opacity-5 rounded-full blur-[100px] -mr-32 -mt-32" />
 
-                <div className="flex flex-wrap items-center gap-3">
-                    {/* Date Filters Group */}
-                    <div className="flex flex-wrap items-center bg-[var(--bg-secondary)] border border-[var(--border-primary)] p-1 rounded-xl gap-1">
-                        {[
-                            { id: 'ALL', label: 'All' },
-                            { id: 'WEEK', label: 'Week' },
-                            { id: 'MONTH', label: 'Month' },
-                            { id: 'PREV_MONTH', label: 'Prev' },
-                            { id: 'CUSTOM', label: 'Custom' }
-                        ].map(f => (
-                            <button
-                                key={f.id}
-                                onClick={() => setActiveFilter(f.id)}
-                                className={`px-2.5 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all ${activeFilter === f.id ? 'bg-[var(--accent-primary)] text-white shadow-lg' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}
-                            >
-                                {f.label}
-                            </button>
-                        ))}
-
-                        {activeFilter === 'CUSTOM' && (
-                            <div className="flex items-center gap-2 pl-2 border-l border-[var(--border-primary)] ml-1 animate-fadeIn">
-                                <input
-                                    type="date"
-                                    value={customDates.from}
-                                    onChange={(e) => setCustomDates(prev => ({ ...prev, from: e.target.value }))}
-                                    className="bg-transparent text-[9px] font-bold text-[var(--text-primary)] outline-none border-b border-[var(--accent-primary)]/30"
-                                />
-                                <span className="text-[8px] text-[var(--text-tertiary)] font-black">TO</span>
-                                <input
-                                    type="date"
-                                    value={customDates.to}
-                                    onChange={(e) => setCustomDates(prev => ({ ...prev, to: e.target.value }))}
-                                    className="bg-transparent text-[9px] font-bold text-[var(--text-primary)] outline-none border-b border-[var(--accent-primary)]/30 px-1"
-                                />
-                                <button
-                                    onClick={fetchDashboardData}
-                                    className="p-1.5 hover:bg-[var(--accent-primary)]/10 rounded-lg text-[var(--accent-primary)] transition-all"
-                                >
-                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
-                                </button>
+                <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6 relative z-10">
+                    <div>
+                        <div className="flex items-center gap-4 mb-2">
+                            <div className="p-2.5 bg-[var(--accent-primary)]/10 rounded-xl text-[var(--accent-primary)]">
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+                                </svg>
                             </div>
-                        )}
+                            <h1 className="text-3xl font-black tracking-tight text-[var(--text-primary)]">
+                                Admin <span className="text-[var(--accent-primary)]">Hub</span>
+                            </h1>
+                        </div>
+                        <p className="text-[13px] font-bold text-[var(--text-secondary)] opacity-70">
+                            Global performance overview and intelligence sync
+                        </p>
                     </div>
 
-                    <div className="h-6 w-px bg-[var(--border-primary)] mx-1 hidden sm:block" />
+                    <div className="flex flex-wrap items-center gap-4">
+                        {/* Date Filters Group */}
+                        <div className="flex flex-wrap items-center bg-[var(--bg-tertiary)] border border-[var(--border-primary)] p-1 rounded-2xl">
+                            {[
+                                { id: 'ALL', label: 'All Time' },
+                                { id: 'WEEK', label: 'Week' },
+                                { id: 'MONTH', label: 'Month' },
+                                { id: 'PREV_MONTH', label: 'Prev Month' },
+                                { id: 'CUSTOM', label: 'Custom' }
+                            ].map(f => (
+                                <button
+                                    key={f.id}
+                                    onClick={() => setActiveFilter(f.id)}
+                                    className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all ${activeFilter === f.id ? 'bg-[var(--accent-primary)] text-white shadow-md' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}
+                                >
+                                    {f.label}
+                                </button>
+                            ))}
 
-                    <div className="flex gap-2">
-                        <button onClick={() => navigate('console')} className="px-3 py-1.5 bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-xl text-[9px] font-black uppercase tracking-widest text-[var(--text-secondary)]">Audit</button>
-                        <button onClick={() => navigate('requests')} className="px-3 py-1.5 bg-[var(--accent-primary)] text-white rounded-xl shadow-lg text-[9px] font-black uppercase tracking-widest">Approvals</button>
+                            {activeFilter === 'CUSTOM' && (
+                                <div className="flex items-center gap-2 pl-3 border-l border-[var(--border-primary)] ml-1 animate-fadeIn">
+                                    <input
+                                        type="date"
+                                        value={customDates.from}
+                                        onChange={(e) => setCustomDates(prev => ({ ...prev, from: e.target.value }))}
+                                        className="bg-transparent text-[10px] font-bold text-[var(--text-primary)] outline-none border-b border-[var(--accent-primary)]/30"
+                                    />
+                                    <span className="text-[9px] text-[var(--text-tertiary)] font-black">TO</span>
+                                    <input
+                                        type="date"
+                                        value={customDates.to}
+                                        onChange={(e) => setCustomDates(prev => ({ ...prev, to: e.target.value }))}
+                                        className="bg-transparent text-[10px] font-bold text-[var(--text-primary)] outline-none border-b border-[var(--accent-primary)]/30"
+                                    />
+                                    <button
+                                        onClick={fetchDashboardData}
+                                        className="p-1.5 hover:bg-[var(--accent-primary)]/10 rounded-lg text-[var(--accent-primary)] transition-all"
+                                    >
+                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="flex gap-2">
+                            <button onClick={() => navigate('console')} className="px-5 py-2.5 bg-[var(--bg-tertiary)] border border-[var(--border-primary)] rounded-xl text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all">Audit Logs</button>
+                            <button onClick={() => navigate('requests')} className="px-5 py-2.5 bg-[var(--accent-primary)] text-white rounded-xl shadow-lg text-[10px] font-black uppercase tracking-widest hover:brightness-110 transition-all">Approvals</button>
+                        </div>
                     </div>
                 </div>
             </div>

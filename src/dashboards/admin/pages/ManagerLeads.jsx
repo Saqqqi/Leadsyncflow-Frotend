@@ -104,37 +104,40 @@ export default function ManagerLeads() {
     return (
         <div className="p-4 sm:p-6 md:p-8 space-y-6 animate-fadeIn max-w-[1700px] mx-auto">
             {/* Header */}
-            <div className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-[40px] p-8 shadow-2xl relative overflow-hidden">
+            <div className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-[32px] p-6 shadow-xl relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-80 h-80 bg-amber-500 opacity-5 rounded-full blur-[100px] -mr-40 -mt-40 transition-all group-hover:opacity-10" />
 
-                <div className="flex flex-col xl:flex-row justify-between items-start xl:items-end gap-6 relative z-10">
+                <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6 relative z-10">
                     <div>
                         <div className="flex items-center gap-4 mb-2">
-                            <div className="p-3 bg-amber-500/10 rounded-2xl text-amber-500">
-                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 7h8l-8 8-4-4-6 6" /></svg>
+                            <div className="p-2.5 bg-amber-500/10 rounded-xl text-amber-500">
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7h8l-8 8-4-4-6 6" />
+                                </svg>
                             </div>
-                            <h1 className="text-4xl font-black text-[var(--text-primary)] tracking-tighter">
+                            <h1 className="text-3xl font-black tracking-tight text-[var(--text-primary)]">
                                 Deal Manager <span className="text-[var(--accent-primary)]">
                                     {view === 'ALL_LEADS' ? 'All Records' : view === 'TEAM' ? 'Team' : `History: ${selectedUser?.name}`}
                                 </span>
                             </h1>
                         </div>
-                        <p className="text-[var(--text-secondary)] font-medium">
+                        <p className="text-[13px] font-bold text-[var(--text-secondary)] opacity-70">
                             {view === 'TEAM' ? 'Analyzing closing rates and manager performance' : `Overseeing ${filteredLeads.length} high-intent deals`}
                         </p>
                     </div>
 
                     <div className="flex flex-wrap items-center gap-4">
-                        <div className="flex p-1.5 bg-[var(--bg-tertiary)] border border-[var(--border-primary)] rounded-2xl">
+                        {/* View Switcher */}
+                        <div className="flex p-1 bg-[var(--bg-tertiary)] border border-[var(--border-primary)] rounded-2xl">
                             <button
                                 onClick={() => { setView('ALL_LEADS'); setSelectedUser(null); }}
-                                className={`px-8 py-2.5 rounded-xl text-sm font-black transition-all ${view === 'ALL_LEADS' ? 'bg-[var(--bg-secondary)] text-[var(--accent-primary)] shadow-xl' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}
+                                className={`px-6 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${view === 'ALL_LEADS' ? 'bg-[var(--bg-secondary)] text-[var(--accent-primary)] shadow-sm' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}
                             >
                                 All Deals
                             </button>
                             <button
                                 onClick={() => { setView('TEAM'); setSelectedUser(null); }}
-                                className={`px-8 py-2.5 rounded-xl text-sm font-black transition-all ${view === 'TEAM' ? 'bg-[var(--bg-secondary)] text-[var(--accent-primary)] shadow-xl' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}
+                                className={`px-6 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${view === 'TEAM' ? 'bg-[var(--bg-secondary)] text-[var(--accent-primary)] shadow-sm' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}
                             >
                                 Team
                             </button>
@@ -145,19 +148,19 @@ export default function ManagerLeads() {
                                 type="date"
                                 value={filterDate}
                                 onChange={e => setFilterDate(e.target.value)}
-                                className="px-5 py-3 rounded-2xl border border-[var(--border-primary)] bg-[var(--bg-tertiary)] text-sm font-bold text-[var(--text-primary)] outline-none ring-[var(--accent-primary)]/20 focus:ring-2"
+                                className="px-4 py-2.5 rounded-xl border border-[var(--border-primary)] bg-[var(--bg-tertiary)] text-xs font-bold text-[var(--text-primary)] outline-none ring-[var(--accent-primary)]/20 focus:ring-2"
                             />
                         )}
 
-                        <div className="relative w-72">
+                        <div className="relative w-64 md:w-72">
                             <input
                                 type="text"
                                 placeholder={view === 'TEAM' ? "Search managers..." : "Search deals..."}
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full bg-[var(--bg-tertiary)] border border-[var(--border-primary)] rounded-[20px] px-6 py-3 pl-12 text-sm font-medium outline-none ring-[var(--accent-primary)]/20 focus:ring-2"
+                                className="w-full bg-[var(--bg-tertiary)] border border-[var(--border-primary)] rounded-xl px-4 py-2.5 pl-10 text-xs font-bold outline-none ring-[var(--accent-primary)]/20 focus:ring-2"
                             />
-                            <svg className="absolute left-4 top-3.5 h-5 w-5 text-[var(--text-tertiary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg className="absolute left-3.5 top-3 h-4 w-4 text-[var(--text-tertiary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                             </svg>
                         </div>
@@ -239,8 +242,8 @@ export default function ManagerLeads() {
                                         </td>
                                         <td className="px-6 py-4">
                                             <span className={`px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-lg border ${lead.status === 'PAID' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' :
-                                                    lead.status === 'UNPAID' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' :
-                                                        'bg-blue-500/10 text-blue-500 border-blue-500/20'
+                                                lead.status === 'UNPAID' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' :
+                                                    'bg-blue-500/10 text-blue-500 border-blue-500/20'
                                                 }`}>
                                                 {lead.status || 'PENDING'}
                                             </span>

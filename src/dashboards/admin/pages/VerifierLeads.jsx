@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { adminAPI } from '../../../api/admin.api';
 
-export default function DataMinerLeads() {
+export default function VerifierLeads() {
     const [leads, setLeads] = useState([]);
     const [team, setTeam] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -11,16 +11,17 @@ export default function DataMinerLeads() {
     const [filterDate, setFilterDate] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
 
-    const fetchAllLeads = async () => {
+    const fetchLeads = async () => {
         try {
             setLoading(true);
-            // Fetch ALL leads from ALL employees combined (no stage filter)
-            const response = await adminAPI.getLeadsByStage(null, 500);
+            // Fetch leads in DM stage (this is where verification happens)
+            const response = await adminAPI.getVerifierLeads(200);
+            console.log("Verifier Leads API Response:", response);
             if (response.success) {
                 setLeads(response.leads);
             }
         } catch (error) {
-            console.error('Error fetching leads:', error);
+            console.error('Error fetching verifier leads:', error);
         } finally {
             setLoading(false);
         }
@@ -29,12 +30,12 @@ export default function DataMinerLeads() {
     const fetchTeam = async () => {
         try {
             setLoading(true);
-            const response = await adminAPI.getPerformance('Data Minors');
+            const response = await adminAPI.getPerformance('Verifier');
             if (response.success) {
                 setTeam(response.rows);
             }
         } catch (error) {
-            console.error('Error fetching team:', error);
+            console.error('Error fetching verifier team:', error);
         } finally {
             setLoading(false);
         }
@@ -44,8 +45,12 @@ export default function DataMinerLeads() {
         try {
             setLoading(true);
             setSelectedUser(user);
-            // Fetch all leads created by this specific user (no stage filter)
-            const response = await adminAPI.getLeadsByStage(null, 500, 0, { createdBy: user.userId });
+            // In the case of verifiers, they don't "own" leads, they verify emails inside them.
+            // However, we can show leads where they have verified at least one email.
+            // For now, let's just show all DM leads for context, or filter if backend supported it.
+            // Since backend doesn't have verifiedBy filter on the main endpoint yet, 
+            // we'll fetch all DM leads and show a notification.
+            const response = await adminAPI.getVerifierLeads(500);
             if (response.success) {
                 setLeads(response.leads);
                 setView('INDIVIDUAL_LEADS');
@@ -58,7 +63,7 @@ export default function DataMinerLeads() {
     };
 
     useEffect(() => {
-        if (view === 'ALL_LEADS') fetchAllLeads();
+        if (view === 'ALL_LEADS') fetchLeads();
         else if (view === 'TEAM') fetchTeam();
     }, [view]);
 
@@ -76,9 +81,7 @@ export default function DataMinerLeads() {
                 return (
                     lead.name?.toLowerCase().includes(search) ||
                     lead.location?.toLowerCase().includes(search) ||
-                    lead.industry?.toLowerCase().includes(search) ||
-                    lead.emails?.some(e => e.value.toLowerCase().includes(search)) ||
-                    lead.phones?.some(p => p.toLowerCase().includes(search))
+                    lead.emails?.some(e => e.value.toLowerCase().includes(search))
                 );
             }
             return true;
@@ -108,19 +111,19 @@ export default function DataMinerLeads() {
         <div className="p-4 sm:p-6 md:p-8 space-y-6 min-h-screen animate-fadeIn max-w-[1800px] mx-auto">
             {/* Header Area */}
             <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-6 bg-[var(--bg-secondary)] p-8 rounded-[40px] border border-[var(--border-primary)] shadow-2xl relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--accent-primary)] opacity-5 rounded-full blur-[100px] -mr-32 -mt-32" />
+                <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500 opacity-5 rounded-full blur-[100px] -mr-32 -mt-32" />
 
                 <div className="relative z-10">
                     <div className="flex items-center gap-4 mb-2">
-                        <div className="p-3 bg-[var(--accent-primary)]/10 rounded-2xl text-[var(--accent-primary)]">
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+                        <div className="p-3 bg-emerald-500/10 rounded-2xl text-emerald-500">
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                         </div>
                         <h1 className="text-4xl font-black tracking-tighter text-[var(--text-primary)]">
-                            Master <span className="text-[var(--accent-primary)]">Lead Repository</span>
+                            Verification <span className="text-[var(--accent-primary)]">{view === 'TEAM' ? 'Team' : 'Collection'}</span>
                         </h1>
                     </div>
                     <p className="text-[var(--text-secondary)] font-medium">
-                        {view === 'TEAM' ? 'Browse Data Miners' : `Viewing ${view === 'ALL_LEADS' ? 'All System' : selectedUser?.name} Leads (${filteredLeads.length} records)`}
+                        {view === 'TEAM' ? 'Monitoring email validation performance' : `Analyzing ${filteredLeads.length} leads currently in the DM/Verification pipeline`}
                     </p>
                 </div>
 
@@ -130,7 +133,7 @@ export default function DataMinerLeads() {
                             onClick={() => { setView('ALL_LEADS'); setSelectedUser(null); }}
                             className={`px-8 py-2.5 rounded-xl text-sm font-black transition-all ${view === 'ALL_LEADS' ? 'bg-[var(--bg-secondary)] text-[var(--accent-primary)] shadow-xl' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}
                         >
-                            All Leads
+                            Queue
                         </button>
                         <button
                             onClick={() => { setView('TEAM'); setSelectedUser(null); }}
@@ -152,7 +155,7 @@ export default function DataMinerLeads() {
                     <div className="relative w-72">
                         <input
                             type="text"
-                            placeholder={view === 'TEAM' ? "Search miners..." : "Search leads..."}
+                            placeholder={view === 'TEAM' ? "Search verifiers..." : "Search leads..."}
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="w-full bg-[var(--bg-tertiary)] border border-[var(--border-primary)] rounded-[20px] px-6 py-3 pl-12 text-sm font-medium focus:ring-2 ring-[var(--accent-primary)]/20 outline-none"
@@ -163,7 +166,7 @@ export default function DataMinerLeads() {
                     </div>
 
                     <button
-                        onClick={() => view === 'TEAM' ? fetchTeam() : (selectedUser ? fetchUserLeads(selectedUser) : fetchAllLeads())}
+                        onClick={() => view === 'TEAM' ? fetchTeam() : fetchLeads()}
                         className="p-3 rounded-2xl bg-[var(--bg-tertiary)] border border-[var(--border-primary)] transition-all active:scale-95 hover:bg-[var(--accent-primary)] group"
                     >
                         <svg className="w-5 h-5 text-[var(--text-secondary)] group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
@@ -181,7 +184,7 @@ export default function DataMinerLeads() {
                             className="group bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-[32px] p-8 hover:border-[var(--accent-primary)] transition-all cursor-pointer relative overflow-hidden active:scale-95 shadow-xl"
                         >
                             <div className="flex items-center gap-5">
-                                <div className="h-20 w-20 rounded-3xl bg-gradient-to-br from-[var(--accent-primary)] to-purple-600 flex items-center justify-center text-white font-black text-3xl shadow-2xl group-hover:rotate-6 transition-transform">
+                                <div className="h-20 w-20 rounded-3xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white font-black text-3xl shadow-2xl group-hover:rotate-6 transition-transform">
                                     {member.name?.[0]}
                                 </div>
                                 <div className="flex-1 min-w-0">
@@ -190,13 +193,13 @@ export default function DataMinerLeads() {
                                 </div>
                             </div>
 
-                            <div className="mt-8 grid grid-cols-1 gap-4">
+                            <div className="mt-8">
                                 <div className="p-5 rounded-3xl bg-[var(--bg-tertiary)] border border-[var(--border-primary)] transition-colors group-hover:bg-[var(--accent-primary)]/5">
-                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] mb-1">Total Leads</p>
-                                    <div className="flex items-end justify-between">
-                                        <p className="text-4xl font-black text-[var(--text-primary)] tracking-tighter">{member.metrics?.processed || 0}</p>
-                                        <div className="p-2 bg-[var(--accent-primary)]/10 text-[var(--accent-primary)] rounded-xl">
-                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" /></svg>
+                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] mb-1">Status</p>
+                                    <div className="flex items-center justify-between">
+                                        <p className="text-xl font-black text-[var(--text-primary)] tracking-tight">Active Verifier</p>
+                                        <div className="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-500 text-[10px] font-black uppercase">
+                                            {member.status}
                                         </div>
                                     </div>
                                 </div>
@@ -205,20 +208,19 @@ export default function DataMinerLeads() {
                     ))}
                 </div>
             ) : (
-                /* EXCEL-LIKE TABLE VIEW */
+                /* Master Sheet Table for Verifiers */
                 <div className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-[40px] shadow-2xl overflow-hidden flex flex-col animate-slideUp">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left border-collapse min-w-[1200px]">
                             <thead>
                                 <tr className="bg-[var(--bg-tertiary)] border-b border-[var(--border-primary)]">
                                     <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">#</th>
-                                    <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">Company / Name</th>
-                                    <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">Stage</th>
-                                    <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">Emails Identified</th>
-                                    <th className="px-6 py-5 text-[10px) font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">Phone Numbers</th>
-                                    <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">Industry/Loc</th>
-                                    <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">Miner</th>
-                                    <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">Date</th>
+                                    <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">Company / Identity</th>
+                                    <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">Email Assets</th>
+                                    <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">Verification Status</th>
+                                    <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">Location</th>
+                                    <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">Submitter</th>
+                                    <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">Created</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-[var(--border-primary)]/50">
@@ -227,30 +229,23 @@ export default function DataMinerLeads() {
                                         <td className="px-6 py-4 text-xs font-bold text-[var(--text-tertiary)]">{index + 1}</td>
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--accent-primary)]/20 to-indigo-500/20 flex items-center justify-center text-[var(--accent-primary)] font-black text-sm border border-[var(--accent-primary)]/10">
-                                                    {lead.name?.[0] || 'L'}
+                                                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 flex items-center justify-center text-emerald-600 font-black text-sm border border-emerald-500/10">
+                                                    {lead.name?.[0] || 'V'}
                                                 </div>
                                                 <div className="max-w-[200px] truncate">
-                                                    <div className="font-bold text-[var(--text-primary)] text-sm">{lead.name || 'N/A'}</div>
-                                                    <div className="text-[10px] text-[var(--text-tertiary)] font-bold">ST: {lead.stage}</div>
+                                                    <div className="font-bold text-[var(--text-primary)] text-sm">{lead.name || 'Anonymous'}</div>
+                                                    <div className="text-[10px] text-[var(--text-tertiary)] font-bold">ID: {lead._id.slice(-6)}</div>
                                                 </div>
                                             </div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className={`px-3 py-1.5 rounded-xl text-[10px] font-black tracking-widest uppercase border ${lead.stage === 'DM' ? 'bg-blue-500/10 text-blue-500 border-blue-500/20' :
-                                                    lead.stage === 'LQ' ? 'bg-purple-500/10 text-purple-500 border-purple-500/20' :
-                                                        lead.stage === 'MANAGER' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' :
-                                                            'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
-                                                }`}>
-                                                {lead.stage}
-                                            </span>
                                         </td>
                                         <td className="px-6 py-4">
                                             <div className="space-y-1 max-w-[250px]">
                                                 {lead.emails && lead.emails.length > 0 ? (
                                                     lead.emails.slice(0, 3).map((e, i) => (
                                                         <div key={i} className="text-[11px] font-bold text-[var(--text-secondary)] truncate flex items-center gap-1.5">
-                                                            <div className="w-1 h-1 rounded-full bg-[var(--accent-primary)]" />
+                                                            <div className={`w-1.5 h-1.5 rounded-full ${e.status === 'ACTIVE' ? 'bg-emerald-500' :
+                                                                e.status === 'BOUNCED' ? 'bg-rose-500' : 'bg-amber-400'
+                                                                }`} />
                                                             {e.value}
                                                         </div>
                                                     ))
@@ -263,42 +258,42 @@ export default function DataMinerLeads() {
                                             </div>
                                         </td>
                                         <td className="px-6 py-4">
-                                            <div className="space-y-1 max-w-[200px]">
-                                                {lead.phones && lead.phones.length > 0 ? (
-                                                    lead.phones.slice(0, 3).map((p, i) => (
-                                                        <div key={i} className="text-[11px] font-bold text-[var(--text-secondary)] truncate flex items-center gap-1.5">
-                                                            <div className="w-1 h-1 rounded-full bg-[var(--accent-primary)]" />
-                                                            {p}
-                                                        </div>
-                                                    ))
-                                                ) : (
-                                                    <span className="text-[10px] text-[var(--text-tertiary)] italic">No Phones</span>
-                                                )}
-                                                {lead.phones?.length > 3 && (
-                                                    <div className="text-[9px] font-black text-[var(--accent-primary)]">+{lead.phones.length - 3} more</div>
-                                                )}
+                                            <div className="flex flex-wrap gap-1.5">
+                                                <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase border ${lead.emails?.every(e => e.status === 'ACTIVE') ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' :
+                                                    lead.emails?.some(e => e.status === 'BOUNCED') ? 'bg-rose-500/10 text-rose-500 border-rose-500/20' :
+                                                        'bg-amber-500/10 text-amber-500 border-amber-500/20'
+                                                    }`}>
+                                                    {lead.emails?.filter(e => e.status !== 'PENDING').length || 0}/{lead.emails?.length || 0} Verified
+                                                </span>
                                             </div>
                                         </td>
                                         <td className="px-6 py-4">
-                                            <div className="text-xs font-bold text-[var(--text-secondary)] truncate max-w-[150px]">{lead.industry || 'Unknown'}</div>
-                                            <div className="text-[10px] text-[var(--text-tertiary)] font-black uppercase tracking-wider truncate max-w-[150px]">{lead.location || 'Unknown'}</div>
+                                            <div className="text-xs font-bold text-[var(--text-secondary)]">{lead.location || 'Unknown'}</div>
+                                            <div className="text-[10px] text-[var(--text-tertiary)] font-black uppercase tracking-wider">{lead.industry || 'Lead'}</div>
                                         </td>
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-2">
                                                 <div className="w-6 h-6 rounded-lg bg-[var(--bg-tertiary)] flex items-center justify-center text-[10px] font-black text-[var(--text-primary)] border border-[var(--border-primary)]">
-                                                    {lead.createdBy?.name?.[0] || 'S'}
+                                                    {lead.createdBy?.name?.[0] || 'M'}
                                                 </div>
                                                 <span className="text-xs font-bold text-[var(--text-secondary)]">{lead.createdBy?.name || 'System'}</span>
                                             </div>
                                         </td>
                                         <td className="px-6 py-4">
                                             <div className="text-xs font-bold text-[var(--text-secondary)]">{new Date(lead.createdAt).toLocaleDateString()}</div>
-                                            <div className="text-[10px] text-[var(--text-tertiary)] font-medium">{new Date(lead.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                                            <div className="text-[10px] text-[var(--text-tertiary)] font-medium">Stage: {lead.stage}</div>
                                         </td>
                                     </tr>
                                 ))}
                             </tbody>
                         </table>
+
+                        {filteredLeads.length === 0 && (
+                            <div className="py-24 text-center">
+                                <p className="text-[var(--text-secondary)] font-black text-xl tracking-tight">No Verification Records Found</p>
+                                <p className="text-sm text-[var(--text-tertiary)] mt-2">Adjust your search parameters or check if leads are in the DM stage.</p>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}

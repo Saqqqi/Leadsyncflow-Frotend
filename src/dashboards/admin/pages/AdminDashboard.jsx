@@ -1,190 +1,293 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-
-const StatCard = ({ title, value, subtitle, icon, trend, bgColor, onClick }) => (
-    <div
-        onClick={onClick}
-        className={`rounded-3xl p-6 border transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 relative overflow-hidden group cursor-pointer ${onClick ? 'active:scale-95' : ''}`}
-        style={{
-            backgroundColor: 'var(--bg-secondary)',
-            borderColor: 'var(--border-primary)'
-        }}
-    >
-        <div className={`absolute top-0 right-0 w-32 h-32 -mr-8 -mt-8 bg-gradient-to-br ${bgColor} opacity-10 rounded-full blur-3xl transition-all duration-500 group-hover:scale-150`}></div>
-
-        <div className="flex items-start justify-between relative z-10">
-            <div>
-                <p className="text-xs font-black mb-1 tracking-widest uppercase opacity-60" style={{ color: 'var(--text-secondary)' }}>
-                    {title}
-                </p>
-                <p className="text-4xl font-black mt-2 mb-1 tracking-tighter" style={{ color: 'var(--text-primary)' }}>
-                    {value}
-                </p>
-                {subtitle && (
-                    <p className="text-[10px] font-bold mt-2 flex items-center gap-1.5" style={{ color: 'var(--text-tertiary)' }}>
-                        {trend && (
-                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-black flex-shrink-0 ${trend > 0 ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500'}`}>
-                                {trend > 0 ? '↑' : '↓'} {Math.abs(trend)}%
-                            </span>
-                        )}
-                        <span className="opacity-60">{subtitle}</span>
-                    </p>
-                )}
-            </div>
-            <div className={`p-4 rounded-2xl bg-gradient-to-br ${bgColor} transition-all duration-500 group-hover:rotate-12 group-hover:scale-110 shadow-lg`}>
-                <div className="text-white">
-                    {icon}
-                </div>
-            </div>
-        </div>
-    </div>
-);
+import { adminAPI } from '../../../api/admin.api';
 
 export default function AdminDashboard() {
     const navigate = useNavigate();
-    const [stats, setStats] = useState({
-        dataMiners: { total: 0, pending: 0, trend: 15 },
-        leadQualifiers: { total: 0, active: 0, trend: 8 },
-        managers: { total: 0, deals: 0, trend: 12 }
-    });
+    const [loading, setLoading] = useState(true);
+    const [data, setData] = useState(null);
+    const [activeFilter, setActiveFilter] = useState('ALL'); // ALL, WEEK, MONTH, PREV_MONTH, CUSTOM
+    const [customDates, setCustomDates] = useState({ from: '', to: '' });
 
-    // Mock fetching for now - real API calls can be added later
-    useEffect(() => {
-        // In a real app, you'd fetch from multiple endpoints here
-        setStats({
-            dataMiners: { total: 124, pending: 45, trend: 15 },
-            leadQualifiers: { total: 86, active: 32, trend: -5 },
-            managers: { total: 42, deals: 18, trend: 12 }
-        });
-    }, []);
+    const getDateRange = useCallback((filter) => {
+        const now = new Date();
+        const start = new Date();
+        const end = new Date();
 
-    const sections = [
-        {
-            id: 'data-miner',
-            title: 'Data Miner Hub',
-            value: stats.dataMiners.total,
-            subtitle: `${stats.dataMiners.pending} leads pending verification`,
-            trend: stats.dataMiners.trend,
-            icon: (
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                </svg>
-            ),
-            bgColor: 'from-blue-500 to-indigo-600',
-            path: 'data-miner-leads'
-        },
-        {
-            id: 'lead-qualifier',
-            title: 'Lead Qualifiers',
-            value: stats.leadQualifiers.total,
-            subtitle: `${stats.leadQualifiers.active} active qualifying tasks`,
-            trend: stats.leadQualifiers.trend,
-            icon: (
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-            ),
-            bgColor: 'from-purple-500 to-pink-600',
-            path: 'lead-qualifier-leads'
-        },
-        {
-            id: 'manager',
-            title: 'Deal Managers',
-            value: stats.managers.total,
-            subtitle: `${stats.managers.deals} deals in final stages`,
-            trend: stats.managers.trend,
-            icon: (
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                </svg>
-            ),
-            bgColor: 'from-amber-500 to-orange-600',
-            path: 'manager-leads'
+        switch (filter) {
+            case 'WEEK':
+                start.setDate(now.getDate() - 7);
+                break;
+            case 'MONTH':
+                start.setMonth(now.getMonth() - 1);
+                break;
+            case 'PREV_MONTH':
+                // First day of previous month
+                start.setMonth(now.getMonth() - 1);
+                start.setDate(1);
+                // Last day of previous month
+                end.setDate(0);
+                break;
+            case 'CUSTOM':
+                return customDates;
+            case 'ALL':
+            default:
+                return { from: '', to: '' };
         }
-    ];
+
+        const formatDate = (date) => date.toISOString().split('T')[0];
+        return { from: formatDate(start), to: formatDate(end) };
+    }, [customDates]);
+
+    const fetchDashboardData = useCallback(async () => {
+        try {
+            setLoading(true);
+            const params = getDateRange(activeFilter);
+
+            // Log for debugging
+            console.log(`Fetching Dashboard with filter: ${activeFilter}`, params);
+
+            const res = await adminAPI.getOverview(params);
+            if (res.success) {
+                setData(res);
+            }
+        } catch (error) {
+            console.error('Dashboard Load Error:', error);
+        } finally {
+            setLoading(false);
+        }
+    }, [activeFilter, getDateRange]);
+
+    useEffect(() => {
+        fetchDashboardData();
+    }, [fetchDashboardData]);
+
+    const cards = useMemo(() => {
+        if (!data) return [];
+        const { totals, conversions } = data;
+        return [
+            {
+                id: 'mining',
+                title: 'Mining Hub',
+                value: totals.dmCount,
+                subtitle: 'Active Collection',
+                trend: conversions.dm_to_lq,
+                path: 'data-miner-leads',
+                color: 'from-blue-600 to-indigo-600',
+                icon: (
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 11H5m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2" />
+                    </svg>
+                )
+            },
+            {
+                id: 'verification',
+                title: 'Verification',
+                value: totals.dmCount,
+                subtitle: 'Email Validation',
+                trend: 0,
+                path: 'verifier-leads',
+                color: 'from-emerald-600 to-teal-600',
+                icon: (
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                )
+            },
+            {
+                id: 'qualification',
+                title: 'Qualification',
+                value: totals.lqCount,
+                subtitle: 'Funnel Filtering',
+                trend: conversions.lq_to_manager,
+                path: 'lead-qualifier-leads',
+                color: 'from-purple-600 to-pink-600',
+                icon: (
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                )
+            },
+            {
+                id: 'deals',
+                title: 'Deal Pipeline',
+                value: totals.paidCount,
+                subtitle: 'Revenue Generated',
+                trend: conversions.manager_paid,
+                path: 'manager-leads',
+                color: 'from-amber-600 to-orange-600',
+                icon: (
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                )
+            }
+        ];
+    }, [data]);
+
+    if (loading && !data) return (
+        <div className="flex items-center justify-center min-h-screen">
+            <div className="w-8 h-8 border-4 border-[var(--accent-primary)]/20 border-t-[var(--accent-primary)] rounded-full animate-spin" />
+        </div>
+    );
+
+    const { totals, conversions, leaderboards } = data;
 
     return (
-        <div className="space-y-12 animate-fadeIn max-w-[1600px] mx-auto p-4 sm:p-8">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div className="p-4 md:p-6 space-y-4 max-w-[1400px] mx-auto animate-fadeIn min-h-screen">
+            {/* Header + Date Filters */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 px-2 mb-2">
                 <div>
-                    <h1 className="text-5xl font-black tracking-tighter text-[var(--text-primary)]">
-                        Admin <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--accent-primary)] to-purple-600">Control Center</span>
+                    <h1 className="text-xl font-black text-[var(--text-primary)] tracking-tight">
+                        Admin <span className="text-[var(--accent-primary)]">Hub</span>
                     </h1>
-                    <p className="mt-4 text-[var(--text-secondary)] font-medium max-w-xl text-lg opacity-80 leading-relaxed">
-                        Monitor the entire lead lifecycle from mining to closed deals. Manage departments and oversee performance.
-                    </p>
                 </div>
-                <div className="flex gap-4">
-                    <div className="px-6 py-3 rounded-2xl bg-[var(--bg-secondary)] border border-[var(--border-primary)] flex items-center gap-3">
-                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                        <span className="text-sm font-black text-[var(--text-secondary)] uppercase tracking-widest">System Live</span>
+
+                <div className="flex flex-wrap items-center gap-3">
+                    {/* Date Filters Group */}
+                    <div className="flex flex-wrap items-center bg-[var(--bg-secondary)] border border-[var(--border-primary)] p-1 rounded-xl gap-1">
+                        {[
+                            { id: 'ALL', label: 'All' },
+                            { id: 'WEEK', label: 'Week' },
+                            { id: 'MONTH', label: 'Month' },
+                            { id: 'PREV_MONTH', label: 'Prev' },
+                            { id: 'CUSTOM', label: 'Custom' }
+                        ].map(f => (
+                            <button
+                                key={f.id}
+                                onClick={() => setActiveFilter(f.id)}
+                                className={`px-2.5 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all ${activeFilter === f.id ? 'bg-[var(--accent-primary)] text-white shadow-lg' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}
+                            >
+                                {f.label}
+                            </button>
+                        ))}
+
+                        {activeFilter === 'CUSTOM' && (
+                            <div className="flex items-center gap-2 pl-2 border-l border-[var(--border-primary)] ml-1 animate-fadeIn">
+                                <input
+                                    type="date"
+                                    value={customDates.from}
+                                    onChange={(e) => setCustomDates(prev => ({ ...prev, from: e.target.value }))}
+                                    className="bg-transparent text-[9px] font-bold text-[var(--text-primary)] outline-none border-b border-[var(--accent-primary)]/30"
+                                />
+                                <span className="text-[8px] text-[var(--text-tertiary)] font-black">TO</span>
+                                <input
+                                    type="date"
+                                    value={customDates.to}
+                                    onChange={(e) => setCustomDates(prev => ({ ...prev, to: e.target.value }))}
+                                    className="bg-transparent text-[9px] font-bold text-[var(--text-primary)] outline-none border-b border-[var(--accent-primary)]/30 px-1"
+                                />
+                                <button
+                                    onClick={fetchDashboardData}
+                                    className="p-1.5 hover:bg-[var(--accent-primary)]/10 rounded-lg text-[var(--accent-primary)] transition-all"
+                                >
+                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                                </button>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="h-6 w-px bg-[var(--border-primary)] mx-1 hidden sm:block" />
+
+                    <div className="flex gap-2">
+                        <button onClick={() => navigate('console')} className="px-3 py-1.5 bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-xl text-[9px] font-black uppercase tracking-widest text-[var(--text-secondary)]">Audit</button>
+                        <button onClick={() => navigate('requests')} className="px-3 py-1.5 bg-[var(--accent-primary)] text-white rounded-xl shadow-lg text-[9px] font-black uppercase tracking-widest">Approvals</button>
                     </div>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {sections.map((section) => (
-                    <StatCard
-                        key={section.id}
-                        title={section.title}
-                        value={section.value}
-                        subtitle={section.subtitle}
-                        icon={section.icon}
-                        trend={section.trend}
-                        bgColor={section.bgColor}
-                        onClick={() => navigate(section.path)}
-                    />
+            {/* Error Fixed Message if needed, otherwise Cards forced row */}
+            <div className="flex flex-wrap lg:flex-nowrap gap-4 px-2">
+                {cards.map((card) => (
+                    <div
+                        key={card.id}
+                        onClick={() => navigate(card.path)}
+                        className="flex-1 min-w-[200px] group bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-2xl p-4 hover:border-[var(--accent-primary)] transition-all cursor-pointer relative overflow-hidden active:scale-[0.97] shadow-sm flex flex-col justify-between h-[150px]"
+                    >
+                        <div className="flex justify-between items-start relative z-10">
+                            <div className={`p-2 rounded-xl bg-gradient-to-br ${card.color} text-white shadow-md group-hover:scale-110 transition-transform`}>
+                                {card.icon}
+                            </div>
+                            <div className="flex flex-col items-end">
+                                <span className="text-[7px] font-black uppercase tracking-widest text-[var(--text-tertiary)] opacity-60">Status</span>
+                                <span className="text-[7px] font-black text-emerald-500 tracking-widest bg-emerald-500/5 px-1 py-0.5 rounded border border-emerald-500/10">ACTIVE</span>
+                            </div>
+                        </div>
+
+                        <div className="space-y-1 relative z-10">
+                            <h3 className="text-[8px] font-black uppercase tracking-widest text-[var(--text-tertiary)]">{card.title}</h3>
+                            <div className="flex items-end justify-between">
+                                <span className="text-2xl font-black text-[var(--text-primary)] tracking-tighter">{card.value}</span>
+                                {card.trend > 0 && (
+                                    <span className="text-[8px] font-black text-emerald-500 mb-1 px-1 py-0.5 bg-emerald-500/5 rounded border border-emerald-500/10">+{card.trend}%</span>
+                                )}
+                            </div>
+                            <p className="text-[8px] font-bold text-[var(--text-secondary)] opacity-60 border-t border-[var(--border-primary)]/20 pt-2 mt-1 truncate">{card.subtitle}</p>
+                        </div>
+                    </div>
                 ))}
             </div>
 
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-                {/* Recent Activity or Quick Reports could go here */}
-                <div className="bg-[var(--bg-secondary)] rounded-[40px] border border-[var(--border-primary)] p-8 overflow-hidden relative group">
-                    <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:scale-110 transition-transform duration-700">
-                        <svg className="w-64 h-64" fill="currentColor" viewBox="0 0 20 20"><path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" /></svg>
+            {/* CONVERSION VELOCITY */}
+            <div className="px-2">
+                <div className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-2xl p-5 shadow-sm">
+                    <div className="flex items-center gap-2 mb-4">
+                        <div className="w-1 h-3 bg-[var(--accent-primary)] rounded-full" />
+                        <h2 className="text-[9px] font-black text-[var(--text-primary)] uppercase tracking-widest">Analytics Velocity • {activeFilter.replace('_', ' ')}</h2>
                     </div>
-                    <h3 className="text-2xl font-black mb-6 flex items-center gap-3">
-                        <span className="p-2 rounded-xl bg-blue-500/10 text-blue-500">
-                            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                        </span>
-                        Performance Overview
-                    </h3>
-                    <div className="space-y-6 relative z-10">
-                        <p className="text-[var(--text-secondary)] text-sm font-medium leading-relaxed">
-                            Overview of conversions across all departments. The system shows a <span className="text-emerald-500 font-bold">12% increase</span> in efficiency since the last update.
-                        </p>
-                        <div className="pt-4 flex gap-4">
-                            <button onClick={() => navigate('analytics')} className="px-6 py-3 rounded-2xl bg-[var(--accent-primary)] text-white font-black text-xs uppercase tracking-widest hover:scale-105 transition-all shadow-xl shadow-[var(--accent-primary)]/20">
-                                View Detailed Analytics
-                            </button>
-                            <button className="px-6 py-3 rounded-2xl bg-[var(--bg-tertiary)] border border-[var(--border-primary)] text-[var(--text-primary)] font-black text-xs uppercase tracking-widest hover:bg-[var(--border-primary)] transition-all">
-                                Export Report
-                            </button>
-                        </div>
-                    </div>
-                </div>
 
-                <div className="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-[40px] p-8 text-white relative overflow-hidden group">
-                    <div className="absolute bottom-0 right-0 p-4 opacity-10 group-hover:scale-125 transition-transform duration-1000">
-                        <svg className="w-80 h-80" fill="currentColor" viewBox="0 0 20 20"><path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a.997.997 0 00-.12-.47c1.183-.22 2.12-.124 2.12.47v3h-2zM4.12 14.53c-.118.1-.12.28-.12.47v3H2v-3c0-.594.937-.69 2.12-.47z" /></svg>
-                    </div>
-                    <div className="relative z-10">
-                        <h3 className="text-2xl font-black mb-4">Team Coordination</h3>
-                        <p className="text-indigo-100 font-medium mb-8 leading-relaxed max-w-md">
-                            Seamlessly move leads between departments. Every action is logged and tracked in real-time.
-                        </p>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="p-4 rounded-3xl bg-white/10 backdrop-blur-md border border-white/20">
-                                <p className="text-[10px] font-black uppercase tracking-widest text-indigo-200 opacity-60">Avg. Response Time</p>
-                                <p className="text-2xl font-black mt-1">14.2 min</p>
+                    <div className="flex flex-col md:flex-row gap-8">
+                        {[
+                            { label: 'Mining → Qualification', value: conversions.dm_to_lq, color: 'from-blue-500 to-indigo-500' },
+                            { label: 'Qualification → Sales', value: conversions.lq_to_manager, color: 'from-purple-500 to-pink-500' },
+                            { label: 'Sales → Revenue', value: conversions.manager_paid, color: 'from-amber-500 to-orange-500' }
+                        ].map((stat, i) => (
+                            <div key={i} className="flex-1 space-y-2">
+                                <div className="flex justify-between items-end">
+                                    <p className="text-[8px] font-black uppercase tracking-widest text-[var(--text-tertiary)]">{stat.label}</p>
+                                    <p className="text-xs font-black text-[var(--text-primary)]">{stat.value}%</p>
+                                </div>
+                                <div className="h-1.5 bg-[var(--bg-tertiary)] rounded-full overflow-hidden border border-[var(--border-primary)]/10">
+                                    <div
+                                        className={`h-full bg-gradient-to-r ${stat.color} rounded-full transition-all duration-1000`}
+                                        style={{ width: `${stat.value}%` }}
+                                    />
+                                </div>
                             </div>
-                            <div className="p-4 rounded-3xl bg-white/10 backdrop-blur-md border border-white/20">
-                                <p className="text-[10px] font-black uppercase tracking-widest text-indigo-200 opacity-60">Conversion Rate</p>
-                                <p className="text-2xl font-black mt-1">24.5%</p>
-                            </div>
-                        </div>
+                        ))}
                     </div>
                 </div>
+            </div>
+
+            {/* MINI HALL OF FAME */}
+            <div className="flex flex-col md:flex-row gap-4 px-2">
+                {[
+                    { label: 'Top Miner', user: leaderboards.dataMinors[0], metric: 'leadsCreated', unit: 'Leads', icon: '⛏️' },
+                    { label: 'Top Qualifier', user: leaderboards.leadQualifiers[0], metric: 'leadsUpdated', unit: 'Verified', icon: '🎯' },
+                    { label: 'Top Manager', user: leaderboards.managers[0], metric: 'paidCount', unit: 'Closed', icon: '💰' }
+                ].map((hero, i) => hero.user && (
+                    <div key={i} className="flex-1 bg-[var(--bg-secondary)] border border-[var(--border-primary)] p-3 rounded-xl flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-[var(--bg-tertiary)] flex items-center justify-center text-sm border border-[var(--border-primary)]">
+                            {hero.icon}
+                        </div>
+                        <div className="min-w-0">
+                            <p className="text-[7px] font-black uppercase tracking-widest text-[var(--accent-primary)]">{hero.label}</p>
+                            <h4 className="text-[10px] font-black text-[var(--text-primary)] truncate">{hero.user.name}</h4>
+                            <p className="text-[8px] font-bold text-[var(--text-tertiary)] opacity-50">
+                                {hero.user[hero.metric]} {hero.unit}
+                            </p>
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            {/* Status Footer */}
+            <div className="px-5 py-2 text-[7px] font-black uppercase tracking-widest text-[var(--text-tertiary)] opacity-30 flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                    <span className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
+                    Global Intelligence Filtered: {activeFilter}
+                </div>
+                <span>Sync Node: {new Date().toLocaleTimeString()}</span>
             </div>
         </div>
     );

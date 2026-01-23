@@ -60,6 +60,8 @@ const AdminDashboard = lazy(() => import("../dashboards/admin/pages/AdminDashboa
 const AdminDataMinerLeads = lazy(() => import("../dashboards/admin/pages/DataMinerLeads"));
 const AdminLeadQualifierLeads = lazy(() => import("../dashboards/admin/pages/LeadQualifierLeads"));
 const AdminManagerLeads = lazy(() => import("../dashboards/admin/pages/ManagerLeads"));
+const AdminVerifierLeads = lazy(() => import("../dashboards/admin/pages/VerifierLeads"));
+const AdminConsole = lazy(() => import("../dashboards/admin/pages/AdminConsole"));
 
 // Centralized Configuration
 export const dashboardConfig = [
@@ -74,6 +76,8 @@ export const dashboardConfig = [
       { name: 'Data Miners', path: 'data-miner-leads', component: AdminDataMinerLeads, icon: <FilesIcon />, showInSidebar: true },
       { name: 'Lead Qualifiers', path: 'lead-qualifier-leads', component: AdminLeadQualifierLeads, icon: <UsersIcon />, showInSidebar: true },
       { name: 'Managers', path: 'manager-leads', component: AdminManagerLeads, icon: <LeadsIcon />, showInSidebar: true },
+      { name: 'Verifiers', path: 'verifier-leads', component: AdminVerifierLeads, icon: <DashboardIcon />, showInSidebar: true },
+      { name: 'Admin Console', path: 'console', component: AdminConsole, icon: <AnalyticsIcon />, showInSidebar: true },
     ],
   },
   {

@@ -231,8 +231,8 @@ export default function DataMinerLeads() {
                             <tbody className="divide-y divide-[var(--border-primary)]/50">
                                 {filteredLeads.map((lead, index) => (
                                     <tr key={lead._id} className="hover:bg-[var(--bg-tertiary)]/50 transition-colors group cursor-default">
-                                        <td className="px-6 py-4 text-xs font-bold text-[var(--text-tertiary)]">{index + 1}</td>
-                                        <td className="px-6 py-4">
+                                        <td className="px-6 py-4 align-top text-xs font-bold text-[var(--text-tertiary)]">{index + 1}</td>
+                                        <td className="px-6 py-4 align-top">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--accent-primary)]/20 to-indigo-500/20 flex items-center justify-center text-[var(--accent-primary)] font-black text-sm border border-[var(--accent-primary)]/10">
                                                     {lead.name?.[0] || 'L'}
@@ -243,7 +243,7 @@ export default function DataMinerLeads() {
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4">
+                                        <td className="px-6 py-4 align-top">
                                             <span className={`px-3 py-1.5 rounded-xl text-[10px] font-black tracking-widest uppercase border ${lead.stage === 'DM' ? 'bg-blue-500/10 text-blue-500 border-blue-500/20' :
                                                 lead.stage === 'LQ' ? 'bg-purple-500/10 text-purple-500 border-purple-500/20' :
                                                     lead.stage === 'MANAGER' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' :
@@ -252,45 +252,43 @@ export default function DataMinerLeads() {
                                                 {lead.stage}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4">
-                                            <div className="space-y-1 max-w-[250px]">
+                                        <td className="px-6 py-4 align-top">
+                                            <div className="flex flex-col gap-1.5 min-w-[220px]">
                                                 {lead.emails && lead.emails.length > 0 ? (
-                                                    lead.emails.slice(0, 3).map((e, i) => (
-                                                        <div key={i} className="text-[11px] font-bold text-[var(--text-secondary)] truncate flex items-center gap-1.5">
-                                                            <div className="w-1 h-1 rounded-full bg-[var(--accent-primary)]" />
-                                                            {e.value}
+                                                    lead.emails.map((e, i) => (
+                                                        <div key={i} className="group/item flex items-center gap-2 py-1 px-2 rounded-lg bg-[var(--bg-tertiary)]/30 border border-transparent hover:border-[var(--accent-primary)]/20 hover:bg-[var(--accent-primary)]/5 transition-all">
+                                                            <div className={`w-1.5 h-1.5 rounded-full ${e.status === 'ACTIVE' ? 'bg-emerald-500' : 'bg-amber-400'}`} />
+                                                            <span className="text-[11px] font-bold text-[var(--text-secondary)] break-all">{e.value}</span>
                                                         </div>
                                                     ))
                                                 ) : (
-                                                    <span className="text-[10px] text-[var(--text-tertiary)] italic">No Emails</span>
-                                                )}
-                                                {lead.emails?.length > 3 && (
-                                                    <div className="text-[9px] font-black text-[var(--accent-primary)]">+{lead.emails.length - 3} more</div>
+                                                    <span className="text-[10px] text-[var(--text-tertiary)] italic px-2">No Emails identified</span>
                                                 )}
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4">
-                                            <div className="space-y-1 max-w-[200px]">
+                                        <td className="px-6 py-4 align-top">
+                                            <div className="flex flex-col gap-1.5 min-w-[150px]">
                                                 {lead.phones && lead.phones.length > 0 ? (
-                                                    lead.phones.slice(0, 3).map((p, i) => (
-                                                        <div key={i} className="text-[11px] font-bold text-[var(--text-secondary)] truncate flex items-center gap-1.5">
-                                                            <div className="w-1 h-1 rounded-full bg-[var(--accent-primary)]" />
-                                                            {p}
+                                                    lead.phones.map((p, i) => (
+                                                        <div key={i} className="flex items-center gap-2 py-1 px-2 rounded-lg bg-[var(--bg-tertiary)]/30 border border-transparent hover:border-[var(--accent-primary)]/20 hover:bg-[var(--accent-primary)]/5 transition-all">
+                                                            <div className="p-1 bg-[var(--accent-primary)]/10 rounded-md">
+                                                                <svg className="w-2.5 h-2.5 text-[var(--accent-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                                                </svg>
+                                                            </div>
+                                                            <span className="text-[11px] font-bold text-[var(--text-secondary)]">{p}</span>
                                                         </div>
                                                     ))
                                                 ) : (
-                                                    <span className="text-[10px] text-[var(--text-tertiary)] italic">No Phones</span>
-                                                )}
-                                                {lead.phones?.length > 3 && (
-                                                    <div className="text-[9px] font-black text-[var(--accent-primary)]">+{lead.phones.length - 3} more</div>
+                                                    <span className="text-[10px] text-[var(--text-tertiary)] italic px-2">No Phones identified</span>
                                                 )}
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4">
+                                        <td className="px-6 py-4 align-top">
                                             <div className="text-xs font-bold text-[var(--text-secondary)] truncate max-w-[150px]">{lead.industry || 'Unknown'}</div>
                                             <div className="text-[10px] text-[var(--text-tertiary)] font-black uppercase tracking-wider truncate max-w-[150px]">{lead.location || 'Unknown'}</div>
                                         </td>
-                                        <td className="px-6 py-4">
+                                        <td className="px-6 py-4 align-top">
                                             <div className="flex items-center gap-2">
                                                 <div className="w-6 h-6 rounded-lg bg-[var(--bg-tertiary)] flex items-center justify-center text-[10px] font-black text-[var(--text-primary)] border border-[var(--border-primary)]">
                                                     {lead.createdBy?.name?.[0] || 'S'}
@@ -298,7 +296,7 @@ export default function DataMinerLeads() {
                                                 <span className="text-xs font-bold text-[var(--text-secondary)]">{lead.createdBy?.name || 'System'}</span>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4">
+                                        <td className="px-6 py-4 align-top">
                                             <div className="text-xs font-bold text-[var(--text-secondary)]">{new Date(lead.createdAt).toLocaleDateString()}</div>
                                             <div className="text-[10px] text-[var(--text-tertiary)] font-medium">{new Date(lead.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
                                         </td>

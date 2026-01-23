@@ -10,13 +10,22 @@ export default function ManagerLeads() {
 
     const [searchTerm, setSearchTerm] = useState('');
     const [filterDate, setFilterDate] = useState('');
+    const [stageFilter, setStageFilter] = useState('ALL'); // ALL, MANAGER, DONE, REJECTED
 
     const fetchAllLeads = async () => {
         try {
             setLoading(true);
-            const response = await adminAPI.getManagerLeads(200);
+            // Fetch a larger set and include various stages related to managers
+            const response = await adminAPI.getLeadsByStage(null, 1000);
             if (response.success) {
-                setLeads(response.leads || []);
+                // Filter for leads that are in Manager stages or have been assigned
+                const mLeads = response.leads.filter(l =>
+                    l.stage === 'MANAGER' ||
+                    l.stage === 'DONE' ||
+                    l.stage === 'REJECTED' ||
+                    l.assignedToRole === 'Manager'
+                );
+                setLeads(mLeads);
             }
         } catch (err) {
             console.error("Failed to fetch manager leads", err);
@@ -63,12 +72,16 @@ export default function ManagerLeads() {
 
     const filteredLeads = useMemo(() => {
         return leads.filter(l => {
+            // Stage Filter
+            if (stageFilter !== 'ALL' && l.stage !== stageFilter) return false;
+
             if (searchTerm) {
                 const search = searchTerm.toLowerCase();
                 return (
                     l.name?.toLowerCase().includes(search) ||
                     l.industry?.toLowerCase().includes(search) ||
-                    l.status?.toLowerCase().includes(search)
+                    l.status?.toLowerCase().includes(search) ||
+                    l.assignedTo?.name?.toLowerCase().includes(search)
                 );
             }
             if (filterDate) {
@@ -80,7 +93,7 @@ export default function ManagerLeads() {
             }
             return true;
         });
-    }, [leads, searchTerm, filterDate]);
+    }, [leads, searchTerm, filterDate, stageFilter]);
 
     const filteredTeam = useMemo(() => {
         return team.filter(member => {
@@ -144,12 +157,24 @@ export default function ManagerLeads() {
                         </div>
 
                         {view !== 'TEAM' && (
-                            <input
-                                type="date"
-                                value={filterDate}
-                                onChange={e => setFilterDate(e.target.value)}
-                                className="px-4 py-2.5 rounded-xl border border-[var(--border-primary)] bg-[var(--bg-tertiary)] text-xs font-bold text-[var(--text-primary)] outline-none ring-[var(--accent-primary)]/20 focus:ring-2"
-                            />
+                            <>
+                                <select
+                                    value={stageFilter}
+                                    onChange={e => setStageFilter(e.target.value)}
+                                    className="px-4 py-2.5 rounded-xl border border-[var(--border-primary)] bg-[var(--bg-tertiary)] text-xs font-black text-[var(--text-primary)] outline-none ring-[var(--accent-primary)]/20 focus:ring-2 cursor-pointer"
+                                >
+                                    <option value="ALL">All Stages</option>
+                                    <option value="MANAGER">Active Deals</option>
+                                    <option value="DONE">Completed</option>
+                                    <option value="REJECTED">Rejected</option>
+                                </select>
+                                <input
+                                    type="date"
+                                    value={filterDate}
+                                    onChange={e => setFilterDate(e.target.value)}
+                                    className="px-4 py-2.5 rounded-xl border border-[var(--border-primary)] bg-[var(--bg-tertiary)] text-xs font-bold text-[var(--text-primary)] outline-none ring-[var(--accent-primary)]/20 focus:ring-2"
+                                />
+                            </>
                         )}
 
                         <div className="relative w-64 md:w-72">
@@ -228,51 +253,117 @@ export default function ManagerLeads() {
                             <tbody className="divide-y divide-[var(--border-primary)]/50">
                                 {filteredLeads.map((lead, index) => (
                                     <tr key={lead._id} className="hover:bg-[var(--bg-tertiary)]/50 transition-colors group cursor-default">
-                                        <td className="px-6 py-4 text-xs font-bold text-[var(--text-tertiary)]">{index + 1}</td>
-                                        <td className="px-6 py-4">
+                                        <td className="px-6 py-5 align-top text-xs font-bold text-[var(--text-tertiary)]">{index + 1}</td>
+                                        <td className="px-6 py-5 align-top">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 flex items-center justify-center text-amber-600 font-black text-sm border border-orange-500/10">
                                                     {lead.name?.[0] || 'D'}
                                                 </div>
-                                                <div>
-                                                    <div className="font-bold text-[var(--text-primary)] text-sm">{lead.name || 'Anonymous'}</div>
-                                                    <div className="text-[10px] text-[var(--text-tertiary)] font-black">ST: {lead.stage}</div>
+                                                <div className="max-w-[180px]">
+                                                    <div className="font-bold text-[var(--text-primary)] text-sm break-words">{lead.name || 'Anonymous'}</div>
+                                                    <div className="text-[10px] text-[var(--text-tertiary)] font-black uppercase mt-1">
+                                                        📍 {lead.location || 'N/A'}
+                                                    </div>
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4">
-                                            <span className={`px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-lg border ${lead.status === 'PAID' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' :
-                                                lead.status === 'UNPAID' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' :
-                                                    'bg-blue-500/10 text-blue-500 border-blue-500/20'
-                                                }`}>
-                                                {lead.status || 'PENDING'}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="text-xs font-bold text-[var(--text-primary)] truncate max-w-[150px]">
-                                                {lead.responseSource?.value || 'N/A'}
+                                        <td className="px-6 py-5 align-top">
+                                            <div className="space-y-2">
+                                                <span className={`block px-3 py-1 text-[9px] font-black uppercase tracking-widest rounded-lg border w-fit ${lead.status === 'PAID' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' :
+                                                    lead.status === 'UNPAID' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' :
+                                                        'bg-blue-500/10 text-blue-500 border-blue-500/20'
+                                                    }`}>
+                                                    {lead.status || 'PENDING'}
+                                                </span>
+                                                <div className="flex gap-1">
+                                                    <span className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase border ${lead.stage === 'MANAGER' ? 'bg-blue-500/10 text-blue-600 border-blue-500/20' :
+                                                        lead.stage === 'DONE' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' :
+                                                            'bg-rose-500/10 text-rose-600 border-rose-500/20'
+                                                        }`}>
+                                                        {lead.stage === 'MANAGER' ? 'ACTIVE' : lead.stage}
+                                                    </span>
+                                                    <span className="px-2 py-0.5 rounded-md text-[8px] font-black uppercase border border-[var(--border-primary)] bg-[var(--bg-tertiary)] text-[var(--text-tertiary)]">
+                                                        LQ: {lead.lqStatus || 'N/A'}
+                                                    </span>
+                                                </div>
                                             </div>
-                                            <div className="text-[10px] text-[var(--text-tertiary)] font-black uppercase">
-                                                {lead.responseSource?.type || 'No Source'}
+                                        </td>
+                                        <td className="px-6 py-5 align-top">
+                                            <div className="flex flex-col gap-1.5 min-w-[220px]">
+                                                {lead.emails && lead.emails.length > 0 ? (
+                                                    lead.emails.map((e, i) => (
+                                                        <div key={i} className={`flex items-center gap-2 py-1 px-2 rounded-lg border transition-all ${e.value === lead.responseSource?.value ? 'bg-[var(--accent-primary)]/10 border-[var(--accent-primary)]/20' : 'bg-[var(--bg-tertiary)]/30 border-transparent'}`}>
+                                                            <div className={`w-1.5 h-1.5 rounded-full ${e.status === 'ACTIVE' ? 'bg-emerald-500' : 'bg-rose-400'}`} />
+                                                            <span className={`text-[11px] font-bold break-all ${e.value === lead.responseSource?.value ? 'text-[var(--accent-primary)]' : 'text-[var(--text-secondary)]'}`}>
+                                                                {e.value}
+                                                            </span>
+                                                            {e.value === lead.responseSource?.value && <span className="ml-auto text-[8px] font-black uppercase text-[var(--accent-primary)]">Used</span>}
+                                                        </div>
+                                                    ))
+                                                ) : (
+                                                    <span className="text-[10px] text-[var(--text-tertiary)] italic">No Emails</span>
+                                                )}
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4">
-                                            <span className="text-[10px] font-black text-[var(--text-secondary)] bg-[var(--bg-tertiary)] px-2 py-1 rounded-lg uppercase border border-[var(--border-primary)]">
-                                                {lead.industry || 'Unknown'}
-                                            </span>
+                                        <td className="px-6 py-5 align-top">
+                                            <div className="flex flex-col gap-1.5 min-w-[150px]">
+                                                {lead.phones && lead.phones.length > 0 ? (
+                                                    lead.phones.map((p, i) => (
+                                                        <div key={i} className={`flex items-center gap-2 py-1 px-2 rounded-lg border transition-all ${p === lead.responseSource?.value ? 'bg-[var(--accent-primary)]/10 border-[var(--accent-primary)]/20' : 'bg-[var(--bg-tertiary)]/30 border-transparent'}`}>
+                                                            <div className="p-0.5 bg-[var(--accent-primary)]/10 rounded">
+                                                                <svg className="w-2 h-2 text-[var(--accent-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
+                                                            </div>
+                                                            <span className={`text-[11px] font-bold ${p === lead.responseSource?.value ? 'text-[var(--accent-primary)]' : 'text-[var(--text-secondary)]'}`}>
+                                                                {p}
+                                                            </span>
+                                                        </div>
+                                                    ))
+                                                ) : (
+                                                    <span className="text-[10px] text-[var(--text-tertiary)] italic">No Phones</span>
+                                                )}
+                                            </div>
                                         </td>
-                                        <td className="px-6 py-4">
+                                        <td className="px-6 py-5 align-top">
+                                            <div className="space-y-2">
+                                                <div className="flex items-center gap-1.5">
+                                                    <span className="px-2 py-1 bg-[var(--bg-tertiary)] text-[var(--text-secondary)] rounded-lg text-[9px] font-black uppercase border border-[var(--border-primary)]">
+                                                        {lead.industry || 'N/A'}
+                                                    </span>
+                                                </div>
+                                                <div className="text-[9px] text-[var(--text-tertiary)] font-black uppercase flex items-center gap-1 px-1">
+                                                    <div className="w-1 h-1 rounded-full bg-[var(--accent-primary)]" />
+                                                    via {lead.responseSource?.type || 'Source N/A'}
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-5 align-top">
                                             <div className="flex items-center gap-2">
-                                                <div className="w-6 h-6 rounded-lg bg-[var(--bg-tertiary)] flex items-center justify-center text-[10px] font-black text-[var(--text-primary)] border border-[var(--border-primary)]">
+                                                <div className="w-7 h-7 rounded-lg bg-[var(--bg-tertiary)] flex items-center justify-center text-[10px] font-black text-[var(--text-primary)] border border-[var(--border-primary)]">
                                                     {lead.assignedTo?.name?.[0] || 'M'}
                                                 </div>
-                                                <span className="text-xs font-bold text-[var(--text-secondary)]">{lead.assignedTo?.name || 'Unassigned'}</span>
+                                                <div>
+                                                    <div className="text-xs font-bold text-[var(--text-primary)]">{lead.assignedTo?.name || 'Unassigned'}</div>
+                                                    <div className="text-[9px] text-[var(--text-tertiary)] font-black uppercase">Role: {lead.assignedToRole || 'Manager'}</div>
+                                                </div>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4">
-                                            <div className="text-xs font-bold text-[var(--text-secondary)]">{lead.comments?.length || 0} Comments</div>
-                                            <div className="text-[10px] font-medium text-[var(--text-tertiary)] tracking-tight">
-                                                Last: {lead.comments && lead.comments.length > 0 ? new Date(lead.comments[lead.comments.length - 1].createdAt).toLocaleDateString() : 'No Activity'}
+                                        <td className="px-6 py-5 align-top">
+                                            <div className="space-y-1">
+                                                <div className="text-xs font-bold text-[var(--text-primary)]">{lead.comments?.length || 0} Logs</div>
+                                                <div className="text-[9px] font-bold text-[var(--text-tertiary)]">
+                                                    Assigned: {lead.assignedAt ? new Date(lead.assignedAt).toLocaleDateString() : 'N/A'}
+                                                </div>
+                                                {lead.lqUpdatedBy && (
+                                                    <div className="mt-2 pt-2 border-t border-[var(--border-primary)]/30">
+                                                        <div className="text-[8px] font-black text-[var(--text-tertiary)] uppercase mb-1">Qualified By</div>
+                                                        <div className="flex items-center gap-1.5">
+                                                            <div className="w-4 h-4 rounded bg-purple-500/10 flex items-center justify-center text-[7px] font-black text-purple-600 border border-purple-500/20">
+                                                                {lead.lqUpdatedBy.name?.[0]}
+                                                            </div>
+                                                            <span className="text-[9px] font-bold text-[var(--text-secondary)]">{lead.lqUpdatedBy.name}</span>
+                                                        </div>
+                                                    </div>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>

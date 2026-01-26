@@ -67,8 +67,6 @@ export default function LeadQualifierLeads() {
                d.getFullYear() === today.getFullYear();
     };
 
-    const [dateFilter, setDateFilter] = useState('ALL');
-
     useEffect(() => {
         fetchLeads();
         fetchManagers();

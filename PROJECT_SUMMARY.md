@@ -22,13 +22,13 @@ Over the course of recent development, significant effort has been invested in r
     -   **Main Application Routes (`src/routes/AppRoutes.jsx`)**: Configures the main routing structure using React Router. It intelligently differentiates between public routes (like `/` for signup and `/login`) and protected dashboard routes.
         -   Crucially, token monitoring and expiry checks are **stopped** when on public routes to prevent infinite redirect loops, ensuring a smooth login experience.
         -   It globally listens for `tokenExpired` events dispatched by the `tokenManager` to trigger application-wide redirects.
-    -   **Dynamic Dashboard Routing (`src/routes/DynamicRoutes.jsx` & `src/dashboards/dashboardConfig.jsx`)**: Dynamically generates routes for various dashboards, including **Super Admin**, Data Miner, Lead Qualifier, Admin, Manager, and Support roles, based on a central `dashboardConfig.jsx`.
+    -   **Dynamic Dashboard Routing (`src/routes/DynamicRoutes.jsx` & `src/dashboards/dashboardConfig.jsx`)**: Dynamically generates routes for various dashboards, including **Admin**, Data Miner, Lead Qualifier, Manager, and Support roles, based on a central `dashboardConfig.jsx`.
         -   The `dashboardConfig.jsx` file defines the structure, `basePath`, `icon`, and `pages` for each dashboard, enabling a scalable and flexible routing solution.
         -   Each dashboard's pages are lazy-loaded for optimized performance.
-    -   **Super Admin Dashboard (e.g., `/gds/super-admin`)**: This is a critical dashboard providing extensive administrative capabilities. It includes pages such as:
+    -   **Admin Dashboard (e.g., `/gds/admin`)**: This is the main administrative dashboard providing comprehensive user management capabilities. It includes pages such as:
         -   **Dashboard**: Overview of key metrics.
-        -   **Users**: Management of all user accounts, including approval of pending requests.
-        -   **Pending Requests**: Specific section for Super Admins to review and approve/reject new user registrations.
+        -   **Users Management**: Management of all user accounts, including role assignment and status management.
+        -   **Pending Requests**: Section for Admins to review and approve/reject new user registrations.
         -   **Leads**: Comprehensive lead management.
         -   **Analytics**: Detailed reporting and insights.
         -   **Settings**: Application configuration.

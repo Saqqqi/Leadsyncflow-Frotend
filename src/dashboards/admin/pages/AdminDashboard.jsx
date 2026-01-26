@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { adminAPI } from '../../../api/admin.api';
+import SharedLoader from '../../../components/SharedLoader';
 
 export default function AdminDashboard() {
     const navigate = useNavigate();
@@ -81,20 +82,6 @@ export default function AdminDashboard() {
                 )
             },
             {
-                id: 'verification',
-                title: 'Verification',
-                value: totals.dmCount,
-                subtitle: 'Email Validation',
-                trend: 0,
-                path: 'verifier-leads',
-                color: 'from-emerald-600 to-teal-600',
-                icon: (
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                )
-            },
-            {
                 id: 'qualification',
                 title: 'Qualification',
                 value: totals.lqCount,
@@ -125,11 +112,7 @@ export default function AdminDashboard() {
         ];
     }, [data]);
 
-    if (loading && !data) return (
-        <div className="flex items-center justify-center min-h-screen">
-            <div className="w-8 h-8 border-4 border-[var(--accent-primary)]/20 border-t-[var(--accent-primary)] rounded-full animate-spin" />
-        </div>
-    );
+    if (loading && !data) return <SharedLoader />;
 
     const { totals, conversions, leaderboards } = data;
 

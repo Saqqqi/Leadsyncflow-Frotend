@@ -2,7 +2,7 @@
 export const getRoleBasedRedirect = (userRole) => {
   const roleRedirectMap = {
     'Admin': '/gds/admin',
-    'Super Admin': '/gds/super-admin',
+    'Super Admin': '/gds/admin',
     'Lead qualifiers': '/gds/lead-qualifier',
     'Lead Qualifiers': '/gds/lead-qualifier',
     'Team lead( Lead qualifiers,)': '/gds/lead-qualifier',
@@ -19,7 +19,7 @@ export const getRoleBasedRedirect = (userRole) => {
 export const getRoleDisplayName = (userRole) => {
   const roleNameMap = {
     'Admin': 'Admin',
-    'Super Admin': 'Super Admin',
+    'Super Admin': 'Admin',
     'Lead qualifiers': 'Lead Qualifier',
     'Lead Qualifiers': 'Lead Qualifier',
     'Team lead( Lead qualifiers,)': 'Lead Qualifier',
@@ -35,7 +35,6 @@ export const getRoleDisplayName = (userRole) => {
 export const getDashboardTitleFromPath = (pathname) => {
   const pathTitleMap = {
     '/gds/admin': 'Admin Dashboard',
-    '/gds/super-admin': 'Super Admin Dashboard',
     '/gds/lead-qualifier': 'Lead Qualifier Dashboard',
     '/gds/data-minor': 'Data Minor Dashboard',
     '/gds/verifier': 'Verifier Dashboard',

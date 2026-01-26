@@ -62,7 +62,7 @@ src/
 ├── 📁 layouts/            # 🖼️ Persistent Dashboard & Auth layouts
 ├── 📁 routes/             # 🚦 Dynamic & Role-based routing logic
 ├── 📁 dashboards/         # 📊 Feature-rich role-specific modules
-│   ├── 📁 super-admin/    # Governance: User approvals, roles, global stats
+│   ├── 📁 admin/           # Administration: User management, approvals, role assignment
 │   ├── 📁 data-minor/     # Operations: Lead entry, duplicate checks, uploads
 │   ├── 📁 Verifier/       # Validation: Email verification, lead cleansing
 │   ├── 📁 lead-qualifier/ # Qualification: Lead assignment, scoring, history

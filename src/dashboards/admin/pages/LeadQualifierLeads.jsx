@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { adminAPI } from '../../../api/admin.api';
+import SharedLoader from '../../../components/SharedLoader';
 
 export default function LeadQualifierLeads() {
     const [leads, setLeads] = useState([]);
@@ -115,11 +116,7 @@ export default function LeadQualifierLeads() {
         dead: leads.filter(l => l.lqStatus === 'DEAD').length,
     }), [leads]);
 
-    if (loading && leads.length === 0 && team.length === 0) return (
-        <div className="flex items-center justify-center min-h-[400px]">
-            <div className="w-12 h-12 rounded-full border-4 border-[var(--accent-primary)]/20 border-t-[var(--accent-primary)] animate-spin" />
-        </div>
-    );
+    if (loading && leads.length === 0 && team.length === 0) return <SharedLoader />;
 
     return (
         <div className="p-4 sm:p-6 md:p-8 space-y-6 animate-fadeIn max-w-[1800px] mx-auto">

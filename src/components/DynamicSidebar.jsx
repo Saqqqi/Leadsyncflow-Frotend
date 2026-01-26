@@ -2,11 +2,13 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { dashboardConfig } from '../dashboards/dashboardConfig';
 import { useLeadCounts } from '../hooks/useLeadCounts';
+import { usePendingRequestsCount } from '../hooks/usePendingRequestsCount';
 
 export default function DynamicSidebar({ isOpen, onClose, onToggle, user }) {
   const location = useLocation();
   const userRole = user?.role || user?.department;
   const counts = useLeadCounts(userRole);
+  const { count: pendingRequestsCount } = usePendingRequestsCount();
 
   // Find current dashboard and page
   const currentPath = location.pathname;
@@ -142,7 +144,12 @@ export default function DynamicSidebar({ isOpen, onClose, onToggle, user }) {
                         {counts.newLeads}
                       </span>
                     )}
-                    {isPageActive && !(page.name === 'New Leads' && counts.newLeads > 0) && (
+                    {page.name === 'Pending Requests' && pendingRequestsCount > 0 && (
+                      <span className="ml-auto bg-orange-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full animate-pulse shadow-lg shadow-orange-500/40">
+                        {pendingRequestsCount}
+                      </span>
+                    )}
+                    {isPageActive && !(page.name === 'New Leads' && counts.newLeads > 0) && !(page.name === 'Pending Requests' && pendingRequestsCount > 0) && (
                       <div className="ml-auto w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_8px_white]" />
                     )}
                   </Link>

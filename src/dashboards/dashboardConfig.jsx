@@ -39,11 +39,6 @@ const AnalyticsIcon = () => (
 );
 
 // Lazy Loaded Components
-const SuperAdminDashboard = lazy(() => import("../dashboards/super-admin/pages/AdminDashboard"));
-const SuperAdminUsers = lazy(() => import("../dashboards/super-admin/pages/Users"));
-const SuperAdminLeads = lazy(() => import("../dashboards/super-admin/pages/Leads"));
-const SuperAdminAnalytics = lazy(() => import("../dashboards/super-admin/pages/Analytics"));
-const SuperAdminSettings = lazy(() => import("../dashboards/super-admin/pages/Settings"));
 const LeadQualifierDashboard = lazy(() => import("../dashboards/lead-qualifier/pages/LeadQualifierDashboard"));
 const DataMinorDashboard = lazy(() => import("../dashboards/data-minor/pages/DataMinorDashboard"));
 const InputFiles = lazy(() => import("../dashboards/data-minor/pages/InputFiles"));
@@ -60,8 +55,8 @@ const AdminDashboard = lazy(() => import("../dashboards/admin/pages/AdminDashboa
 const AdminDataMinerLeads = lazy(() => import("../dashboards/admin/pages/DataMinerLeads"));
 const AdminLeadQualifierLeads = lazy(() => import("../dashboards/admin/pages/LeadQualifierLeads"));
 const AdminManagerLeads = lazy(() => import("../dashboards/admin/pages/ManagerLeads"));
-const AdminVerifierLeads = lazy(() => import("../dashboards/admin/pages/VerifierLeads"));
-const AdminConsole = lazy(() => import("../dashboards/admin/pages/AdminConsole"));
+const AdminPendingRequests = lazy(() => import("../dashboards/admin/pages/PendingRequests"));
+const AdminUsersManagement = lazy(() => import("../dashboards/admin/pages/UsersManagement"));
 
 // Centralized Configuration
 export const dashboardConfig = [
@@ -76,22 +71,8 @@ export const dashboardConfig = [
       { name: 'Data Miners', path: 'data-miner-leads', component: AdminDataMinerLeads, icon: <FilesIcon />, showInSidebar: true },
       { name: 'Lead Qualifiers', path: 'lead-qualifier-leads', component: AdminLeadQualifierLeads, icon: <UsersIcon />, showInSidebar: true },
       { name: 'Managers', path: 'manager-leads', component: AdminManagerLeads, icon: <LeadsIcon />, showInSidebar: true },
-      { name: 'Verifiers', path: 'verifier-leads', component: AdminVerifierLeads, icon: <DashboardIcon />, showInSidebar: true },
-      { name: 'Admin Console', path: 'console', component: AdminConsole, icon: <AnalyticsIcon />, showInSidebar: true },
-    ],
-  },
-  {
-    id: 'super-admin',
-    name: 'Super Admin',
-    role: 'Super Admin',
-    basePath: '/gds/super-admin',
-    icon: <SettingsIcon />,
-    pages: [
-      { name: 'Dashboard', path: '', component: SuperAdminDashboard, icon: <DashboardIcon />, showInSidebar: true },
-      { name: 'Users', path: 'users', component: SuperAdminUsers, icon: <UsersIcon />, showInSidebar: true },
-      { name: 'Leads', path: 'leads', component: SuperAdminLeads, icon: <LeadsIcon />, showInSidebar: true },
-      { name: 'Analytics', path: 'analytics', component: SuperAdminAnalytics, icon: <AnalyticsIcon />, showInSidebar: true },
-      { name: 'Settings', path: 'settings', component: SuperAdminSettings, icon: <SettingsIcon />, showInSidebar: true },
+      { name: 'Pending Requests', path: 'pending-requests', component: AdminPendingRequests, icon: <UsersIcon />, showInSidebar: true },
+      { name: 'Users Management', path: 'users', component: AdminUsersManagement, icon: <UsersIcon />, showInSidebar: true },
     ],
   },
   {

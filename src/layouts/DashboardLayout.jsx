@@ -91,6 +91,24 @@ export default function DashboardLayout() {
         user={user}
       />
 
+      {/* Floating Sidebar Toggle Button (Desktop) - appears when sidebar is closed */}
+      {!isSidebarOpen && (
+        <button
+          onClick={() => setIsSidebarOpen(true)}
+          className="fixed left-4 top-1/2 -translate-y-1/2 z-[70] w-12 h-12 flex items-center justify-center rounded-full shadow-lg hover:shadow-xl transition-all duration-300 group border-2"
+          style={{ 
+            backgroundColor: 'var(--accent-primary)', 
+            borderColor: 'var(--accent-primary)',
+            color: 'white'
+          }}
+          title="Show Sidebar"
+        >
+          <svg className="w-5 h-5 transition-transform group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      )}
+
       <div
         className={`flex-1 flex flex-col transition-all duration-300 ${isSidebarOpen ? 'lg:ml-64' : 'lg:ml-0'
           }`}
@@ -111,6 +129,24 @@ export default function DashboardLayout() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
+
+            {/* Desktop sidebar toggle - shows when sidebar is closed */}
+            {!isSidebarOpen && (
+              <button
+                onClick={() => setIsSidebarOpen(true)}
+                className="flex p-3 rounded-lg hover:bg-[var(--bg-secondary)] transition-all duration-300 group border-2"
+                style={{ 
+                  color: 'var(--accent-primary)',
+                  borderColor: 'var(--accent-primary)',
+                  backgroundColor: 'var(--accent-primary)/10'
+                }}
+                title="Show Sidebar"
+              >
+                <svg className="h-5 w-5 transition-transform group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h8M4 18h16" />
+                </svg>
+              </button>
+            )}
 
             {/* Dashboard info */}
             {currentDashboard && (

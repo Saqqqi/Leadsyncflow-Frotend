@@ -55,9 +55,6 @@ function AppRoutesWithTokenManagement() {
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/*" element={<DynamicRoutes />} />
       </Routes>
-
-      {/* Token status shown only on protected routes */}
-      {!isPublicRoute && <TokenStatus />}
     </>
   );
 }

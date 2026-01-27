@@ -21,20 +21,43 @@ export default function ManagerLeads() {
     const fetchAllLeads = async () => {
         try {
             setLoading(true);
-            // Fetch a larger set and include various stages related to managers
-            const response = await adminAPI.getLeadsByStage(null, 1000);
-            if (response.success) {
-                // Filter for leads that are in Manager stages or have been assigned
-                const mLeads = response.leads.filter(l =>
-                    l.stage === 'MANAGER' ||
-                    l.stage === 'DONE' ||
-                    l.stage === 'REJECTED' ||
-                    l.assignedToRole === 'Manager'
-                );
-                setLeads(mLeads);
+            console.log('🎯 ManagerLeads: Fetching Manager stage leads');
+            
+            // Fetch Manager stage leads directly from backend
+            const managerResponse = await adminAPI.getAllLeadsByRole(1000, 0, { stage: 'MANAGER' });
+            
+            // Also fetch COMPLETED and REJECTED leads that were handled by managers
+            const completedResponse = await adminAPI.getAllLeadsByRole(1000, 0, { stage: 'COMPLETED' });
+            const rejectedResponse = await adminAPI.getAllLeadsByRole(1000, 0, { stage: 'REJECTED' });
+            
+            let allManagerLeads = [];
+            
+            if (managerResponse.success) {
+                allManagerLeads = [...allManagerLeads, ...managerResponse.leads];
+                console.log('📊 ManagerLeads: MANAGER stage leads:', managerResponse.leads.length);
             }
-        } catch (err) {
-            console.error("Failed to fetch manager leads", err);
+            
+            if (completedResponse.success) {
+                allManagerLeads = [...allManagerLeads, ...completedResponse.leads];
+                console.log('📊 ManagerLeads: COMPLETED stage leads:', completedResponse.leads.length);
+            }
+            
+            if (rejectedResponse.success) {
+                allManagerLeads = [...allManagerLeads, ...rejectedResponse.leads];
+                console.log('📊 ManagerLeads: REJECTED stage leads:', rejectedResponse.leads.length);
+            }
+            
+            console.log('🔍 ManagerLeads: Total Manager-involved leads:', allManagerLeads.length);
+            console.log('📈 ManagerLeads: Stage breakdown:', 
+                allManagerLeads.reduce((acc, lead) => {
+                    acc[lead.stage] = (acc[lead.stage] || 0) + 1;
+                    return acc;
+                }, {})
+            );
+            
+            setLeads(allManagerLeads);
+        } catch (error) {
+            console.error('❌ ManagerLeads: Error fetching leads:', error);
         } finally {
             setLoading(false);
         }
@@ -58,8 +81,8 @@ export default function ManagerLeads() {
         try {
             setLoading(true);
             setSelectedUser(user);
-            // Bypass stage filter to show full assignment history
-            const response = await adminAPI.getLeadsByStage(null, 500, 0, { assignedTo: user.userId });
+            // Fetch leads assigned to this specific manager across all relevant stages
+            const response = await adminAPI.getAllLeads(500, 0, { assignedTo: user.userId });
             if (response.success) {
                 setLeads(response.leads || []);
                 setView('INDIVIDUAL_LEADS');
@@ -433,24 +456,24 @@ export default function ManagerLeads() {
             {/* Contact Details Modal */}
             {showContactModal && selectedLead && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-[var(--bg-secondary)] rounded-[32px] border border-[var(--border-primary)] max-w-2xl w-full max-h-[80vh] overflow-hidden shadow-2xl">
+                    <div className="bg-[var(--bg-secondary)] rounded-2xl border border-[var(--border-primary)] max-w-4xl w-full max-h-[85vh] overflow-hidden shadow-2xl">
                         {/* Modal Header */}
-                        <div className="p-6 border-b border-[var(--border-primary)]">
+                        <div className="p-4 border-b border-[var(--border-primary)] bg-[var(--bg-tertiary)]/30">
                             <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 flex items-center justify-center text-amber-600 font-black text-lg border border-orange-500/10">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-500/20 to-orange-500/20 flex items-center justify-center text-amber-600 font-black text-sm border border-orange-500/10">
                                         {selectedLead.name?.[0] || 'D'}
                                     </div>
                                     <div>
-                                        <h3 className="text-xl font-black text-[var(--text-primary)]">{selectedLead.name || 'Anonymous'}</h3>
-                                        <p className="text-sm text-[var(--text-tertiary)]">Contact Information</p>
+                                        <h3 className="text-lg font-black text-[var(--text-primary)]">{selectedLead.name || 'Anonymous'}</h3>
+                                        <p className="text-xs text-[var(--text-tertiary)]">Contact Information</p>
                                     </div>
                                 </div>
                                 <button
                                     onClick={() => setShowContactModal(false)}
-                                    className="p-2 rounded-xl hover:bg-[var(--bg-tertiary)] transition-all"
+                                    className="p-2 rounded-lg hover:bg-[var(--bg-tertiary)] transition-all"
                                 >
-                                    <svg className="w-5 h-5 text-[var(--text-tertiary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg className="w-4 h-4 text-[var(--text-tertiary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                     </svg>
                                 </button>
@@ -458,107 +481,99 @@ export default function ManagerLeads() {
                         </div>
 
                         {/* Modal Content */}
-                        <div className="p-6 overflow-y-auto max-h-[60vh]">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="p-4 overflow-y-auto max-h-[70vh]">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                                 {/* Emails Section */}
-                                <div className="space-y-4">
-                                    <div className="flex items-center gap-2">
-                                        <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div className="space-y-3">
+                                    <div className="flex items-center gap-2 pb-2 border-b border-[var(--border-primary)]/30">
+                                        <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                                         </svg>
-                                        <h4 className="text-lg font-black text-[var(--text-primary)]">
-                                            Email Addresses ({Array.isArray(selectedLead.emails) ? selectedLead.emails.length : 0})
+                                        <h4 className="text-sm font-black text-[var(--text-primary)]">
+                                            Emails ({Array.isArray(selectedLead.emails) ? selectedLead.emails.length : 0})
                                         </h4>
                                     </div>
-                                    <div className="space-y-2 max-h-60 overflow-y-auto">
+                                    <div className="space-y-2 max-h-48 overflow-y-auto">
                                         {Array.isArray(selectedLead.emails) && selectedLead.emails.length > 0 ? (
                                             selectedLead.emails.map((email, i) => {
-                                                // Handle both object and string formats
                                                 const emailValue = typeof email === 'object' ? email.value : email;
                                                 const emailStatus = typeof email === 'object' ? email.status : 'Unknown';
                                                 
                                                 return (
-                                                    <div key={i} className={`p-3 rounded-xl border transition-all ${emailValue === selectedLead.responseSource?.value ? 'bg-[var(--accent-primary)]/10 border-[var(--accent-primary)]/20' : 'bg-[var(--bg-tertiary)]/30 border-[var(--border-primary)]'}`}>
-                                                        <div className="flex items-center justify-between">
-                                                            <div className="flex items-center gap-3">
-                                                                <div className={`w-3 h-3 rounded-full ${emailStatus === 'ACTIVE' ? 'bg-emerald-500' : 'bg-rose-400'}`} />
-                                                                <span className={`font-medium break-all ${emailValue === selectedLead.responseSource?.value ? 'text-[var(--accent-primary)]' : 'text-[var(--text-primary)]'}`}>
+                                                    <div key={i} className={`p-2 rounded-lg border transition-all ${emailValue === selectedLead.responseSource?.value ? 'bg-[var(--accent-primary)]/10 border-[var(--accent-primary)]/20' : 'bg-[var(--bg-tertiary)]/30 border-[var(--border-primary)]'}`}>
+                                                        <div className="flex items-center justify-between gap-2">
+                                                            <div className="flex items-center gap-2 min-w-0 flex-1">
+                                                                <div className={`w-2 h-2 rounded-full flex-shrink-0 ${emailStatus === 'ACTIVE' ? 'bg-emerald-500' : 'bg-rose-400'}`} />
+                                                                <span className={`font-medium text-xs break-all ${emailValue === selectedLead.responseSource?.value ? 'text-[var(--accent-primary)]' : 'text-[var(--text-primary)]'}`}>
                                                                     {emailValue}
                                                                 </span>
                                                             </div>
-                                                            <div className="flex items-center gap-2 flex-shrink-0">
+                                                            <div className="flex items-center gap-1 flex-shrink-0">
                                                                 {emailValue === selectedLead.responseSource?.value && (
-                                                                    <span className="px-2 py-1 bg-[var(--accent-primary)] text-white text-[8px] font-black uppercase rounded">Primary</span>
+                                                                    <span className="px-1.5 py-0.5 bg-[var(--accent-primary)] text-white text-[7px] font-black uppercase rounded">Primary</span>
                                                                 )}
                                                                 <button
-                                                                    onClick={() => {
-                                                                        navigator.clipboard.writeText(emailValue);
-                                                                        // Optional: Show a toast or temporary feedback
-                                                                    }}
-                                                                    className="p-1.5 rounded hover:bg-[var(--bg-secondary)] transition-all"
-                                                                    title="Copy to clipboard"
+                                                                    onClick={() => navigator.clipboard.writeText(emailValue)}
+                                                                    className="p-1 rounded hover:bg-[var(--bg-secondary)] transition-all"
+                                                                    title="Copy"
                                                                 >
-                                                                    <svg className="w-4 h-4 text-[var(--text-tertiary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <svg className="w-3 h-3 text-[var(--text-tertiary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                                                                     </svg>
                                                                 </button>
                                                             </div>
                                                         </div>
-                                                        <div className="mt-1 text-[10px] text-[var(--text-tertiary)] font-medium">
-                                                            Status: {emailStatus}
+                                                        <div className="mt-1 text-[8px] text-[var(--text-tertiary)] font-medium">
+                                                            {emailStatus}
                                                         </div>
                                                     </div>
                                                 );
                                             })
                                         ) : (
-                                            <div className="p-4 text-center text-[var(--text-tertiary)] bg-[var(--bg-tertiary)]/30 rounded-xl border border-[var(--border-primary)]">
-                                                <svg className="w-8 h-8 mx-auto mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <div className="p-3 text-center text-[var(--text-tertiary)] bg-[var(--bg-tertiary)]/30 rounded-lg border border-[var(--border-primary)]">
+                                                <svg className="w-6 h-6 mx-auto mb-1 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                                                 </svg>
-                                                <p>No email addresses available</p>
+                                                <p className="text-xs">No emails available</p>
                                             </div>
                                         )}
                                     </div>
                                 </div>
 
                                 {/* Phones Section */}
-                                <div className="space-y-4">
-                                    <div className="flex items-center gap-2">
-                                        <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div className="space-y-3">
+                                    <div className="flex items-center gap-2 pb-2 border-b border-[var(--border-primary)]/30">
+                                        <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                                         </svg>
-                                        <h4 className="text-lg font-black text-[var(--text-primary)]">
-                                            Phone Numbers ({Array.isArray(selectedLead.phones) ? selectedLead.phones.length : 0})
+                                        <h4 className="text-sm font-black text-[var(--text-primary)]">
+                                            Phones ({Array.isArray(selectedLead.phones) ? selectedLead.phones.length : 0})
                                         </h4>
                                     </div>
-                                    <div className="space-y-2 max-h-60 overflow-y-auto">
+                                    <div className="space-y-2 max-h-48 overflow-y-auto">
                                         {Array.isArray(selectedLead.phones) && selectedLead.phones.length > 0 ? (
                                             selectedLead.phones.map((phone, i) => {
-                                                // Handle both object and string formats
                                                 const phoneValue = typeof phone === 'object' ? phone.value || phone.number : phone;
                                                 
                                                 return (
-                                                    <div key={i} className={`p-3 rounded-xl border transition-all ${phoneValue === selectedLead.responseSource?.value ? 'bg-[var(--accent-primary)]/10 border-[var(--accent-primary)]/20' : 'bg-[var(--bg-tertiary)]/30 border-[var(--border-primary)]'}`}>
-                                                        <div className="flex items-center justify-between">
-                                                            <div className="flex items-center gap-3">
-                                                                <div className="w-3 h-3 bg-green-500 rounded-full" />
-                                                                <span className={`font-medium ${phoneValue === selectedLead.responseSource?.value ? 'text-[var(--accent-primary)]' : 'text-[var(--text-primary)]'}`}>
+                                                    <div key={i} className={`p-2 rounded-lg border transition-all ${phoneValue === selectedLead.responseSource?.value ? 'bg-[var(--accent-primary)]/10 border-[var(--accent-primary)]/20' : 'bg-[var(--bg-tertiary)]/30 border-[var(--border-primary)]'}`}>
+                                                        <div className="flex items-center justify-between gap-2">
+                                                            <div className="flex items-center gap-2 min-w-0 flex-1">
+                                                                <div className="w-2 h-2 bg-green-500 rounded-full flex-shrink-0" />
+                                                                <span className={`font-medium text-xs ${phoneValue === selectedLead.responseSource?.value ? 'text-[var(--accent-primary)]' : 'text-[var(--text-primary)]'}`}>
                                                                     {phoneValue}
                                                                 </span>
                                                             </div>
-                                                            <div className="flex items-center gap-2 flex-shrink-0">
+                                                            <div className="flex items-center gap-1 flex-shrink-0">
                                                                 {phoneValue === selectedLead.responseSource?.value && (
-                                                                    <span className="px-2 py-1 bg-[var(--accent-primary)] text-white text-[8px] font-black uppercase rounded">Primary</span>
+                                                                    <span className="px-1.5 py-0.5 bg-[var(--accent-primary)] text-white text-[7px] font-black uppercase rounded">Primary</span>
                                                                 )}
                                                                 <button
-                                                                    onClick={() => {
-                                                                        navigator.clipboard.writeText(phoneValue);
-                                                                        // Optional: Show a toast or temporary feedback
-                                                                    }}
-                                                                    className="p-1.5 rounded hover:bg-[var(--bg-secondary)] transition-all"
-                                                                    title="Copy to clipboard"
+                                                                    onClick={() => navigator.clipboard.writeText(phoneValue)}
+                                                                    className="p-1 rounded hover:bg-[var(--bg-secondary)] transition-all"
+                                                                    title="Copy"
                                                                 >
-                                                                    <svg className="w-4 h-4 text-[var(--text-tertiary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <svg className="w-3 h-3 text-[var(--text-tertiary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                                                                     </svg>
                                                                 </button>
@@ -568,34 +583,18 @@ export default function ManagerLeads() {
                                                 );
                                             })
                                         ) : (
-                                            <div className="p-4 text-center text-[var(--text-tertiary)] bg-[var(--bg-tertiary)]/30 rounded-xl border border-[var(--border-primary)]">
-                                                <svg className="w-8 h-8 mx-auto mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <div className="p-3 text-center text-[var(--text-tertiary)] bg-[var(--bg-tertiary)]/30 rounded-lg border border-[var(--border-primary)]">
+                                                <svg className="w-6 h-6 mx-auto mb-1 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                                                 </svg>
-                                                <p>No phone numbers available</p>
+                                                <p className="text-xs">No phones available</p>
                                             </div>
                                         )}
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Additional Info */}
-                            <div className="mt-6 pt-6 border-t border-[var(--border-primary)]">
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <div className="p-3 bg-[var(--bg-tertiary)]/30 rounded-xl border border-[var(--border-primary)]">
-                                        <div className="text-[10px] font-black uppercase text-[var(--text-tertiary)] mb-1">Industry</div>
-                                        <div className="font-bold text-[var(--text-primary)]">{selectedLead.industry || 'N/A'}</div>
-                                    </div>
-                                    <div className="p-3 bg-[var(--bg-tertiary)]/30 rounded-xl border border-[var(--border-primary)]">
-                                        <div className="text-[10px] font-black uppercase text-[var(--text-tertiary)] mb-1">Location</div>
-                                        <div className="font-bold text-[var(--text-primary)]">{selectedLead.location || 'N/A'}</div>
-                                    </div>
-                                    <div className="p-3 bg-[var(--bg-tertiary)]/30 rounded-xl border border-[var(--border-primary)]">
-                                        <div className="text-[10px] font-black uppercase text-[var(--text-tertiary)] mb-1">Response Source</div>
-                                        <div className="font-bold text-[var(--text-primary)]">{selectedLead.responseSource?.type || 'N/A'}</div>
-                                    </div>
-                                </div>
-                            </div>
+                           
                         </div>
                     </div>
                 </div>

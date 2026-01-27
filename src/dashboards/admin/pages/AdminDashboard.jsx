@@ -73,7 +73,7 @@ export default function AdminDashboard() {
                 value: totals.dmCount,
                 subtitle: 'Active Collection',
                 trend: conversions.dm_to_lq,
-                path: 'data-miner-leads',
+                path: 'combined-leads',
                 color: 'from-blue-600 to-indigo-600',
                 icon: (
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -87,7 +87,7 @@ export default function AdminDashboard() {
                 value: totals.lqCount,
                 subtitle: 'Funnel Filtering',
                 trend: conversions.lq_to_manager,
-                path: 'lead-qualifier-leads',
+                path: 'combined-leads',
                 color: 'from-purple-600 to-pink-600',
                 icon: (
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

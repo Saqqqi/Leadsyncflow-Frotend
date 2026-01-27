@@ -67,22 +67,7 @@ export default function DynamicSidebar({ isOpen, onClose, onToggle, user }) {
           </div>
         </div>
 
-        {/* Sidebar Expansion Toggle Line (Desktop) */}
-        <div
-          onClick={onToggle}
-          className="hidden lg:flex absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-24 items-center justify-center cursor-pointer group/toggle z-10"
-          title={isOpen ? "Collapse Sidebar" : "Expand Sidebar"}
-        >
-          <div className="w-1.5 h-16 rounded-full bg-gray-400 dark:bg-gray-600 group-hover/toggle:bg-[var(--accent-primary)] transition-all duration-300 group-hover/toggle:h-20 group-hover/toggle:w-2"></div>
-          {/* Floating Arrow Icon on the Line */}
-          <div className="absolute right-0 w-6 h-6 bg-white dark:bg-gray-800 border rounded-full flex items-center justify-center opacity-80 group-hover/toggle:opacity-100 transition-all transform shadow-lg"
-            style={{ borderColor: 'var(--border-primary)' }}>
-            <svg className={`w-3 h-3 transition-transform duration-300 ${isOpen ? 'rotate-0' : 'rotate-180'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 19l-7-7 7-7" />
-            </svg>
-          </div>
-        </div>
-
+        
         {/* Navigation */}
         <nav className="p-4 space-y-4 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 128px)' }}>
           {!currentDashboard && (

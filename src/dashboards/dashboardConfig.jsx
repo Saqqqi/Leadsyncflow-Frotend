@@ -38,6 +38,12 @@ const AnalyticsIcon = () => (
   </svg>
 );
 
+const CombinedIcon = () => (
+  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+  </svg>
+);
+
 // Lazy Loaded Components
 const LeadQualifierDashboard = lazy(() => import("../dashboards/lead-qualifier/pages/LeadQualifierDashboard"));
 const DataMinorDashboard = lazy(() => import("../dashboards/data-minor/pages/DataMinorDashboard"));
@@ -45,16 +51,14 @@ const InputFiles = lazy(() => import("../dashboards/data-minor/pages/InputFiles"
 const Employees = lazy(() => import("../dashboards/data-minor/pages/EmployeeListing"));
 const VerifierDashboard = lazy(() => import("../dashboards/Verifier/pages/VerifierDashboard"));
 const VerifierLeads = lazy(() => import("../dashboards/Verifier/pages/VerifierLeads"));
-const LeadQualifierLeads = lazy(() => import("../dashboards/lead-qualifier/pages/LeadQualifierLeads"));
 const ManagerDashboard = lazy(() => import("../dashboards/manager/pages/ManagerDashboard"));
 const ManagerNewLeads = lazy(() => import("../dashboards/manager/pages/ManagerNewLeads"));
 const ManagerHistory = lazy(() => import("../dashboards/manager/pages/ManagerHistory"));
 
 // Admin Pages
 const AdminDashboard = lazy(() => import("../dashboards/admin/pages/AdminDashboard"));
-const AdminDataMinerLeads = lazy(() => import("../dashboards/admin/pages/DataMinerLeads"));
-const AdminLeadQualifierLeads = lazy(() => import("../dashboards/admin/pages/LeadQualifierLeads"));
 const AdminManagerLeads = lazy(() => import("../dashboards/admin/pages/ManagerLeads"));
+const AdminCombinedLeads = lazy(() => import("../dashboards/admin/pages/CombinedLeads"));
 const AdminPendingRequests = lazy(() => import("../dashboards/admin/pages/PendingRequests"));
 const AdminUsersManagement = lazy(() => import("../dashboards/admin/pages/UsersManagement"));
 
@@ -68,11 +72,10 @@ export const dashboardConfig = [
     icon: <DashboardIcon />,
     pages: [
       { name: 'Dashboard', path: '', component: AdminDashboard, icon: <DashboardIcon />, showInSidebar: true },
-      { name: 'Data Miners', path: 'data-miner-leads', component: AdminDataMinerLeads, icon: <FilesIcon />, showInSidebar: true },
-      { name: 'Lead Qualifiers', path: 'lead-qualifier-leads', component: AdminLeadQualifierLeads, icon: <UsersIcon />, showInSidebar: true },
+      { name: 'Combined Leads', path: 'combined-leads', component: AdminCombinedLeads, icon: <CombinedIcon />, showInSidebar: true },
       { name: 'Managers', path: 'manager-leads', component: AdminManagerLeads, icon: <LeadsIcon />, showInSidebar: true },
       { name: 'Pending Requests', path: 'pending-requests', component: AdminPendingRequests, icon: <UsersIcon />, showInSidebar: true },
-      { name: 'Users Management', path: 'users', component: AdminUsersManagement, icon: <UsersIcon />, showInSidebar: true },
+      { name: 'Users Management', path: 'users', component: AdminUsersManagement, icon: <UsersIcon />, showInSidebar: false },
     ],
   },
   {
@@ -83,7 +86,6 @@ export const dashboardConfig = [
     icon: <DashboardIcon />,
     pages: [
       { name: 'Dashboard', path: '', component: LeadQualifierDashboard, icon: <DashboardIcon />, showInSidebar: true },
-      { name: 'Leads', path: 'leads', component: LeadQualifierLeads, icon: <LeadsIcon />, showInSidebar: true },
     ],
   },
   {

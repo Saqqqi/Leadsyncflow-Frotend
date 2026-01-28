@@ -263,7 +263,7 @@ const InputFiles = () => {
     /* ------------------------- Constants ----------------------------- */
 
     const baseFields = [
-        { label: "Student Name", name: "studentName", placeholder: "e.g. John", type: "text" },
+        { label: "First Name", name: "firstName", placeholder: "e.g. John", type: "text" },
         { label: "Location", name: "location", placeholder: "e.g. London", type: "text" },
     ];
 
@@ -633,7 +633,6 @@ const InputFiles = () => {
                                         }}
                                     >
                                         <option value="" className="bg-slate-900 text-white">Choose a source...</option>
-                                        <option value="LinkedIn" className="bg-slate-900 text-white">LinkedIn</option>
                                         <option value="Facebook" className="bg-slate-900 text-white">Facebook</option>
                                         <option value="Instagram" className="bg-slate-900 text-white">Instagram</option>
                                         <option value="YouTube" className="bg-slate-900 text-white">YouTube</option>
@@ -648,7 +647,7 @@ const InputFiles = () => {
                                 </div>
                             </div>
 
-                            {formData.leadSource && (formData.leadSource === 'Facebook' || formData.leadSource === 'Instagram' || formData.leadSource === 'YouTube' || formData.leadSource === 'LinkedIn') && (
+                            {formData.leadSource && (formData.leadSource === 'Facebook' || formData.leadSource === 'Instagram' || formData.leadSource === 'YouTube') && (
                                 <div className="group/field space-y-2 animate-in slide-in-from-left-5 duration-500">
                                     <label className="text-[10px] font-black uppercase tracking-[0.25em] ml-1 block" style={{ color: 'var(--text-tertiary)' }}>
                                         {formData.leadSource} Profile URL

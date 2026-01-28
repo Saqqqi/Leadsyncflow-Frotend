@@ -24,29 +24,36 @@ export default function ManagerLeads() {
             setLoading(true);
             console.log('🎯 ManagerLeads: Fetching Manager stage leads');
 
-            // Fetch Manager stage leads directly from backend
-            const managerResponse = await adminAPI.getAllLeadsByRole(1000, 0, { stage: 'MANAGER' });
-
-            // Also fetch COMPLETED and REJECTED leads that were handled by managers
-            const completedResponse = await adminAPI.getAllLeadsByRole(1000, 0, { stage: 'COMPLETED' });
-            const rejectedResponse = await adminAPI.getAllLeadsByRole(1000, 0, { stage: 'REJECTED' });
+            // Fetch ALL relevant stages for managers
+            const [
+                managerRes,
+                doneRes,
+                completedRes,
+                rejectedRes,
+                approvedRes
+            ] = await Promise.all([
+                adminAPI.getAllLeadsByRole(1000, 0, { stage: 'MANAGER' }),
+                adminAPI.getAllLeadsByRole(1000, 0, { stage: 'DONE' }),
+                adminAPI.getAllLeadsByRole(1000, 0, { stage: 'COMPLETED' }),
+                adminAPI.getAllLeadsByRole(1000, 0, { stage: 'REJECTED' }),
+                adminAPI.getAllLeadsByRole(1000, 0, { stage: 'MANAGER_APPROVED' })
+            ]);
 
             let allManagerLeads = [];
 
-            if (managerResponse.success) {
-                allManagerLeads = [...allManagerLeads, ...managerResponse.leads];
-                console.log('📊 ManagerLeads: MANAGER stage leads:', managerResponse.leads.length);
-            }
+            if (managerRes.success) allManagerLeads.push(...(managerRes.leads || []));
+            if (doneRes.success) allManagerLeads.push(...(doneRes.leads || []));
+            if (completedRes.success) allManagerLeads.push(...(completedRes.leads || []));
+            if (rejectedRes.success) allManagerLeads.push(...(rejectedRes.leads || []));
+            if (approvedRes.success) allManagerLeads.push(...(approvedRes.leads || []));
 
-            if (completedResponse.success) {
-                allManagerLeads = [...allManagerLeads, ...completedResponse.leads];
-                console.log('📊 ManagerLeads: COMPLETED stage leads:', completedResponse.leads.length);
-            }
-
-            if (rejectedResponse.success) {
-                allManagerLeads = [...allManagerLeads, ...rejectedResponse.leads];
-                console.log('📊 ManagerLeads: REJECTED stage leads:', rejectedResponse.leads.length);
-            }
+            console.log('📊 ManagerLeads Breakdown:', {
+                manager: managerRes.leads?.length || 0,
+                done: doneRes.leads?.length || 0,
+                completed: completedRes.leads?.length || 0,
+                rejected: rejectedRes.leads?.length || 0,
+                approved: approvedRes.leads?.length || 0
+            });
 
             console.log('🔍 ManagerLeads: Total Manager-involved leads:', allManagerLeads.length);
             console.log('📈 ManagerLeads: Stage breakdown:',

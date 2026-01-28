@@ -3,9 +3,10 @@ import tokenManager from '../utils/tokenManager';
 
 export const managerAPI = {
     // Get leads assigned to the current Manager
-    getMyLeads: async () => {
+    getMyLeads: async (params = {}) => {
         const token = tokenManager.getToken();
         const response = await axiosInstance.get('/api/manager/leads', {
+            params,
             headers: { Authorization: `Bearer ${token}` }
         });
         return response.data;

@@ -1,11 +1,17 @@
 import { useState, useEffect } from 'react';
 import { adminAPI } from '../api/admin.api';
 
-export function usePendingRequestsCount() {
+export function usePendingRequestsCount(userRole) {
   const [count, setCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Only fetch for Super Admin roles
+    if (userRole !== 'Super Admin' && userRole !== 'Admin') {
+      setLoading(false);
+      return;
+    }
+
     const fetchCount = async () => {
       try {
         const data = await adminAPI.getPendingRequests();
@@ -24,7 +30,7 @@ export function usePendingRequestsCount() {
     const interval = setInterval(fetchCount, 30000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [userRole]);
 
   return { count, loading };
 }

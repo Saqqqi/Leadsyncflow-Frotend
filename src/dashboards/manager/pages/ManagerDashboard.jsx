@@ -35,7 +35,8 @@ export default function ManagerDashboard() {
     const fetchData = async () => {
         try {
             setLoading(true);
-            const response = await managerAPI.getMyLeads();
+            const response = await managerAPI.getMyLeads({ status: 'all', dashboard: true });
+            console.log(response);
             if (response.success) {
                 setLeads(response.leads || []);
             }
@@ -56,7 +57,7 @@ export default function ManagerDashboard() {
         },
         {
             title: "Total Approved",
-            value: leads.filter(l => l.stage === 'MANAGER_APPROVED').length,
+            value: leads.filter(l => l.stage === 'COMPLETED' || l.stage === 'DONE' || l.stage === 'MANAGER_APPROVED').length,
             subValue: "Accepted Leads",
             icon: <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
             colorClass: "bg-emerald-500/10 text-emerald-500"
@@ -70,7 +71,7 @@ export default function ManagerDashboard() {
         },
         {
             title: "Unpaid Pipeline",
-            value: leads.filter(l => l.stage === 'MANAGER_APPROVED' && l.status === 'UNPAID').length,
+            value: leads.filter(l => (l.stage === 'COMPLETED' || l.stage === 'DONE' || l.stage === 'MANAGER_APPROVED') && l.status === 'UNPAID').length,
             subValue: "Waiting Status",
             icon: <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>,
             colorClass: "bg-[var(--accent-primary)]/10 text-[var(--accent-primary)]"
@@ -146,10 +147,10 @@ export default function ManagerDashboard() {
                                                 </span>
                                             </td>
                                             <td className="px-8 py-6 text-center">
-                                                <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${lead.stage === 'MANAGER_APPROVED' ? 'bg-emerald-500/10 text-emerald-500' :
+                                                <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${(lead.stage === 'COMPLETED' || lead.stage === 'DONE' || lead.stage === 'MANAGER_APPROVED') ? 'bg-emerald-500/10 text-emerald-500' :
                                                     lead.stage === 'REJECTED' ? 'bg-rose-500/10 text-rose-500' : 'bg-amber-500/10 text-amber-500'
                                                     }`}>
-                                                    {lead.stage === 'MANAGER' ? 'PENDING' : lead.stage.replace('MANAGER_', '')}
+                                                    {lead.stage === 'MANAGER' ? 'PENDING' : (lead.stage === 'COMPLETED' || lead.stage === 'DONE') ? 'COMPLETED' : lead.stage.replace('MANAGER_', '')}
                                                 </span>
                                             </td>
                                             <td className="px-8 py-6 text-right">

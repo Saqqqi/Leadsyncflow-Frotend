@@ -8,7 +8,7 @@ export default function DynamicSidebar({ isOpen, onClose, onToggle, user }) {
   const location = useLocation();
   const userRole = user?.role || user?.department;
   const counts = useLeadCounts(userRole);
-  const { count: pendingRequestsCount } = usePendingRequestsCount();
+  const { count: pendingRequestsCount } = usePendingRequestsCount(userRole);
 
   // Find current dashboard and page
   const currentPath = location.pathname;
@@ -54,20 +54,20 @@ export default function DynamicSidebar({ isOpen, onClose, onToggle, user }) {
 
           {/* Logo */}
           <div className="flex items-center justify-center">
-            <img 
-              src="/Logo - Lead Sync.(Lght Mode).svg" 
-              alt="Lead Sync Flow Logo" 
+            <img
+              src="/Logo - Lead Sync.(Lght Mode).svg"
+              alt="Lead Sync Flow Logo"
               className="h-20 w-20 md:h-24 md:w-24 dark:hidden"
             />
-            <img 
-              src="/Logo - Lead Sync.(Dark Mode).svg" 
-              alt="Lead Sync Flow Logo" 
+            <img
+              src="/Logo - Lead Sync.(Dark Mode).svg"
+              alt="Lead Sync Flow Logo"
               className="h-20 w-20 md:h-24 md:w-24 hidden dark:block"
             />
           </div>
         </div>
 
-        
+
         {/* Navigation */}
         <nav className="p-4 space-y-4 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 128px)' }}>
           {!currentDashboard && (

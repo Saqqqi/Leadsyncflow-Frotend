@@ -10,8 +10,7 @@ const CombinedLeads = () => {
   const [filters, setFilters] = useState({
     stage: '',
     status: '',
-    lqStatus: '',
-    role: 'all' // 'all', 'dataMiner', 'leadQualifier'
+    lqStatus: ''
   });
 
   useEffect(() => {
@@ -23,17 +22,7 @@ const CombinedLeads = () => {
       setLoading(true);
       console.log('🎯 CombinedLeads: Fetching leads with filters:', filters);
 
-      let response;
-      if (filters.role === 'dataMiner') {
-        // Fetch only Data Miner leads
-        response = await combinedAPI.getLeadsByRole('DM');
-      } else if (filters.role === 'leadQualifier') {
-        // Fetch only Lead Qualifier leads
-        response = await combinedAPI.getLeadsByRole('LQ');
-      } else {
-        // Fetch all leads
-        response = await combinedAPI.getAllLeadsCombined();
-      }
+      const response = await combinedAPI.getAllLeadsCombined();
 
       if (response.success) {
         setLeads(response.leads || []);
@@ -222,19 +211,7 @@ const CombinedLeads = () => {
               </div>
             </div>
 
-            {/* Role Filter */}
-            <div className="min-w-[120px] sm:min-w-[140px]">
-              <label className="block text-xs font-medium text-white mb-1">Role</label>
-              <select
-                value={filters.role}
-                onChange={(e) => setFilters(prev => ({ ...prev, role: e.target.value }))}
-                className="w-full px-3 sm:px-4 py-2 sm:py-2.5 bg-[var(--bg-tertiary)] border border-[var(--border-primary)] rounded-lg sm:rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary)] text-xs sm:text-sm font-medium"
-              >
-                <option value="all">All Roles</option>
-                <option value="dataMiner">Data Miner Only</option>
-                <option value="leadQualifier">Lead Qualifier Only</option>
-              </select>
-            </div>
+
 
             {/* Stage Filter */}
             <div className="min-w-[100px] sm:min-w-[120px]">

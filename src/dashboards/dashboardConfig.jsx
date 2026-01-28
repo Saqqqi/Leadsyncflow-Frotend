@@ -49,6 +49,7 @@ const LeadQualifierDashboard = lazy(() => import("../dashboards/lead-qualifier/p
 const DataMinorDashboard = lazy(() => import("../dashboards/data-minor/pages/DataMinorDashboard"));
 const InputFiles = lazy(() => import("../dashboards/data-minor/pages/InputFiles"));
 const Employees = lazy(() => import("../dashboards/data-minor/pages/EmployeeListing"));
+const LeadQualifierLeads = lazy(() => import("../dashboards/lead-qualifier/pages/LeadQualifierLeads"));
 const VerifierDashboard = lazy(() => import("../dashboards/Verifier/pages/VerifierDashboard"));
 const VerifierLeads = lazy(() => import("../dashboards/Verifier/pages/VerifierLeads"));
 const ManagerDashboard = lazy(() => import("../dashboards/manager/pages/ManagerDashboard"));
@@ -85,7 +86,9 @@ export const dashboardConfig = [
     basePath: '/gds/lead-qualifier',
     icon: <DashboardIcon />,
     pages: [
+
       { name: 'Dashboard', path: '', component: LeadQualifierDashboard, icon: <DashboardIcon />, showInSidebar: true },
+      { name: 'All Leads', path: 'all-leads', component: LeadQualifierLeads, icon: <CombinedIcon />, showInSidebar: true },
     ],
   },
   {

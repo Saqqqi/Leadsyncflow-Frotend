@@ -11,8 +11,9 @@ export default function ManagerLeads() {
 
     const [searchTerm, setSearchTerm] = useState('');
     const [filterDate, setFilterDate] = useState('');
+    const [filterMonth, setFilterMonth] = useState('ALL');
     const [stageFilter, setStageFilter] = useState('ALL'); // ALL, MANAGER, DONE, REJECTED
-    
+
     // New states for expandable rows and modal
     const [expandedRows, setExpandedRows] = useState(new Set());
     const [selectedLead, setSelectedLead] = useState(null);
@@ -22,39 +23,39 @@ export default function ManagerLeads() {
         try {
             setLoading(true);
             console.log('🎯 ManagerLeads: Fetching Manager stage leads');
-            
+
             // Fetch Manager stage leads directly from backend
             const managerResponse = await adminAPI.getAllLeadsByRole(1000, 0, { stage: 'MANAGER' });
-            
+
             // Also fetch COMPLETED and REJECTED leads that were handled by managers
             const completedResponse = await adminAPI.getAllLeadsByRole(1000, 0, { stage: 'COMPLETED' });
             const rejectedResponse = await adminAPI.getAllLeadsByRole(1000, 0, { stage: 'REJECTED' });
-            
+
             let allManagerLeads = [];
-            
+
             if (managerResponse.success) {
                 allManagerLeads = [...allManagerLeads, ...managerResponse.leads];
                 console.log('📊 ManagerLeads: MANAGER stage leads:', managerResponse.leads.length);
             }
-            
+
             if (completedResponse.success) {
                 allManagerLeads = [...allManagerLeads, ...completedResponse.leads];
                 console.log('📊 ManagerLeads: COMPLETED stage leads:', completedResponse.leads.length);
             }
-            
+
             if (rejectedResponse.success) {
                 allManagerLeads = [...allManagerLeads, ...rejectedResponse.leads];
                 console.log('📊 ManagerLeads: REJECTED stage leads:', rejectedResponse.leads.length);
             }
-            
+
             console.log('🔍 ManagerLeads: Total Manager-involved leads:', allManagerLeads.length);
-            console.log('📈 ManagerLeads: Stage breakdown:', 
+            console.log('📈 ManagerLeads: Stage breakdown:',
                 allManagerLeads.reduce((acc, lead) => {
                     acc[lead.stage] = (acc[lead.stage] || 0) + 1;
                     return acc;
                 }, {})
             );
-            
+
             setLeads(allManagerLeads);
         } catch (error) {
             console.error('❌ ManagerLeads: Error fetching leads:', error);
@@ -66,7 +67,16 @@ export default function ManagerLeads() {
     const fetchTeam = async () => {
         try {
             setLoading(true);
-            const response = await adminAPI.getPerformance('Manager');
+            const params = {};
+            if (filterMonth !== 'ALL') {
+                const now = new Date();
+                const year = now.getFullYear();
+                const startDate = new Date(year, parseInt(filterMonth), 1).toISOString();
+                const endDate = new Date(year, parseInt(filterMonth) + 1, 0, 23, 59, 59).toISOString();
+                params.startDate = startDate;
+                params.endDate = endDate;
+            }
+            const response = await adminAPI.getPerformance('Manager', params);
             if (response.success) {
                 setTeam(response.rows);
             }
@@ -97,7 +107,7 @@ export default function ManagerLeads() {
     useEffect(() => {
         if (view === 'ALL_LEADS') fetchAllLeads();
         else if (view === 'TEAM') fetchTeam();
-    }, [view]);
+    }, [view, filterMonth]);
 
     const filteredLeads = useMemo(() => {
         return leads.filter(l => {
@@ -114,10 +124,17 @@ export default function ManagerLeads() {
                 );
             }
             if (filterDate) {
-                const d = new Date(l.createdAt);
+                const d = new Date(l.assignedAt || l.createdAt);
                 if (!isNaN(d.getTime())) {
                     const rowDate = d.toISOString().split('T')[0];
                     if (rowDate !== filterDate) return false;
+                }
+            }
+            if (filterMonth !== 'ALL') {
+                const d = new Date(l.assignedAt || l.createdAt);
+                if (!isNaN(d.getTime())) {
+                    const rowMonth = d.getMonth().toString();
+                    if (rowMonth !== filterMonth) return false;
                 }
             }
             return true;
@@ -148,7 +165,7 @@ export default function ManagerLeads() {
     };
 
     const openContactModal = (lead) => {
- 
+
         setSelectedLead(lead);
         setShowContactModal(true);
     };
@@ -196,6 +213,26 @@ export default function ManagerLeads() {
                                 Team
                             </button>
                         </div>
+
+                        <select
+                            value={filterMonth}
+                            onChange={e => setFilterMonth(e.target.value)}
+                            className="px-4 py-2.5 rounded-xl border border-[var(--border-primary)] bg-[var(--bg-tertiary)] text-xs font-black text-[var(--text-primary)] outline-none ring-[var(--accent-primary)]/20 focus:ring-2 cursor-pointer"
+                        >
+                            <option value="ALL">All Months</option>
+                            <option value="0">January</option>
+                            <option value="1">February</option>
+                            <option value="2">March</option>
+                            <option value="3">April</option>
+                            <option value="4">May</option>
+                            <option value="5">June</option>
+                            <option value="6">July</option>
+                            <option value="7">August</option>
+                            <option value="8">September</option>
+                            <option value="9">October</option>
+                            <option value="10">November</option>
+                            <option value="11">December</option>
+                        </select>
 
                         {view !== 'TEAM' && (
                             <>
@@ -288,6 +325,7 @@ export default function ManagerLeads() {
                                     <th className="px-4 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">Contact Info</th>
                                     <th className="px-4 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">Industry</th>
                                     <th className="px-4 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">Manager</th>
+                                    <th className="px-4 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">Assigned</th>
                                     <th className="px-4 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">Actions</th>
                                 </tr>
                             </thead>
@@ -299,7 +337,7 @@ export default function ManagerLeads() {
                                             {/* Main Row */}
                                             <tr className="hover:bg-[var(--bg-tertiary)]/50 transition-colors group cursor-default">
                                                 <td className="px-4 py-2 align-middle text-xs font-bold text-[var(--text-tertiary)]">{index + 1}</td>
-                                                
+
                                                 {/* Deal / Prospect */}
                                                 <td className="px-4 py-2 align-middle">
                                                     <div className="flex items-center gap-3">
@@ -373,6 +411,18 @@ export default function ManagerLeads() {
                                                         <div>
                                                             <div className="text-[10px] font-bold text-[var(--text-primary)]">{lead.assignedTo?.name || 'Unassigned'}</div>
                                                         </div>
+                                                    </div>
+                                                </td>
+
+                                                {/* Assigned Date */}
+                                                <td className="px-4 py-2 align-middle">
+                                                    <div className="flex flex-col">
+                                                        <span className="text-[10px] font-black text-[var(--text-primary)]">
+                                                            {lead.assignedAt ? `Assigned: ${new Date(lead.assignedAt).toLocaleDateString('en-GB')}` : 'Not Assigned'}
+                                                        </span>
+                                                        <span className="text-[8px] font-bold text-[var(--text-tertiary)] uppercase tracking-tighter">
+                                                            Processing Start
+                                                        </span>
                                                     </div>
                                                 </td>
 
@@ -498,7 +548,7 @@ export default function ManagerLeads() {
                                             selectedLead.emails.map((email, i) => {
                                                 const emailValue = typeof email === 'object' ? email.value : email;
                                                 const emailStatus = typeof email === 'object' ? email.status : 'Unknown';
-                                                
+
                                                 return (
                                                     <div key={i} className={`p-2 rounded-lg border transition-all ${emailValue === selectedLead.responseSource?.value ? 'bg-[var(--accent-primary)]/10 border-[var(--accent-primary)]/20' : 'bg-[var(--bg-tertiary)]/30 border-[var(--border-primary)]'}`}>
                                                         <div className="flex items-center justify-between gap-2">
@@ -554,7 +604,7 @@ export default function ManagerLeads() {
                                         {Array.isArray(selectedLead.phones) && selectedLead.phones.length > 0 ? (
                                             selectedLead.phones.map((phone, i) => {
                                                 const phoneValue = typeof phone === 'object' ? phone.value || phone.number : phone;
-                                                
+
                                                 return (
                                                     <div key={i} className={`p-2 rounded-lg border transition-all ${phoneValue === selectedLead.responseSource?.value ? 'bg-[var(--accent-primary)]/10 border-[var(--accent-primary)]/20' : 'bg-[var(--bg-tertiary)]/30 border-[var(--border-primary)]'}`}>
                                                         <div className="flex items-center justify-between gap-2">
@@ -594,7 +644,7 @@ export default function ManagerLeads() {
                                 </div>
                             </div>
 
-                           
+
                         </div>
                     </div>
                 </div>

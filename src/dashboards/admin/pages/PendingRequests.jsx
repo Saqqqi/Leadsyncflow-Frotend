@@ -10,20 +10,28 @@ export default function PendingRequests() {
   const [selectedRoles, setSelectedRoles] = useState({});
 
   useEffect(() => {
-    fetchPendingRequests();
+    fetchPendingRequests(); // Initial load with loader
+
+    // Poll for new requests every 5 seconds (silent refresh)
+    const interval = setInterval(() => fetchPendingRequests(true), 5000);
+    return () => clearInterval(interval);
   }, []);
 
-  const fetchPendingRequests = async () => {
+  const fetchPendingRequests = async (isBackground = false) => {
     try {
-      setLoading(true);
+      // Only show loader on initial fetch, not during polling
+      if (!isBackground) setLoading(true);
+
       const data = await adminAPI.getPendingRequests();
       setRequests(data.requests || []);
       setError(null);
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to fetch pending requests');
       console.error('Error fetching pending requests:', err);
+      if (!isBackground) {
+        setError(err.response?.data?.message || 'Failed to fetch pending requests');
+      }
     } finally {
-      setLoading(false);
+      if (!isBackground) setLoading(false);
     }
   };
 
@@ -31,8 +39,10 @@ export default function PendingRequests() {
     try {
       setActionLoading(requestId);
       await adminAPI.approveRequest(requestId, role);
-      setRequests(requests.filter(req => req._id !== requestId));
+      setRequests(prev => prev.filter(req => req._id !== requestId));
       setError(null);
+      // Notify other components (like Sidebar) to update their counts immediately
+      window.dispatchEvent(new CustomEvent('pendingRequestsUpdated', { detail: { change: -1 } }));
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to approve request');
       console.error('Error approving request:', err);
@@ -45,8 +55,10 @@ export default function PendingRequests() {
     try {
       setActionLoading(requestId);
       await adminAPI.rejectRequest(requestId);
-      setRequests(requests.filter(req => req._id !== requestId));
+      setRequests(prev => prev.filter(req => req._id !== requestId));
       setError(null);
+      // Notify other components (like Sidebar) to update their counts immediately
+      window.dispatchEvent(new CustomEvent('pendingRequestsUpdated', { detail: { change: -1 } }));
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to reject request');
       console.error('Error rejecting request:', err);

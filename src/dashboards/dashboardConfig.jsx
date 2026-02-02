@@ -50,7 +50,7 @@ const DataMinorDashboard = lazy(() => import("../dashboards/data-minor/pages/Dat
 const InputFiles = lazy(() => import("../dashboards/data-minor/pages/InputFiles"));
 const Employees = lazy(() => import("../dashboards/data-minor/pages/EmployeeListing"));
 const LeadQualifierLeads = lazy(() => import("../dashboards/lead-qualifier/pages/LeadQualifierLeads"));
-const VerifierDashboard = lazy(() => import("../dashboards/Verifier/pages/VerifierDashboard"));
+
 const VerifierLeads = lazy(() => import("../dashboards/Verifier/pages/VerifierLeads"));
 const ManagerDashboard = lazy(() => import("../dashboards/manager/pages/ManagerDashboard"));
 const ManagerNewLeads = lazy(() => import("../dashboards/manager/pages/ManagerNewLeads"));
@@ -110,9 +110,9 @@ export const dashboardConfig = [
     role: 'Verifier',
     basePath: '/gds/verifier',
     icon: <LeadsIcon />,
+    hideSidebar: true,
     pages: [
-      { name: 'Dashboard', path: '', component: VerifierDashboard, icon: <DashboardIcon />, showInSidebar: true },
-      { name: 'Leads', path: 'leads', component: VerifierLeads, icon: <LeadsIcon />, showInSidebar: true },
+      { name: 'Leads', path: '', component: VerifierLeads, icon: <LeadsIcon />, showInSidebar: false },
     ],
   },
   {

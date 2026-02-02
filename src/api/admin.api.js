@@ -210,6 +210,41 @@ export const adminAPI = {
     return response.data;
   },
 
+  // Debug function to see what stages actually exist
+  getStagesDebug: async () => {
+    try {
+      console.groupCollapsed('%c🔍 DEBUG: Checking what stages exist in database', 'color: #ff6b6b; font-weight: bold; font-size: 14px;');
+      
+      const response = await axiosInstance.get('/api/superadmin/leads', { params: { limit: 1000, skip: 0 } });
+      
+      if (response.data.success) {
+        const stages = [...new Set(response.data.leads?.map(l => l.stage) || [])];
+        const stageBreakdown = response.data.leads?.reduce((acc, lead) => {
+          acc[lead.stage] = (acc[lead.stage] || 0) + 1;
+          return acc;
+        }, {});
+        
+        console.log('%c📊 Available Stages:', 'color: #ff6b6b; font-weight: bold;', stages);
+        console.log('%c📈 Stage Breakdown:', 'color: #ff6b6b; font-weight: bold;', stageBreakdown);
+        console.log('%c📋 Total Leads:', 'color: #ff6b6b; font-weight: bold;', response.data.leads?.length);
+        
+        // Check specifically for DM stage
+        const dmLeads = response.data.leads?.filter(l => l.stage === 'DM') || [];
+        console.log('%c🛠️ DM Stage Leads:', 'color: #ff6b6b; font-weight: bold;', dmLeads.length);
+        
+        if (dmLeads.length > 0) {
+          console.log('%c📝 Sample DM Lead:', 'color: #ff6b6b; font-weight: bold;', dmLeads[0]);
+        }
+        
+        console.groupEnd();
+        return { stages, stageBreakdown, total: response.data.leads?.length, dmCount: dmLeads.length };
+      }
+    } catch (error) {
+      console.error('❌ Debug Stages Error:', error);
+      throw error;
+    }
+  },
+
   // Make user a super admin
   makeSuperAdmin: async (userId) => {
     const response = await axiosInstance.patch(`/api/superadmin/users/${userId}/make-super-admin`);

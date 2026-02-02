@@ -48,10 +48,11 @@ export const dataMinorAPI = {
         return response.data;
     },
 
-    updateLeadEmailStatus: async (leadId, emailData) => {
+    // Batch update all emails for a lead (when Done is clicked)
+    updateLeadAllEmails: async (leadId, emailsData) => {
         const token = tokenManager.getToken();
         const response = await axiosInstance.post(`/api/verifier/leads/${leadId}/update-emails`, {
-            emails: [emailData]
+            emails: emailsData
         }, {
             headers: {
                 Authorization: `Bearer ${token}`,
@@ -62,7 +63,7 @@ export const dataMinorAPI = {
 
     moveLeadToLeadQualifiers: async (leadId) => {
         const token = tokenManager.getToken();
-        const response = await axiosInstance.post(`/api/verifier/leads/${leadId}/move-to-lq`, {}, {
+        const response = await axiosInstance.post(`/api/verifier/leads/${leadId}/distribute-verifier-to-lq`, {}, {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
@@ -70,6 +71,15 @@ export const dataMinorAPI = {
         return response.data;
     },
 
+    distributeVerifierLeadsToLQ: async () => {
+        const token = tokenManager.getToken();
+        const response = await axiosInstance.post('/api/verifier/leads/distribute-verifier-to-lq', {}, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+        return response.data;
+    },
 };
 
 export default dataMinorAPI;

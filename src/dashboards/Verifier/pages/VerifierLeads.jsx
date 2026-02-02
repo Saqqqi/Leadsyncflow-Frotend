@@ -1,11 +1,88 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import dataMinorAPI from '../../../api/data-minor';
 
+// Cookie helper functions
+const getCookie = (name) => {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) {
+        try {
+            return JSON.parse(decodeURIComponent(parts.pop().split(';').shift()));
+        } catch (e) {
+            return null;
+        }
+    }
+    return null;
+};
+
+const setCookie = (name, value, days = 7) => {
+    const expires = new Date();
+    expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
+    document.cookie = `${name}=${encodeURIComponent(JSON.stringify(value))}; expires=${expires.toUTCString()}; path=/`;
+};
+
+const deleteCookie = (name) => {
+    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+};
+
 const VerifierLeads = () => {
     const [leads, setLeads] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [isProcessing, setIsProcessing] = useState(false);
     const [expandedNames, setExpandedNames] = useState(new Set());
     const [filterDate, setFilterDate] = useState('');
+    const [pendingEmailChanges, setPendingEmailChanges] = useState({}); // Store pending changes in state
+    const [processingLeads, setProcessingLeads] = useState(new Set()); // Track which leads are being processed
+    const [notification, setNotification] = useState(null); // { message, type: 'success' | 'error' | 'info' }
+
+    const showNotification = (message, type = 'success') => {
+        setNotification({ message, type });
+        setTimeout(() => setNotification(null), 4000);
+    };
+
+    // Load pending changes from cookies on component mount
+    useEffect(() => {
+        const savedChanges = getCookie('verifier_email_changes');
+        if (savedChanges) {
+            setPendingEmailChanges(savedChanges);
+        }
+    }, []);
+
+    // Save pending changes to cookies whenever they change
+    useEffect(() => {
+        if (Object.keys(pendingEmailChanges).length > 0) {
+            setCookie('verifier_email_changes', pendingEmailChanges);
+        } else {
+            deleteCookie('verifier_email_changes');
+        }
+    }, [pendingEmailChanges]);
+
+    const handleProcessAllLeads = async () => {
+        if (!window.confirm("Are you sure you want to distribute all verified leads to Lead Qualifiers (LQ)?")) return;
+
+        setIsProcessing(true);
+        try {
+            const response = await dataMinorAPI.distributeVerifierLeadsToLQ();
+
+            if (response.success) {
+                if (response.count === 0) {
+                    showNotification(response.message || "No leads found to move.", "info");
+                } else {
+                    showNotification(response.message || "Successfully distributed leads to LQ!", "success");
+                    fetchLeads();
+                }
+            }
+        } catch (error) {
+            console.error('Batch move failed:', error);
+            if (error.response && error.response.status === 404) {
+                showNotification("No verified leads found in the system to move.", "info");
+            } else {
+                showNotification('Batch process failed: ' + (error.response?.data?.message || error.message), "error");
+            }
+        } finally {
+            setIsProcessing(false);
+        }
+    };
 
     const fetchLeads = async () => {
         try {
@@ -26,12 +103,11 @@ const VerifierLeads = () => {
         fetchLeads();
     }, []);
 
-    const toggleExpand = (name) => {
-        const key = (name || 'Unknown').trim().toLowerCase();
+    const toggleExpand = (id) => {
         setExpandedNames(prev => {
             const newSet = new Set(prev);
-            if (newSet.has(key)) newSet.delete(key);
-            else newSet.add(key);
+            if (newSet.has(id)) newSet.delete(id);
+            else newSet.add(id);
             return newSet;
         });
     };
@@ -51,52 +127,38 @@ const VerifierLeads = () => {
         return '…';
     };
 
-    const grouped = useMemo(() => {
-        const map = new Map();
-
-        leads.forEach(lead => {
-            // Date filtering
-            if (filterDate) {
-                const d = new Date(lead.submittedDate || lead.createdAt);
-                if (!isNaN(d.getTime())) {
-                    const rowDate = d.toISOString().split('T')[0];
-                    if (rowDate !== filterDate) return;
+    const filteredLeads = useMemo(() => {
+        return leads
+            .filter(lead => {
+                // Date filtering
+                if (filterDate) {
+                    const d = new Date(lead.submittedDate || lead.createdAt);
+                    if (!isNaN(d.getTime())) {
+                        const rowDate = d.toISOString().split('T')[0];
+                        if (rowDate !== filterDate) return false;
+                    }
                 }
-            }
-
-            const emails = lead.emails || [];
-            const pendingEmails = emails.filter(e => !e.status || String(e.status).toUpperCase() === 'PENDING');
-
-            if (pendingEmails.length === 0) return;
-
-            const nameKey = (lead.name || 'Unknown').trim().toLowerCase();
-            if (!map.has(nameKey)) {
-                map.set(nameKey, {
-                    displayName: lead.name || 'Unknown',
-                    sources: new Set(),
-                    totalEmails: 0,
-                    items: []
-                });
-            }
-
-            const group = map.get(nameKey);
-            group.sources.add(lead.sources?.[0]?.name || 'Unknown');
-            group.totalEmails += pendingEmails.length;
-
-            group.items.push({
+                return true;
+            })
+            .map(lead => ({
                 ...lead,
-                emails: pendingEmails
-            });
-        });
-
-        return Array.from(map.values())
-            .filter(g => g.totalEmails > 0)
-            .sort((a, b) => b.totalEmails - a.totalEmails);
+                displayEmails: lead.emails || []
+            }));
     }, [leads, filterDate]);
 
     const handleVerifyAction = async (leadId, email, status) => {
         if (!email) return;
 
+        // Store the change in pending changes (cookies)
+        setPendingEmailChanges(prev => ({
+            ...prev,
+            [leadId]: {
+                ...prev[leadId],
+                [email]: status
+            }
+        }));
+
+        // Update the UI immediately for better UX
         setLeads(prevLeads =>
             prevLeads.map(lead =>
                 lead._id === leadId
@@ -109,26 +171,106 @@ const VerifierLeads = () => {
                     : lead
             )
         );
+    };
+
+    // New function to handle "Done" button click - batch update all emails for a lead
+    const handleDoneClick = async (leadId) => {
+        const leadChanges = pendingEmailChanges[leadId];
+        if (!leadChanges || Object.keys(leadChanges).length === 0) {
+            showNotification('No changes to save for this lead.', 'info');
+            return;
+        }
+
+        setProcessingLeads(prev => new Set([...prev, leadId]));
 
         try {
-            await dataMinorAPI.updateLeadEmailStatus(leadId, {
-                normalized: email,
+            // Prepare emails array in the format expected by backend
+            const emailsToUpdate = Object.entries(leadChanges).map(([normalized, status]) => ({
+                normalized,
                 status
+            }));
+
+            console.log('🔄 Batch updating emails for lead:', leadId, emailsToUpdate);
+
+            // Call the batch update API
+            await dataMinorAPI.updateLeadAllEmails(leadId, emailsToUpdate);
+
+            // Remove this lead's changes from pending changes
+            setPendingEmailChanges(prev => {
+                const newChanges = { ...prev };
+                delete newChanges[leadId];
+                return newChanges;
             });
-        } catch (err) {
-            console.error(err);
+
+            // Refresh the leads to get updated data from server
             fetchLeads();
+
+            showNotification(`Successfully updated ${emailsToUpdate.length} email(s) for this lead.`, 'success');
+        } catch (error) {
+            console.error('❌ Error batch updating emails:', error);
+            showNotification('Failed to update emails: ' + (error.response?.data?.message || error.message), 'error');
+        } finally {
+            setProcessingLeads(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(leadId);
+                return newSet;
+            });
         }
     };
 
     const handleMoveToLq = async (leadId) => {
+        setProcessingLeads(prev => new Set([...prev, leadId]));
         try {
             await dataMinorAPI.moveLeadToLeadQualifiers(leadId);
-            // Remove the lead from the list or show success
             setLeads(prev => prev.filter(l => l._id !== leadId));
         } catch (error) {
             console.error('Error moving lead:', error);
-            alert('Failed to move lead: ' + (error.response?.data?.message || error.message));
+            showNotification('Failed to move lead: ' + (error.response?.data?.message || error.message), 'error');
+        } finally {
+            setProcessingLeads(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(leadId);
+                return newSet;
+            });
+        }
+    };
+
+    const handleDoneManual = async (leadId) => {
+        const lead = leads.find(l => l._id === leadId);
+        if (!lead) return;
+
+        setProcessingLeads(prev => new Set([...prev, leadId]));
+        try {
+            const leadChanges = pendingEmailChanges[leadId] || {};
+            const emailsToUpdate = (lead.emails || []).map(e => {
+                const norm = e.normalized || e.value;
+                // Priority: 1. Pending session change, 2. Existing verified status, 3. Default to ACTIVE
+                const currentStatus = leadChanges[norm] ||
+                    (e.status && e.status.toUpperCase() !== 'PENDING' ? e.status : 'ACTIVE');
+                return { normalized: norm, status: currentStatus };
+            });
+
+            // 1. Update all emails for this lead (moves to 'Verifier' stage)
+            await dataMinorAPI.updateLeadAllEmails(leadId, emailsToUpdate);
+
+            // 2. Clear pending changes for this lead
+            setPendingEmailChanges(prev => {
+                const nc = { ...prev };
+                delete nc[leadId];
+                return nc;
+            });
+
+            showNotification('Lead verified successfully!', 'success');
+            fetchLeads();
+        } catch (error) {
+            console.error('Manual Done failed:', error);
+            showNotification('Failed to complete lead: ' + (error.response?.data?.message || error.message), 'error');
+        } finally {
+            setProcessingLeads(prev => {
+                const ns = new Set(prev);
+                ns.delete(leadId);
+                return ns;
+            });
         }
     };
 
@@ -148,6 +290,21 @@ const VerifierLeads = () => {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-4">
+                    <button
+                        onClick={handleProcessAllLeads}
+                        disabled={isProcessing}
+                        className="group px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-700 text-white font-black text-xs uppercase tracking-widest shadow-xl shadow-blue-500/20 transition-all hover:scale-105 active:scale-95 disabled:opacity-50 flex items-center gap-3"
+                    >
+                        {isProcessing ? (
+                            <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                        ) : (
+                            <svg className="w-5 h-5 group-hover:rotate-12 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            </svg>
+                        )}
+                        <span>{isProcessing ? 'Processing...' : 'Process & Move All'}</span>
+                    </button>
+
                     <input
                         type="date"
                         value={filterDate}
@@ -186,7 +343,7 @@ const VerifierLeads = () => {
                             style={{ borderColor: 'var(--border-primary)', borderTopColor: 'var(--accent-primary)' }}></div>
                         <p style={{ color: 'var(--text-secondary)' }}>Loading leads...</p>
                     </div>
-                ) : grouped.length === 0 ? (
+                ) : filteredLeads.length === 0 ? (
                     <div className="p-20 text-center opacity-60 flex flex-col items-center justify-center rounded-3xl border border-dashed"
                         style={{ borderColor: 'var(--border-primary)' }}>
                         <svg className="w-16 h-16 mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -195,44 +352,66 @@ const VerifierLeads = () => {
                         <p style={{ color: 'var(--text-secondary)' }}>No leads found for verification</p>
                     </div>
                 ) : (
-                    grouped.map((group) => {
-                        const isExpanded = expandedNames.has(group.displayName.trim().toLowerCase());
-                        const sourceText = Array.from(group.sources).join(' • ');
+                    filteredLeads.map((lead, index) => {
+                        const isExpanded = expandedNames.has(lead._id);
+                        const source = lead.sources?.[0];
+                        const sourceText = source?.name || 'Local Upload';
+                        const pendingCount = lead.displayEmails.filter(emailObj => {
+                            const email = emailObj.normalized || emailObj.value;
+                            const status = pendingEmailChanges[lead._id]?.[email] || emailObj.status || 'PENDING';
+                            return String(status).toUpperCase() === 'PENDING';
+                        }).length;
+                        const totalCount = lead.displayEmails.length;
+                        const isDM = lead.stage === 'DM';
+                        const isVerifier = lead.stage === 'Verifier';
 
                         return (
                             <div
-                                key={group.displayName}
-                                className="group rounded-2xl border transition-all duration-300 overflow-hidden hover:shadow-2xl"
+                                key={lead._id}
+                                className={`group rounded-2xl border transition-all duration-300 overflow-hidden hover:shadow-2xl ${isVerifier ? 'ring-1 ring-emerald-500/30 shadow-emerald-500/5' : ''}`}
                                 style={{
                                     backgroundColor: 'var(--bg-secondary)',
-                                    borderColor: isExpanded ? 'var(--accent-primary)' : 'var(--border-primary)',
+                                    borderColor: isVerifier ? '#10b98144' : (isExpanded ? 'var(--accent-primary)' : 'var(--border-primary)'),
                                     boxShadow: isExpanded ? '0 10px 40px -10px rgba(0,0,0,0.5)' : 'none'
                                 }}
                             >
-                                {/* Card Header (Person Summary) */}
+                                {/* Card Header (Lead Summary) */}
                                 <div
-                                    onClick={() => toggleExpand(group.displayName)}
+                                    onClick={() => toggleExpand(lead._id)}
                                     className="px-6 py-5 flex items-center justify-between cursor-pointer transition-colors"
                                     style={{
                                         backgroundColor: isExpanded ? 'rgba(0,0,0,0.2)' : 'transparent',
                                     }}
                                 >
                                     <div className="flex items-center gap-5 flex-1">
-                                        {/* Avatar */}
-                                        <div className="h-12 w-12 rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-lg transform transition-transform group-hover:scale-105"
-                                            style={{
-                                                background: `linear-gradient(135deg, var(--color-secondary), var(--color-primary))`,
-                                                border: '1px solid var(--border-primary)'
-                                            }}>
-                                            {group.displayName.charAt(0).toUpperCase()}
+                                        {/* Serial Number and Icon */}
+                                        <div className="relative">
+                                            <div className="absolute -top-2 -left-2 w-6 h-6 rounded-full bg-[var(--accent-primary)] text-white text-[10px] font-black flex items-center justify-center shadow-lg z-10 border-2 border-[var(--bg-secondary)]">
+                                                {index + 1}
+                                            </div>
+                                            <div className="h-12 w-12 rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-lg transform transition-transform group-hover:scale-105"
+                                                style={{
+                                                    background: `linear-gradient(135deg, var(--color-secondary), var(--color-primary))`,
+                                                    border: '1px solid var(--border-primary)'
+                                                }}>
+                                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                                </svg>
+                                            </div>
                                         </div>
 
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-baseline gap-3">
-                                                <h3 className="font-bold text-lg truncate tracking-tight" style={{ color: 'var(--text-primary)' }}>
-                                                    {group.displayName}
+                                                <h3 className="font-bold text-lg truncate tracking-tight text-white">
+                                                    Lead #{index + 1}
                                                 </h3>
-                                                {isExpanded && (
+                                                {isVerifier && (
+                                                    <span className="text-[9px] uppercase font-black bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-md border border-emerald-500/30 flex items-center gap-1.5">
+                                                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                                        Ready for LQ
+                                                    </span>
+                                                )}
+                                                {isExpanded && !isVerifier && (
                                                     <span className="text-[10px] uppercase font-black tracking-widest px-2 py-0.5 rounded-full"
                                                         style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--text-tertiary)' }}>
                                                         Viewing Details
@@ -245,7 +424,7 @@ const VerifierLeads = () => {
                                                     <svg className="w-3.5 h-3.5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                                                     </svg>
-                                                    <span>{group.totalEmails} Email{group.totalEmails !== 1 ? 's' : ''}</span>
+                                                    <span>{pendingCount} Pending / {totalCount} Total</span>
                                                 </div>
 
                                                 {sourceText && (
@@ -253,7 +432,19 @@ const VerifierLeads = () => {
                                                         <svg className="w-3.5 h-3.5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                                                         </svg>
-                                                        <span className="truncate max-w-[200px]">{sourceText}</span>
+                                                        {source?.link && source.link !== 'Local Upload' ? (
+                                                            <a
+                                                                href={source.link}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="truncate max-w-[200px] hover:text-[var(--accent-primary)] transition-colors underline"
+                                                                onClick={(e) => e.stopPropagation()}
+                                                            >
+                                                                {sourceText}
+                                                            </a>
+                                                        ) : (
+                                                            <span className="truncate max-w-[200px]">{sourceText}</span>
+                                                        )}
                                                     </div>
                                                 )}
                                             </div>
@@ -263,10 +454,19 @@ const VerifierLeads = () => {
                                     <div className="flex items-center gap-4">
                                         <div className="text-right hidden sm:block">
                                             <p className="text-[10px] uppercase font-bold tracking-wider opacity-50" style={{ color: 'var(--text-tertiary)' }}>
-                                                Submitted
+                                                Created At
                                             </p>
-                                            <p className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
-                                                {group.items[0]?.submittedDate ? new Date(group.items[0].submittedDate).toLocaleDateString() : 'N/A'}
+                                            <p className="text-xs font-medium text-white">
+                                                {lead.createdAt
+                                                    ? new Date(lead.createdAt).toLocaleString('en-GB', {
+                                                        day: '2-digit',
+                                                        month: 'short',
+                                                        hour: '2-digit',
+                                                        minute: '2-digit',
+                                                        hour12: true
+                                                    }).replace(',', '')
+                                                    : lead.submittedDate || 'N/A'
+                                                }
                                             </p>
                                         </div>
 
@@ -296,87 +496,146 @@ const VerifierLeads = () => {
 
                                                 {/* Inner Table Body */}
                                                 <div className="divide-y" style={{ borderColor: 'var(--border-primary)' }}>
-                                                    {group.items.map(lead => {
-                                                        const hasReviewedEmail = lead.emails.some(e => e.status && String(e.status).toUpperCase() !== 'PENDING');
+                                                    <div className="group/lead relative">
+                                                        {/* Lead Emails */}
+                                                        <div className="divide-y" style={{ borderColor: 'var(--border-primary)' }}>
+                                                            {lead.displayEmails.map((emailObj, idx) => {
+                                                                const email = emailObj.normalized || emailObj.value;
+                                                                const originalStatus = emailObj.status || 'PENDING';
+                                                                const pendingStatus = pendingEmailChanges[lead._id]?.[email];
+                                                                const status = pendingStatus || originalStatus;
+                                                                const hasPendingChange = !!pendingStatus;
 
-                                                        return (
-                                                            <div key={lead._id} className="group/lead relative">
-                                                                {/* Lead Emails */}
-                                                                <div className="divide-y" style={{ borderColor: 'var(--border-primary)' }}>
-                                                                    {(lead.emails || []).filter(e => !e.status || String(e.status).toUpperCase() === 'PENDING').map((emailObj, idx) => {
-                                                                        const email = emailObj.normalized || emailObj.value;
-                                                                        const status = emailObj.status || 'PENDING';
+                                                                return (
+                                                                    <div key={`${lead._id}-${idx}`}
+                                                                        className="grid grid-cols-12 gap-4 px-5 py-4 items-center transition-colors hover:bg-[var(--bg-tertiary)]/20">
 
-                                                                        return (
-                                                                            <div key={`${lead._id}-${idx}`}
-                                                                                className="grid grid-cols-12 gap-4 px-5 py-4 items-center transition-colors hover:bg-[var(--bg-tertiary)]/20">
+                                                                        {/* Email Column */}
+                                                                        <div className="col-span-5 flex items-center gap-2 group/copy">
+                                                                            <span className="font-mono text-sm break-all font-medium text-white">
+                                                                                {email}
+                                                                            </span>
+                                                                            <button
+                                                                                onClick={(e) => {
+                                                                                    e.stopPropagation();
+                                                                                    navigator.clipboard.writeText(email);
+                                                                                }}
+                                                                                className="opacity-0 group-hover/copy:opacity-100 transition-opacity p-1.5 rounded-md hover:bg-white/10 text-gray-400 hover:text-white"
+                                                                                title="Copy Email"
+                                                                            >
+                                                                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                                                                </svg>
+                                                                            </button>
+                                                                        </div>
 
-                                                                                {/* Email Column */}
-                                                                                <div className="col-span-5 flex items-center gap-2 group/copy">
-                                                                                    <span className="font-mono text-sm break-all font-medium text-white">
-                                                                                        {email}
-                                                                                    </span>
-                                                                                    <button
-                                                                                        onClick={(e) => {
-                                                                                            e.stopPropagation();
-                                                                                            navigator.clipboard.writeText(email);
-                                                                                        }}
-                                                                                        className="opacity-0 group-hover/copy:opacity-100 transition-opacity p-1.5 rounded-md hover:bg-white/10 text-gray-400 hover:text-white"
-                                                                                        title="Copy Email"
-                                                                                    >
-                                                                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                                                                        </svg>
-                                                                                    </button>
-                                                                                </div>
+                                                                        {/* Status Column */}
+                                                                        <div className="col-span-3">
+                                                                            <div className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-lg border text-[10px] font-bold uppercase tracking-wider ${getStatusBadge(status).split(' ').join(' ')} ${hasPendingChange ? 'ring-2 ring-yellow-400/50' : ''}`}>
+                                                                                <span className="text-xs">{getStatusIcon(status)}</span>
+                                                                                <span>{status}</span>
+                                                                                {hasPendingChange && (
+                                                                                    <span className="text-[8px] bg-yellow-400 text-black px-1 rounded">PENDING</span>
+                                                                                )}
+                                                                            </div>
+                                                                        </div>
 
-                                                                                {/* Status Column */}
-                                                                                <div className="col-span-3">
-                                                                                    <div className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-lg border text-[10px] font-bold uppercase tracking-wider ${getStatusBadge(status).split(' ').join(' ')}`}>
-                                                                                        <span className="text-xs">{getStatusIcon(status)}</span>
-                                                                                        <span>{status}</span>
-                                                                                    </div>
-                                                                                </div>
-
-                                                                                {/* Action Column */}
-                                                                                <div className="col-span-4 flex justify-end">
-                                                                                    <div className="relative w-36 group/select">
-                                                                                        <select
-                                                                                            value={status}
-                                                                                            onClick={(e) => e.stopPropagation()}
-                                                                                            onChange={(e) => {
-                                                                                                e.stopPropagation();
-                                                                                                handleVerifyAction(lead._id, email, e.target.value);
-                                                                                            }}
-                                                                                            className="w-full appearance-none pl-3 pr-8 py-2 rounded-lg text-xs font-bold border outline-none cursor-pointer transition-all shadow-sm hover:shadow-md"
-                                                                                            style={{
-                                                                                                backgroundColor: 'var(--bg-secondary)',
-                                                                                                borderColor: 'var(--border-primary)',
-                                                                                                color: 'var(--text-primary)'
-                                                                                            }}
-                                                                                        >
-                                                                                            {status === 'PENDING' && <option value="PENDING">Pending Check</option>}
-                                                                                            <option value="ACTIVE">Mark Active</option>
-                                                                                            <option value="BOUNCED">Mark Bounced</option>
-                                                                                            <option value="DEAD">Mark Dead</option>
-                                                                                        </select>
-                                                                                        <div className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none transition-transform group-hover/select:translate-x-0.5"
-                                                                                            style={{ color: 'var(--text-secondary)' }}>
-                                                                                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
-                                                                                            </svg>
-                                                                                        </div>
-                                                                                    </div>
+                                                                        {/* Action Column */}
+                                                                        <div className="col-span-4 flex justify-end">
+                                                                            <div className="relative w-36 group/select">
+                                                                                <select
+                                                                                    value={status}
+                                                                                    onClick={(e) => e.stopPropagation()}
+                                                                                    onChange={(e) => {
+                                                                                        e.stopPropagation();
+                                                                                        handleVerifyAction(lead._id, email, e.target.value);
+                                                                                    }}
+                                                                                    className="w-full appearance-none pl-3 pr-8 py-2 rounded-lg text-xs font-bold border outline-none cursor-pointer transition-all shadow-sm hover:shadow-md"
+                                                                                    style={{
+                                                                                        backgroundColor: 'var(--bg-secondary)',
+                                                                                        borderColor: 'var(--border-primary)',
+                                                                                        color: 'var(--text-primary)'
+                                                                                    }}
+                                                                                >
+                                                                                    {status === 'PENDING' && <option value="PENDING">Pending Check</option>}
+                                                                                    <option value="ACTIVE">Mark Active</option>
+                                                                                    <option value="BOUNCED">Mark Bounced</option>
+                                                                                    <option value="DEAD">Mark Dead</option>
+                                                                                </select>
+                                                                                <div className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none transition-transform group-hover/select:translate-x-0.5"
+                                                                                    style={{ color: 'var(--text-secondary)' }}>
+                                                                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
+                                                                                    </svg>
                                                                                 </div>
                                                                             </div>
-                                                                        );
-                                                                    })}
-                                                                </div>
+                                                                        </div>
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
 
-
+                                                        {/* Lead Action Footer */}
+                                                        <div className="px-5 py-4 bg-[var(--bg-tertiary)]/10 border-t border-[var(--border-primary)] flex items-center justify-between">
+                                                            <div className="flex gap-3">
+                                                                {/* Quick Action: Mark All Active (Only for DM leads) */}
+                                                                {isDM && pendingCount > 0 && (
+                                                                    <button
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            lead.displayEmails.forEach(emailObj => {
+                                                                                const email = emailObj.normalized || emailObj.value;
+                                                                                if (!emailObj.status || emailObj.status.toUpperCase() === 'PENDING') {
+                                                                                    handleVerifyAction(lead._id, email, 'ACTIVE');
+                                                                                }
+                                                                            });
+                                                                        }}
+                                                                        className="px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 rounded-lg text-xs font-bold transition-all flex items-center gap-2 border border-blue-500/20"
+                                                                    >
+                                                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                                                                        </svg>
+                                                                        Mark All Active
+                                                                    </button>
+                                                                )}
                                                             </div>
-                                                        );
-                                                    })}
+
+                                                            <div className="flex gap-3">
+                                                                {/* Mark as Done: Only show for DM leads when all emails are marked */}
+                                                                {isDM && pendingCount === 0 && (
+                                                                    <button
+                                                                        onClick={() => handleDoneManual(lead._id)}
+                                                                        disabled={processingLeads.has(lead._id)}
+                                                                        className="px-5 py-2 bg-gradient-to-r from-[var(--accent-primary)] to-indigo-600 text-white rounded-lg text-xs font-black shadow-lg shadow-indigo-500/20 hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                                                    >
+                                                                        {processingLeads.has(lead._id) ? (
+                                                                            <>
+                                                                                <div className="w-3 h-3 border border-white/20 border-t-white rounded-full animate-spin" />
+                                                                                Processing...
+                                                                            </>
+                                                                        ) : (
+                                                                            <>
+                                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+                                                                                </svg>
+                                                                                Mark as Done
+                                                                            </>
+                                                                        )}
+                                                                    </button>
+                                                                )}
+
+                                                                {/* Indicator for already verified leads */}
+                                                                {isVerifier && (
+                                                                    <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                                                                        </svg>
+                                                                        Lead Verified (Use Process Button at Top)
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -387,6 +646,45 @@ const VerifierLeads = () => {
                     })
                 )}
             </div>
+            {/* Notification Toast */}
+            {notification && (
+                <div className="fixed bottom-8 right-8 z-[100] animate-in slide-in-from-right-10 duration-500">
+                    <div className={`px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-4 border backdrop-blur-xl ${notification.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' :
+                        notification.type === 'error' ? 'bg-rose-500/10 border-rose-500/20 text-rose-400' :
+                            'bg-blue-500/10 border-blue-500/20 text-blue-400'
+                        }`}>
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${notification.type === 'success' ? 'bg-emerald-500 text-white' :
+                            notification.type === 'error' ? 'bg-rose-500 text-white' :
+                                'bg-blue-500 text-white'
+                            }`}>
+                            {notification.type === 'success' && (
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+                                </svg>
+                            )}
+                            {notification.type === 'error' && (
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            )}
+                            {notification.type === 'info' && (
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            )}
+                        </div>
+                        <div>
+                            <p className="font-black text-sm tracking-tight">{notification.message}</p>
+                            <p className="text-[10px] uppercase font-bold tracking-widest opacity-60">System Notification</p>
+                        </div>
+                        <button onClick={() => setNotification(null)} className="ml-4 opacity-50 hover:opacity-100 transition-opacity">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

@@ -15,13 +15,16 @@ export default function DashboardLayout() {
   /* Global Theme Management */
   const { theme, toggleTheme } = useTheme();
 
-  const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth >= 1024);
-  const [user, setUser] = useState(null);
-
   // Find current dashboard & page
   const currentDashboard = dashboardConfig.find(db =>
     location.pathname.startsWith(db.basePath)
   );
+
+  const [isSidebarOpen, setIsSidebarOpen] = useState(
+    currentDashboard?.hideSidebar ? false : window.innerWidth >= 1024
+  );
+  const [user, setUser] = useState(null);
+
 
   const currentPage = currentDashboard?.pages.find(page => {
     const fullPath = `${currentDashboard.basePath}${page.path ? '/' + page.path : ''}`;
@@ -56,13 +59,18 @@ export default function DashboardLayout() {
 
   // Handle responsive sidebar
   useEffect(() => {
+    if (currentDashboard?.hideSidebar) {
+      setIsSidebarOpen(false);
+      return;
+    }
+
     const handleResize = () => {
       setIsSidebarOpen(window.innerWidth >= 1024);
     };
 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  }, [currentDashboard?.hideSidebar]);
 
   // Token validation & redirect
   useEffect(() => {
@@ -107,7 +115,7 @@ export default function DashboardLayout() {
 
 
             {/* Desktop sidebar toggle - shows when sidebar is closed */}
-            {!isSidebarOpen && (
+            {!isSidebarOpen && !currentDashboard?.hideSidebar && (
               <button
                 onClick={() => setIsSidebarOpen(true)}
                 className="flex fixed left-4 ml-4 translate-y-1/2 z-[70] p-3 rounded-lg hover:bg-[var(--bg-secondary)] transition-all duration-300 group border-2"

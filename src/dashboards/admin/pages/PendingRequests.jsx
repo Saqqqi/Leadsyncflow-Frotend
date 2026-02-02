@@ -7,7 +7,7 @@ export default function PendingRequests() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [actionLoading, setActionLoading] = useState(null);
-  const [selectedRole, setSelectedRole] = useState('User');
+  const [selectedRoles, setSelectedRoles] = useState({});
 
   useEffect(() => {
     fetchPendingRequests();
@@ -96,14 +96,27 @@ export default function PendingRequests() {
               </div>
             </div>
             <div className="flex items-center space-x-3">
-              <div className="px-6 py-3 rounded-full text-sm font-bold border" style={{ backgroundColor: 'var(--accent-success) / 20', color: 'var(--accent-success)', borderColor: 'var(--accent-success) / 50' }}>
-                <div className="flex items-center space-x-2">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <div
+                className="px-8 py-3 rounded-2xl border backdrop-blur-md flex items-center gap-5 min-w-[240px] transform transition-all duration-300 hover:scale-105 hover:shadow-lg"
+                style={{
+                  backgroundColor: 'var(--accent-success) / 10',
+                  borderColor: 'var(--accent-success) / 30',
+                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.05)'
+                }}
+              >
+                <div className="p-3.5 rounded-xl flex items-center justify-center shadow-inner" style={{ backgroundColor: 'var(--accent-success) / 20' }}>
+                  <svg className="w-8 h-8" style={{ color: 'var(--accent-success)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  <span>{requests.length}</span>
                 </div>
-                <span className="text-xs opacity-75">PENDING</span>
+                <div className="flex flex-row items-center gap-3">
+                  <span className="text-3xl font-black leading-none tracking-tight" style={{ color: 'var(--text-primary)' }}>
+                    {requests.length}
+                  </span>
+                  <span className="text-sm font-bold uppercase tracking-widest opacity-90" style={{ color: 'var(--accent-success)' }}>
+                    Pending Requests
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -215,10 +228,10 @@ export default function PendingRequests() {
                     <td className="px-6 py-4">
                       <div className="flex items-center space-x-2">
                         <select
-                          value={selectedRole}
-                          onChange={(e) => setSelectedRole(e.target.value)}
+                          value={selectedRoles[request._id] || ''}
+                          onChange={(e) => setSelectedRoles({ ...selectedRoles, [request._id]: e.target.value })}
                           className="px-3 py-2 rounded-lg border text-sm font-medium focus:outline-none focus:ring-2"
-                          style={{ 
+                          style={{
                             borderColor: 'var(--border-primary)',
                             backgroundColor: 'var(--bg-tertiary)',
                             color: 'var(--text-primary)',
@@ -226,7 +239,7 @@ export default function PendingRequests() {
                           }}
                           disabled={actionLoading === request._id}
                         >
-                          <option value="User">User</option>
+                          <option value="" disabled>Select Role</option>
                           <option value="Data Minors">Data Minors</option>
                           <option value="Lead Qualifiers">Lead Qualifiers</option>
                           <option value="Verifier">Verifier</option>
@@ -234,10 +247,10 @@ export default function PendingRequests() {
                           <option value="Admin">Admin</option>
                         </select>
                         <button
-                          onClick={() => handleApprove(request._id, selectedRole)}
-                          disabled={actionLoading === request._id}
+                          onClick={() => handleApprove(request._id, selectedRoles[request._id])}
+                          disabled={actionLoading === request._id || !selectedRoles[request._id]}
                           className="inline-flex items-center px-4 py-2 text-white text-sm font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105"
-                          style={{ 
+                          style={{
                             background: 'linear-gradient(to right, var(--accent-success), var(--accent-success))',
                             boxShadow: '0 4px 12px rgba(52, 211, 153, 0.3)'
                           }}

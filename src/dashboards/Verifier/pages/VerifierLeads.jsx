@@ -69,9 +69,11 @@ const VerifierLeads = () => {
             const skip = (page - 1) * itemsPerPage;
             const res = await dataMinorAPI.getVerifierLeads(itemsPerPage, skip);
 
-            if (res.success) {
-                setLeads(res.leads ?? []);
-                setTotalLeads(res.total ?? 0);
+            if (res.success || Array.isArray(res.leads)) {
+                const fetchedLeads = res.leads ?? [];
+                setLeads(fetchedLeads);
+                // Try to get total from response, or keep as 0 if not provided
+                setTotalLeads(res.totalLeads ?? res.total ?? res.count ?? 0);
             }
         } catch (err) {
             console.error('Failed to fetch leads:', err);
@@ -86,7 +88,6 @@ const VerifierLeads = () => {
 
     const handlePageChange = (newPage) => {
         setCurrentPage(newPage);
-        fetchLeads(newPage);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
@@ -158,66 +159,9 @@ const VerifierLeads = () => {
         );
     };
 
-    const saveEmailChanges = async (leadId) => {
-        const changes = pendingEmailChanges[leadId];
-        if (!changes || Object.keys(changes).length === 0) {
-            showNotification('No changes to save.', 'info');
-            return;
-        }
 
-        setProcessingLeads((s) => new Set([...s, leadId]));
 
-        try {
-            const emailsToUpdate = Object.entries(changes).map(([normalized, status]) => ({
-                normalized,
-                status,
-            }));
 
-            await dataMinorAPI.updateLeadAllEmails(leadId, emailsToUpdate);
-
-            setPendingEmailChanges((prev) => {
-                const next = { ...prev };
-                delete next[leadId];
-                return next;
-            });
-
-            await fetchLeads();
-            showNotification(`Updated ${emailsToUpdate.length} email(s).`, 'success');
-        } catch (err) {
-            console.error('Batch email update failed:', err);
-            showNotification(
-                'Failed to update: ' + (err.response?.data?.message || err.message),
-                'error'
-            );
-        } finally {
-            setProcessingLeads((s) => {
-                const next = new Set(s);
-                next.delete(leadId);
-                return next;
-            });
-        }
-    };
-
-    const moveToLeadQualifiers = async (leadId) => {
-        setProcessingLeads((s) => new Set([...s, leadId]));
-        try {
-            await dataMinorAPI.moveLeadToLeadQualifiers(leadId);
-            setLeads((prev) => prev.filter((l) => l._id !== leadId));
-            showNotification('Lead moved to Lead Qualifiers.', 'success');
-        } catch (err) {
-            console.error('Move failed:', err);
-            showNotification(
-                'Failed to move lead: ' + (err.response?.data?.message || err.message),
-                'error'
-            );
-        } finally {
-            setProcessingLeads((s) => {
-                const next = new Set(s);
-                next.delete(leadId);
-                return next;
-            });
-        }
-    };
 
     const handleProcessAllLeads = async () => {
         if (!window.confirm('Distribute ALL verified leads to Lead Qualifiers?')) return;
@@ -665,7 +609,7 @@ const VerifierLeads = () => {
             </div>
 
             {/* Pagination UI */}
-            {!loading && leads.length > 0 && totalLeads > itemsPerPage && (
+            {!loading && leads.length > 0 && (totalLeads > itemsPerPage || (totalLeads === 0 && leads.length === itemsPerPage) || currentPage > 1) && (
                 <div className="flex items-center justify-center gap-2 mt-8 pb-8">
                     <button
                         onClick={() => handlePageChange(currentPage - 1)}
@@ -679,37 +623,47 @@ const VerifierLeads = () => {
                     </button>
 
                     <div className="flex items-center gap-1">
-                        {[...Array(Math.ceil(totalLeads / itemsPerPage))].map((_, i) => {
-                            const pageNum = i + 1;
-                            // Basic logic to show only few page numbers if there are too many
-                            if (
-                                totalLeads / itemsPerPage > 7 &&
-                                pageNum !== 1 &&
-                                pageNum !== Math.ceil(totalLeads / itemsPerPage) &&
-                                Math.abs(pageNum - currentPage) > 1
-                            ) {
-                                if (Math.abs(pageNum - currentPage) === 2) return <span key={pageNum} className="px-2 opacity-50">...</span>;
-                                return null;
-                            }
+                        {totalLeads > 0 ? (
+                            [...Array(Math.ceil(totalLeads / itemsPerPage))].map((_, i) => {
+                                const pageNum = i + 1;
+                                // Basic logic to show only few page numbers if there are too many
+                                if (
+                                    totalLeads / itemsPerPage > 7 &&
+                                    pageNum !== 1 &&
+                                    pageNum !== Math.ceil(totalLeads / itemsPerPage) &&
+                                    Math.abs(pageNum - currentPage) > 1
+                                ) {
+                                    if (Math.abs(pageNum - currentPage) === 2) return <span key={pageNum} className="px-2 opacity-50">...</span>;
+                                    return null;
+                                }
 
-                            return (
-                                <button
-                                    key={pageNum}
-                                    onClick={() => handlePageChange(pageNum)}
-                                    className={`w-10 h-10 rounded-xl font-bold text-xs transition-all ${currentPage === pageNum
-                                        ? 'bg-[var(--accent-primary)] text-white shadow-lg shadow-[var(--accent-primary)]/20 scale-110'
-                                        : 'border border-[var(--border-primary)] bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)]'
-                                        }`}
-                                >
-                                    {pageNum}
-                                </button>
-                            );
-                        })}
+                                return (
+                                    <button
+                                        key={pageNum}
+                                        onClick={() => handlePageChange(pageNum)}
+                                        className={`w-10 h-10 rounded-xl font-bold text-xs transition-all ${currentPage === pageNum
+                                            ? 'bg-[var(--accent-primary)] text-white shadow-lg shadow-[var(--accent-primary)]/20 scale-110'
+                                            : 'border border-[var(--border-primary)] bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)]'
+                                            }`}
+                                    >
+                                        {pageNum}
+                                    </button>
+                                );
+                            })
+                        ) : (
+                            <span className="px-4 text-sm font-bold opacity-60" style={{ color: 'var(--text-secondary)' }}>
+                                Page {currentPage}
+                            </span>
+                        )}
                     </div>
 
                     <button
                         onClick={() => handlePageChange(currentPage + 1)}
-                        disabled={currentPage >= Math.ceil(totalLeads / itemsPerPage)}
+                        disabled={
+                            totalLeads > 0
+                                ? currentPage >= Math.ceil(totalLeads / itemsPerPage)
+                                : leads.length < itemsPerPage
+                        }
                         className="p-3 rounded-xl border border-[var(--border-primary)] bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] disabled:opacity-50 transition-all font-bold text-xs flex items-center gap-2"
                     >
                         Next
@@ -723,7 +677,11 @@ const VerifierLeads = () => {
             {/* Pagination Summary */}
             {!loading && leads.length > 0 && (
                 <div className="text-center text-xs font-bold opacity-50 pb-10" style={{ color: 'var(--text-tertiary)' }}>
-                    Showing {Math.min((currentPage - 1) * itemsPerPage + 1, totalLeads)} - {Math.min(currentPage * itemsPerPage, totalLeads)} of {totalLeads} leads
+                    {totalLeads > 0 ? (
+                        `Showing ${Math.min((currentPage - 1) * itemsPerPage + 1, totalLeads)} - ${Math.min(currentPage * itemsPerPage, totalLeads)} of ${totalLeads} leads`
+                    ) : (
+                        `Showing ${leads.length} leads on page ${currentPage}`
+                    )}
                 </div>
             )}
 

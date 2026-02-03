@@ -1,54 +1,59 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import dataMinorAPI from '../../../api/data-minor';
 
-// Cookie helper functions
+// ────────────────────────────────────────────────
+// Cookie Helpers (could be moved to utils/cookies.js later)
 const getCookie = (name) => {
     const value = `; ${document.cookie}`;
     const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) {
-        try {
-            return JSON.parse(decodeURIComponent(parts.pop().split(';').shift()));
-        } catch (e) {
-            return null;
-        }
+    if (parts.length !== 2) return null;
+
+    try {
+        return JSON.parse(decodeURIComponent(parts.pop().split(';').shift()));
+    } catch {
+        return null;
     }
-    return null;
 };
 
 const setCookie = (name, value, days = 7) => {
-    const expires = new Date();
-    expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
-    document.cookie = `${name}=${encodeURIComponent(JSON.stringify(value))}; expires=${expires.toUTCString()}; path=/`;
+    const expires = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+    document.cookie = `${name}=${encodeURIComponent(
+        JSON.stringify(value)
+    )}; expires=${expires.toUTCString()}; path=/`;
 };
 
 const deleteCookie = (name) => {
-    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/`;
 };
 
+// ────────────────────────────────────────────────
 const VerifierLeads = () => {
     const [leads, setLeads] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isProcessing, setIsProcessing] = useState(false);
-    const [expandedNames, setExpandedNames] = useState(new Set());
+    const [expandedNames, setExpandedNames] = useState(() => new Set());
     const [filterDate, setFilterDate] = useState('');
-    const [pendingEmailChanges, setPendingEmailChanges] = useState({}); // Store pending changes in state
-    const [processingLeads, setProcessingLeads] = useState(new Set()); // Track which leads are being processed
-    const [notification, setNotification] = useState(null); // { message, type: 'success' | 'error' | 'info' }
+    const [pendingEmailChanges, setPendingEmailChanges] = useState({});
+    const [processingLeads, setProcessingLeads] = useState(() => new Set());
+    const [notification, setNotification] = useState(null);
 
-    const showNotification = (message, type = 'success') => {
+    // Pagination
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalLeads, setTotalLeads] = useState(0);
+    const itemsPerPage = 15;
+
+    // ─── Helpers ───────────────────────────────────────
+    const showNotification = useCallback((message, type = 'success') => {
         setNotification({ message, type });
         setTimeout(() => setNotification(null), 4000);
-    };
-
-    // Load pending changes from cookies on component mount
-    useEffect(() => {
-        const savedChanges = getCookie('verifier_email_changes');
-        if (savedChanges) {
-            setPendingEmailChanges(savedChanges);
-        }
     }, []);
 
-    // Save pending changes to cookies whenever they change
+    // ─── Cookie Sync ───────────────────────────────────
+    useEffect(() => {
+        const saved = getCookie('verifier_email_changes');
+        if (saved) setPendingEmailChanges(saved);
+    }, []);
+
     useEffect(() => {
         if (Object.keys(pendingEmailChanges).length > 0) {
             setCookie('verifier_email_changes', pendingEmailChanges);
@@ -57,63 +62,46 @@ const VerifierLeads = () => {
         }
     }, [pendingEmailChanges]);
 
-    const handleProcessAllLeads = async () => {
-        if (!window.confirm("Are you sure you want to distribute all verified leads to Lead Qualifiers (LQ)?")) return;
-
-        setIsProcessing(true);
+    // ─── Data Fetching ─────────────────────────────────
+    const fetchLeads = useCallback(async (page = currentPage) => {
+        setLoading(true);
         try {
-            const response = await dataMinorAPI.distributeVerifierLeadsToLQ();
+            const skip = (page - 1) * itemsPerPage;
+            const res = await dataMinorAPI.getVerifierLeads(itemsPerPage, skip);
 
-            if (response.success) {
-                if (response.count === 0) {
-                    showNotification(response.message || "No leads found to move.", "info");
-                } else {
-                    showNotification(response.message || "Successfully distributed leads to LQ!", "success");
-                    fetchLeads();
-                }
+            if (res.success) {
+                setLeads(res.leads ?? []);
+                setTotalLeads(res.total ?? 0);
             }
-        } catch (error) {
-            console.error('Batch move failed:', error);
-            if (error.response && error.response.status === 404) {
-                showNotification("No verified leads found in the system to move.", "info");
-            } else {
-                showNotification('Batch process failed: ' + (error.response?.data?.message || error.message), "error");
-            }
-        } finally {
-            setIsProcessing(false);
-        }
-    };
-
-    const fetchLeads = async () => {
-        try {
-            setLoading(true);
-            const response = await dataMinorAPI.getVerifierLeads(100, 0);
-            console.log(response);
-            if (response.success) {
-                setLeads(response.leads);
-            }
-        } catch (error) {
-            console.error('Error fetching leads:', error);
+        } catch (err) {
+            console.error('Failed to fetch leads:', err);
         } finally {
             setLoading(false);
         }
-    };
+    }, [currentPage]);
 
     useEffect(() => {
         fetchLeads();
-    }, []);
+    }, [fetchLeads]);
 
+    const handlePageChange = (newPage) => {
+        setCurrentPage(newPage);
+        fetchLeads(newPage);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    // ─── UI Interactions ───────────────────────────────
     const toggleExpand = (id) => {
-        setExpandedNames(prev => {
-            const newSet = new Set(prev);
-            if (newSet.has(id)) newSet.delete(id);
-            else newSet.add(id);
-            return newSet;
+        setExpandedNames((prev) => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id);
+            else next.add(id);
+            return next;
         });
     };
 
     const getStatusBadge = (status) => {
-        const s = (status || '').toUpperCase();
+        const s = (status ?? '').toUpperCase();
         if (s === 'ACTIVE') return 'border-[var(--accent-success)]/20 bg-[var(--accent-success)]/10 text-[var(--accent-success)]';
         if (s === 'BOUNCED') return 'border-[var(--accent-error)]/20 bg-[var(--accent-error)]/10 text-[var(--accent-error)]';
         if (s === 'DEAD') return 'border-gray-500/20 bg-gray-500/10 text-gray-500';
@@ -121,155 +109,184 @@ const VerifierLeads = () => {
     };
 
     const getStatusIcon = (status) => {
-        if (status === 'ACTIVE') return '✓';
-        if (status === 'BOUNCED' || status === 'DEAD') return '✕';
-        if (status === 'NO_EMAIL') return '–';
+        const s = (status ?? '').toUpperCase();
+        if (s === 'ACTIVE') return '✓';
+        if (s === 'BOUNCED' || s === 'DEAD') return '✕';
+        if (s === 'NO_EMAIL') return '–';
         return '…';
     };
 
+    // ─── Computed Data ─────────────────────────────────
     const filteredLeads = useMemo(() => {
         return leads
-            .filter(lead => {
-                // Date filtering
-                if (filterDate) {
-                    const d = new Date(lead.submittedDate || lead.createdAt);
-                    if (!isNaN(d.getTime())) {
-                        const rowDate = d.toISOString().split('T')[0];
-                        if (rowDate !== filterDate) return false;
-                    }
-                }
-                return true;
+            .filter((lead) => {
+                if (!filterDate) return true;
+                const d = new Date(lead.submittedDate || lead.createdAt);
+                if (isNaN(d.getTime())) return false;
+                return d.toISOString().split('T')[0] === filterDate;
             })
-            .map(lead => ({
+            .map((lead) => ({
                 ...lead,
-                displayEmails: lead.emails || []
+                displayEmails: lead.emails ?? [],
             }));
     }, [leads, filterDate]);
 
-    const handleVerifyAction = async (leadId, email, status) => {
+    // ─── Lead Actions ──────────────────────────────────
+    const markEmailStatus = (leadId, email, status) => {
         if (!email) return;
 
-        // Store the change in pending changes (cookies)
-        setPendingEmailChanges(prev => ({
+        setPendingEmailChanges((prev) => ({
             ...prev,
             [leadId]: {
-                ...prev[leadId],
-                [email]: status
-            }
+                ...(prev[leadId] ?? {}),
+                [email]: status,
+            },
         }));
 
-        // Update the UI immediately for better UX
-        setLeads(prevLeads =>
-            prevLeads.map(lead =>
+        // Optimistic UI update
+        setLeads((prev) =>
+            prev.map((lead) =>
                 lead._id === leadId
                     ? {
                         ...lead,
-                        emails: lead.emails?.map(e =>
+                        emails: lead.emails?.map((e) =>
                             e.normalized === email ? { ...e, status } : e
-                        ) || []
+                        ) ?? [],
                     }
                     : lead
             )
         );
     };
 
-    // New function to handle "Done" button click - batch update all emails for a lead
-    const handleDoneClick = async (leadId) => {
-        const leadChanges = pendingEmailChanges[leadId];
-        if (!leadChanges || Object.keys(leadChanges).length === 0) {
-            showNotification('No changes to save for this lead.', 'info');
+    const saveEmailChanges = async (leadId) => {
+        const changes = pendingEmailChanges[leadId];
+        if (!changes || Object.keys(changes).length === 0) {
+            showNotification('No changes to save.', 'info');
             return;
         }
 
-        setProcessingLeads(prev => new Set([...prev, leadId]));
+        setProcessingLeads((s) => new Set([...s, leadId]));
 
         try {
-            // Prepare emails array in the format expected by backend
-            const emailsToUpdate = Object.entries(leadChanges).map(([normalized, status]) => ({
+            const emailsToUpdate = Object.entries(changes).map(([normalized, status]) => ({
                 normalized,
-                status
+                status,
             }));
 
-            console.log('🔄 Batch updating emails for lead:', leadId, emailsToUpdate);
-
-            // Call the batch update API
             await dataMinorAPI.updateLeadAllEmails(leadId, emailsToUpdate);
 
-            // Remove this lead's changes from pending changes
-            setPendingEmailChanges(prev => {
-                const newChanges = { ...prev };
-                delete newChanges[leadId];
-                return newChanges;
+            setPendingEmailChanges((prev) => {
+                const next = { ...prev };
+                delete next[leadId];
+                return next;
             });
 
-            // Refresh the leads to get updated data from server
-            fetchLeads();
-
-            showNotification(`Successfully updated ${emailsToUpdate.length} email(s) for this lead.`, 'success');
-        } catch (error) {
-            console.error('❌ Error batch updating emails:', error);
-            showNotification('Failed to update emails: ' + (error.response?.data?.message || error.message), 'error');
+            await fetchLeads();
+            showNotification(`Updated ${emailsToUpdate.length} email(s).`, 'success');
+        } catch (err) {
+            console.error('Batch email update failed:', err);
+            showNotification(
+                'Failed to update: ' + (err.response?.data?.message || err.message),
+                'error'
+            );
         } finally {
-            setProcessingLeads(prev => {
-                const newSet = new Set(prev);
-                newSet.delete(leadId);
-                return newSet;
+            setProcessingLeads((s) => {
+                const next = new Set(s);
+                next.delete(leadId);
+                return next;
             });
         }
     };
 
-    const handleMoveToLq = async (leadId) => {
-        setProcessingLeads(prev => new Set([...prev, leadId]));
+    const moveToLeadQualifiers = async (leadId) => {
+        setProcessingLeads((s) => new Set([...s, leadId]));
         try {
             await dataMinorAPI.moveLeadToLeadQualifiers(leadId);
-            setLeads(prev => prev.filter(l => l._id !== leadId));
-        } catch (error) {
-            console.error('Error moving lead:', error);
-            showNotification('Failed to move lead: ' + (error.response?.data?.message || error.message), 'error');
+            setLeads((prev) => prev.filter((l) => l._id !== leadId));
+            showNotification('Lead moved to Lead Qualifiers.', 'success');
+        } catch (err) {
+            console.error('Move failed:', err);
+            showNotification(
+                'Failed to move lead: ' + (err.response?.data?.message || err.message),
+                'error'
+            );
         } finally {
-            setProcessingLeads(prev => {
-                const newSet = new Set(prev);
-                newSet.delete(leadId);
-                return newSet;
+            setProcessingLeads((s) => {
+                const next = new Set(s);
+                next.delete(leadId);
+                return next;
             });
+        }
+    };
+
+    const handleProcessAllLeads = async () => {
+        if (!window.confirm('Distribute ALL verified leads to Lead Qualifiers?')) return;
+
+        setIsProcessing(true);
+        try {
+            const res = await dataMinorAPI.distributeVerifierLeadsToLQ();
+
+            if (res.success) {
+                if (res.count === 0) {
+                    showNotification(res.message || 'No leads to distribute.', 'info');
+                } else {
+                    showNotification(res.message || 'Leads distributed successfully!', 'success');
+                    fetchLeads();
+                }
+            }
+        } catch (err) {
+            console.error('Batch distribute failed:', err);
+            const msg = err.response?.data?.message || err.message;
+            showNotification(
+                err.response?.status === 404
+                    ? 'No verified leads found.'
+                    : `Batch process failed: ${msg}`,
+                'error'
+            );
+        } finally {
+            setIsProcessing(false);
         }
     };
 
     const handleDoneManual = async (leadId) => {
-        const lead = leads.find(l => l._id === leadId);
+        const lead = leads.find((l) => l._id === leadId);
         if (!lead) return;
 
-        setProcessingLeads(prev => new Set([...prev, leadId]));
+        setProcessingLeads((s) => new Set([...s, leadId]));
+
         try {
-            const leadChanges = pendingEmailChanges[leadId] || {};
-            const emailsToUpdate = (lead.emails || []).map(e => {
+            const pending = pendingEmailChanges[leadId] ?? {};
+
+            const emailsToUpdate = (lead.emails ?? []).map((e) => {
                 const norm = e.normalized || e.value;
-                // Priority: 1. Pending session change, 2. Existing verified status, 3. Default to ACTIVE
-                const currentStatus = leadChanges[norm] ||
+                const status =
+                    pending[norm] ||
                     (e.status && e.status.toUpperCase() !== 'PENDING' ? e.status : 'ACTIVE');
-                return { normalized: norm, status: currentStatus };
+
+                return { normalized: norm, status };
             });
 
-            // 1. Update all emails for this lead (moves to 'Verifier' stage)
             await dataMinorAPI.updateLeadAllEmails(leadId, emailsToUpdate);
 
-            // 2. Clear pending changes for this lead
-            setPendingEmailChanges(prev => {
-                const nc = { ...prev };
-                delete nc[leadId];
-                return nc;
+            setPendingEmailChanges((prev) => {
+                const next = { ...prev };
+                delete next[leadId];
+                return next; f
             });
 
-            showNotification('Lead verified successfully!', 'success');
+            showNotification('Lead verified & completed!', 'success');
             fetchLeads();
-        } catch (error) {
-            console.error('Manual Done failed:', error);
-            showNotification('Failed to complete lead: ' + (error.response?.data?.message || error.message), 'error');
+        } catch (err) {
+            console.error('Manual done failed:', err);
+            showNotification(
+                'Failed to complete lead: ' + (err.response?.data?.message || err.message),
+                'error'
+            );
         } finally {
-            setProcessingLeads(prev => {
-                const ns = new Set(prev);
-                ns.delete(leadId);
-                return ns;
+            setProcessingLeads((s) => {
+                const next = new Set(s);
+                next.delete(leadId);
+                return next;
             });
         }
     };
@@ -387,7 +404,7 @@ const VerifierLeads = () => {
                                         {/* Serial Number and Icon */}
                                         <div className="relative">
                                             <div className="absolute -top-2 -left-2 w-6 h-6 rounded-full bg-[var(--accent-primary)] text-white text-[10px] font-black flex items-center justify-center shadow-lg z-10 border-2 border-[var(--bg-secondary)]">
-                                                {index + 1}
+                                                {((currentPage - 1) * itemsPerPage) + index + 1}
                                             </div>
                                             <div className="h-12 w-12 rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-lg transform transition-transform group-hover:scale-105"
                                                 style={{
@@ -403,7 +420,7 @@ const VerifierLeads = () => {
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-baseline gap-3">
                                                 <h3 className="font-bold text-lg truncate tracking-tight text-white">
-                                                    Lead #{index + 1}
+                                                    Lead #{((currentPage - 1) * itemsPerPage) + index + 1}
                                                 </h3>
                                                 {isVerifier && (
                                                     <span className="text-[9px] uppercase font-black bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-md border border-emerald-500/30 flex items-center gap-1.5">
@@ -548,7 +565,7 @@ const VerifierLeads = () => {
                                                                                     onClick={(e) => e.stopPropagation()}
                                                                                     onChange={(e) => {
                                                                                         e.stopPropagation();
-                                                                                        handleVerifyAction(lead._id, email, e.target.value);
+                                                                                        markEmailStatus(lead._id, email, e.target.value);
                                                                                     }}
                                                                                     className="w-full appearance-none pl-3 pr-8 py-2 rounded-lg text-xs font-bold border outline-none cursor-pointer transition-all shadow-sm hover:shadow-md"
                                                                                     style={{
@@ -557,7 +574,7 @@ const VerifierLeads = () => {
                                                                                         color: 'var(--text-primary)'
                                                                                     }}
                                                                                 >
-                                                                                    {status === 'PENDING' && <option value="PENDING">Pending Check</option>}
+                                                                                    <option value="PENDING">Pending Check</option>
                                                                                     <option value="ACTIVE">Mark Active</option>
                                                                                     <option value="BOUNCED">Mark Bounced</option>
                                                                                     <option value="DEAD">Mark Dead</option>
@@ -586,7 +603,7 @@ const VerifierLeads = () => {
                                                                             lead.displayEmails.forEach(emailObj => {
                                                                                 const email = emailObj.normalized || emailObj.value;
                                                                                 if (!emailObj.status || emailObj.status.toUpperCase() === 'PENDING') {
-                                                                                    handleVerifyAction(lead._id, email, 'ACTIVE');
+                                                                                    markEmailStatus(lead._id, email, 'ACTIVE');
                                                                                 }
                                                                             });
                                                                         }}
@@ -646,6 +663,70 @@ const VerifierLeads = () => {
                     })
                 )}
             </div>
+
+            {/* Pagination UI */}
+            {!loading && leads.length > 0 && totalLeads > itemsPerPage && (
+                <div className="flex items-center justify-center gap-2 mt-8 pb-8">
+                    <button
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className="p-3 rounded-xl border border-[var(--border-primary)] bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] disabled:opacity-50 transition-all font-bold text-xs flex items-center gap-2"
+                    >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" />
+                        </svg>
+                        Previous
+                    </button>
+
+                    <div className="flex items-center gap-1">
+                        {[...Array(Math.ceil(totalLeads / itemsPerPage))].map((_, i) => {
+                            const pageNum = i + 1;
+                            // Basic logic to show only few page numbers if there are too many
+                            if (
+                                totalLeads / itemsPerPage > 7 &&
+                                pageNum !== 1 &&
+                                pageNum !== Math.ceil(totalLeads / itemsPerPage) &&
+                                Math.abs(pageNum - currentPage) > 1
+                            ) {
+                                if (Math.abs(pageNum - currentPage) === 2) return <span key={pageNum} className="px-2 opacity-50">...</span>;
+                                return null;
+                            }
+
+                            return (
+                                <button
+                                    key={pageNum}
+                                    onClick={() => handlePageChange(pageNum)}
+                                    className={`w-10 h-10 rounded-xl font-bold text-xs transition-all ${currentPage === pageNum
+                                        ? 'bg-[var(--accent-primary)] text-white shadow-lg shadow-[var(--accent-primary)]/20 scale-110'
+                                        : 'border border-[var(--border-primary)] bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)]'
+                                        }`}
+                                >
+                                    {pageNum}
+                                </button>
+                            );
+                        })}
+                    </div>
+
+                    <button
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={currentPage >= Math.ceil(totalLeads / itemsPerPage)}
+                        className="p-3 rounded-xl border border-[var(--border-primary)] bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] disabled:opacity-50 transition-all font-bold text-xs flex items-center gap-2"
+                    >
+                        Next
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </button>
+                </div>
+            )}
+
+            {/* Pagination Summary */}
+            {!loading && leads.length > 0 && (
+                <div className="text-center text-xs font-bold opacity-50 pb-10" style={{ color: 'var(--text-tertiary)' }}>
+                    Showing {Math.min((currentPage - 1) * itemsPerPage + 1, totalLeads)} - {Math.min(currentPage * itemsPerPage, totalLeads)} of {totalLeads} leads
+                </div>
+            )}
+
             {/* Notification Toast */}
             {notification && (
                 <div className="fixed bottom-8 right-8 z-[100] animate-in slide-in-from-right-10 duration-500">

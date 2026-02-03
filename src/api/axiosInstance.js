@@ -7,7 +7,7 @@ const API_BASE_URL =
 const axiosInstance = axios.create({
   baseURL: API_BASE_URL,
   headers: { 'Content-Type': 'application/json' },
-  timeout: 15000,
+  timeout: 60000, // Increased to 60s for Render cold starts
 });
 
 
@@ -26,6 +26,11 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Better timeout error handling
+    if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+      error.message = 'The server is taking too long to respond. This might be due to a slow connection or the server waking up. Please try again in a few moments.';
+    }
+
     if (axios.isAxiosError(error) && error.response?.status === 401) {
       tokenManager.clearAuthData();
       if (window.location.pathname !== '/login') {

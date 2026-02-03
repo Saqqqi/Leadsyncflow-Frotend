@@ -70,7 +70,7 @@ const VerifierLeads = () => {
             const res = await dataMinorAPI.getVerifierLeads(itemsPerPage, skip);
 
             if (res.success || Array.isArray(res.leads)) {
-                const fetchedLeads = res.leads ?? [];
+                const fetchedLeads = (res.leads ?? []).filter(l => l.emails && l.emails.length > 0);
                 setLeads(fetchedLeads);
                 // Try to get total from response, or keep as 0 if not provided
                 setTotalLeads(res.totalLeads ?? res.total ?? res.count ?? 0);
@@ -380,7 +380,18 @@ const VerifierLeads = () => {
                                                 )}
                                             </div>
 
-                                            <div className="flex items-center gap-4 mt-1 text-xs font-medium">
+                                            <div className="flex flex-wrap items-center gap-4 mt-1 text-xs font-medium">
+                                                <div className="flex items-center gap-1.5 text-emerald-400">
+                                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                    </svg>
+                                                    <span className="font-bold">
+                                                        {lead.submittedDate || (lead.createdAt ? new Date(lead.createdAt).toLocaleDateString('en-GB') : 'N/A')}
+                                                    </span>
+                                                </div>
+
+                                                <div className="w-1 h-1 rounded-full bg-white/20"></div>
+
                                                 <div className="flex items-center gap-1.5" style={{ color: 'var(--text-secondary)' }}>
                                                     <svg className="w-3.5 h-3.5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -388,26 +399,7 @@ const VerifierLeads = () => {
                                                     <span>{pendingCount} Pending / {totalCount} Total</span>
                                                 </div>
 
-                                                {sourceText && (
-                                                    <div className="flex items-center gap-1.5 opacity-80" style={{ color: 'var(--text-tertiary)' }}>
-                                                        <svg className="w-3.5 h-3.5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                                                        </svg>
-                                                        {source?.link && source.link !== 'Local Upload' ? (
-                                                            <a
-                                                                href={source.link}
-                                                                target="_blank"
-                                                                rel="noopener noreferrer"
-                                                                className="truncate max-w-[200px] hover:text-[var(--accent-primary)] transition-colors underline"
-                                                                onClick={(e) => e.stopPropagation()}
-                                                            >
-                                                                {sourceText}
-                                                            </a>
-                                                        ) : (
-                                                            <span className="truncate max-w-[200px]">{sourceText}</span>
-                                                        )}
-                                                    </div>
-                                                )}
+
                                             </div>
                                         </div>
                                     </div>
@@ -415,18 +407,20 @@ const VerifierLeads = () => {
                                     <div className="flex items-center gap-4">
                                         <div className="text-right hidden sm:block">
                                             <p className="text-[10px] uppercase font-bold tracking-wider opacity-50" style={{ color: 'var(--text-tertiary)' }}>
-                                                Created At
+                                                {lead.submittedDate ? 'Submitted Date' : 'Created At'}
                                             </p>
                                             <p className="text-xs font-medium text-white">
-                                                {lead.createdAt
-                                                    ? new Date(lead.createdAt).toLocaleString('en-GB', {
-                                                        day: '2-digit',
-                                                        month: 'short',
-                                                        hour: '2-digit',
-                                                        minute: '2-digit',
-                                                        hour12: true
-                                                    }).replace(',', '')
-                                                    : lead.submittedDate || 'N/A'
+                                                {lead.submittedDate
+                                                    ? lead.submittedDate
+                                                    : (lead.createdAt
+                                                        ? new Date(lead.createdAt).toLocaleString('en-GB', {
+                                                            day: '2-digit',
+                                                            month: 'short',
+                                                            hour: '2-digit',
+                                                            minute: '2-digit',
+                                                            hour12: true
+                                                        }).replace(',', '')
+                                                        : 'N/A')
                                                 }
                                             </p>
                                         </div>

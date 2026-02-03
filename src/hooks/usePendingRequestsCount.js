@@ -30,11 +30,7 @@ export function usePendingRequestsCount(userRole) {
     const handleUpdate = () => fetchCount();
     window.addEventListener('pendingRequestsUpdated', handleUpdate);
 
-    // Set up polling to update count every 10 seconds
-    const interval = setInterval(fetchCount, 10000);
-
     return () => {
-      clearInterval(interval);
       window.removeEventListener('pendingRequestsUpdated', handleUpdate);
     };
   }, [userRole]);

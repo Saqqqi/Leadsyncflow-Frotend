@@ -9,21 +9,21 @@ export default function PendingRequests() {
   const [actionLoading, setActionLoading] = useState(null);
   const [selectedRoles, setSelectedRoles] = useState({});
 
-  useEffect(() => {
-    fetchPendingRequests(); // Initial load with loader
+  const [refreshing, setRefreshing] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState(new Date());
 
-    // Poll for new requests every 5 seconds (silent refresh)
-    const interval = setInterval(() => fetchPendingRequests(true), 5000);
-    return () => clearInterval(interval);
+  useEffect(() => {
+    fetchPendingRequests();
   }, []);
 
   const fetchPendingRequests = async (isBackground = false) => {
     try {
-      // Only show loader on initial fetch, not during polling
       if (!isBackground) setLoading(true);
+      else setRefreshing(true);
 
       const data = await adminAPI.getPendingRequests();
       setRequests(data.requests || []);
+      setLastUpdated(new Date());
       setError(null);
     } catch (err) {
       console.error('Error fetching pending requests:', err);
@@ -31,7 +31,8 @@ export default function PendingRequests() {
         setError(err.response?.data?.message || 'Failed to fetch pending requests');
       }
     } finally {
-      if (!isBackground) setLoading(false);
+      setLoading(false);
+      setRefreshing(false);
     }
   };
 
@@ -107,7 +108,36 @@ export default function PendingRequests() {
                 </p>
               </div>
             </div>
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-6">
+              <div className="flex flex-col items-end">
+                <button
+                  onClick={() => fetchPendingRequests(true)}
+                  disabled={refreshing}
+                  className="flex items-center space-x-2 px-4 py-2 rounded-xl transition-all duration-300 hover:scale-105 active:scale-95 disabled:opacity-50"
+                  style={{
+                    backgroundColor: 'var(--bg-tertiary)',
+                    border: '1px solid var(--border-primary)',
+                    color: 'var(--text-primary)'
+                  }}
+                >
+                  <svg
+                    className={`w-5 h-5 ${refreshing ? 'animate-spin' : ''}`}
+                    style={{ color: 'var(--accent-success)' }}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  <span className="text-sm font-bold uppercase tracking-wider">
+                    {refreshing ? 'Refreshing...' : 'Refresh'}
+                  </span>
+                </button>
+                <p className="text-[10px] mt-1 font-bold uppercase tracking-tighter opacity-50" style={{ color: 'var(--text-tertiary)' }}>
+                  Last Checked: {lastUpdated.toLocaleTimeString()}
+                </p>
+              </div>
+
               <div
                 className="px-8 py-3 rounded-2xl border backdrop-blur-md flex items-center gap-5 min-w-[240px] transform transition-all duration-300 hover:scale-105 hover:shadow-lg"
                 style={{

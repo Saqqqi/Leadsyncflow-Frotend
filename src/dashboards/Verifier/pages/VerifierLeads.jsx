@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import dataMinorAPI from '../../../api/data-minor';
 
 // ────────────────────────────────────────────────
@@ -29,7 +29,7 @@ const deleteCookie = (name) => {
 // ────────────────────────────────────────────────
 const VerifierLeads = () => {
     const [leads, setLeads] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
     const [expandedNames, setExpandedNames] = useState(() => new Set());
     const [filterDate, setFilterDate] = useState('');
@@ -65,14 +65,21 @@ const VerifierLeads = () => {
     // ─── Data Fetching ─────────────────────────────────
     const fetchLeads = useCallback(async (page = currentPage) => {
         setLoading(true);
+
+        const startTime = Date.now();
+
         try {
             const skip = (page - 1) * itemsPerPage;
             const res = await dataMinorAPI.getVerifierLeads(itemsPerPage, skip);
 
             if (res.success || Array.isArray(res.leads)) {
                 const fetchedLeads = (res.leads ?? []).filter(l => l.emails && l.emails.length > 0);
+
+                // Add a small delay if the request was too fast for a professional "loading" feel
+                const elapsed = Date.now() - startTime;
+                if (elapsed < 500) await new Promise(r => setTimeout(r, 500 - elapsed));
+
                 setLeads(fetchedLeads);
-                // Try to get total from response, or keep as 0 if not provided
                 setTotalLeads(res.totalLeads ?? res.total ?? res.count ?? 0);
             }
         } catch (err) {
@@ -82,11 +89,19 @@ const VerifierLeads = () => {
         }
     }, [currentPage]);
 
+
+    const hasInitiallyLoadedRef = useRef(false);
+
     useEffect(() => {
-        fetchLeads();
-    }, [fetchLeads]);
+
+        if (!hasInitiallyLoadedRef.current) {
+            hasInitiallyLoadedRef.current = true;
+            fetchLeads();
+        }
+    }, []);
 
     const handlePageChange = (newPage) => {
+        fetchLeads(newPage);
         setCurrentPage(newPage);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
@@ -144,7 +159,7 @@ const VerifierLeads = () => {
             },
         }));
 
-        // Optimistic UI update
+
         setLeads((prev) =>
             prev.map((lead) =>
                 lead._id === leadId
@@ -215,7 +230,7 @@ const VerifierLeads = () => {
             setPendingEmailChanges((prev) => {
                 const next = { ...prev };
                 delete next[leadId];
-                return next; f
+                return next;
             });
 
             showNotification('Lead verified & completed!', 'success');
@@ -279,7 +294,7 @@ const VerifierLeads = () => {
                     />
 
                     <button
-                        onClick={fetchLeads}
+                        onClick={() => fetchLeads()}
                         disabled={loading}
                         className="px-6 py-3 rounded-xl border transition-all flex items-center gap-2 text-sm font-bold disabled:opacity-50 hover:brightness-110 active:scale-95 shadow-lg"
                         style={{
@@ -297,7 +312,10 @@ const VerifierLeads = () => {
             </div>
 
             {/* List Content */}
-            <div className="space-y-4">
+            <div
+                key={currentPage}
+                className={`space-y-4 transition-all duration-500 ease-in-out ${loading ? 'opacity-40 scale-[0.99] blur-[2px] pointer-events-none' : 'opacity-100 scale-100 blur-0'} animate-in fade-in slide-in-from-bottom-8 duration-700 fill-mode-both`}
+            >
                 {loading && leads.length === 0 ? (
                     <div className="p-20 flex flex-col items-center justify-center text-center opacity-60">
                         <div className="w-12 h-12 mb-4 border-4 border-t-transparent rounded-full animate-spin"

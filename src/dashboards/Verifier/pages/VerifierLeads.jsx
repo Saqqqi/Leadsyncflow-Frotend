@@ -63,7 +63,8 @@ const VerifierLeads = () => {
     }, [pendingEmailChanges]);
 
     // ─── Data Fetching ─────────────────────────────────
-    const fetchLeads = useCallback(async (page = currentPage) => {
+    const fetchLeads = useCallback(async (pageArg) => {
+        const page = pageArg ?? currentPage;
         setLoading(true);
 
         const startTime = Date.now();
@@ -73,14 +74,27 @@ const VerifierLeads = () => {
             const res = await dataMinorAPI.getVerifierLeads(itemsPerPage, skip);
 
             if (res.success || Array.isArray(res.leads)) {
-                const fetchedLeads = (res.leads ?? []).filter(l => l.emails && l.emails.length > 0);
+                // Remove the frontend filter as it was causing "random" counts and breaking pagination alignment.
+                // The API should handle filtering if needed. Now we show exactly itemsPerPage (15) leads.
+                const fetchedLeads = (res.leads ?? []).slice(0, itemsPerPage);
+                const total = res.totalLeads ?? res.total ?? res.count ?? 0;
+
+                // Update totalLeads first so UI knows the max page count
+                setTotalLeads(total);
+
+                // Handle the case where the current page exceeds total pages now (e.g., after processing)
+                const totalPages = Math.ceil(total / itemsPerPage);
+                if (page > 1 && (fetchedLeads.length === 0 || page > totalPages) && total > 0) {
+                    const targetPage = Math.min(page - 1, totalPages > 0 ? totalPages : 1);
+                    setCurrentPage(targetPage);
+                    return fetchLeads(targetPage);
+                }
 
                 // Add a small delay if the request was too fast for a professional "loading" feel
                 const elapsed = Date.now() - startTime;
                 if (elapsed < 500) await new Promise(r => setTimeout(r, 500 - elapsed));
 
                 setLeads(fetchedLeads);
-                setTotalLeads(res.totalLeads ?? res.total ?? res.count ?? 0);
             }
         } catch (err) {
             console.error('Failed to fetch leads:', err);
@@ -93,12 +107,18 @@ const VerifierLeads = () => {
     const hasInitiallyLoadedRef = useRef(false);
 
     useEffect(() => {
-
         if (!hasInitiallyLoadedRef.current) {
             hasInitiallyLoadedRef.current = true;
             fetchLeads();
         }
     }, []);
+
+    // Also fetch when currentPage changes to ensure data stays in sync
+    useEffect(() => {
+        if (hasInitiallyLoadedRef.current) {
+            fetchLeads(currentPage);
+        }
+    }, [currentPage]);
 
     const handlePageChange = (newPage) => {
         fetchLeads(newPage);
@@ -635,14 +655,15 @@ const VerifierLeads = () => {
                     </button>
 
                     <div className="flex items-center gap-1">
-                        {totalLeads > 0 ? (
-                            [...Array(Math.ceil(totalLeads / itemsPerPage))].map((_, i) => {
+                        {totalLeads > 0 && (
+                            [...Array(Math.max(1, Math.ceil(totalLeads / itemsPerPage)))].map((_, i) => {
                                 const pageNum = i + 1;
                                 // Basic logic to show only few page numbers if there are too many
+                                const totalPages = Math.ceil(totalLeads / itemsPerPage);
                                 if (
-                                    totalLeads / itemsPerPage > 7 &&
+                                    totalPages > 7 &&
                                     pageNum !== 1 &&
-                                    pageNum !== Math.ceil(totalLeads / itemsPerPage) &&
+                                    pageNum !== totalPages &&
                                     Math.abs(pageNum - currentPage) > 1
                                 ) {
                                     if (Math.abs(pageNum - currentPage) === 2) return <span key={pageNum} className="px-2 opacity-50">...</span>;
@@ -662,10 +683,13 @@ const VerifierLeads = () => {
                                     </button>
                                 );
                             })
-                        ) : (
-                            <span className="px-4 text-sm font-bold opacity-60" style={{ color: 'var(--text-secondary)' }}>
-                                Page {currentPage}
-                            </span>
+                        )}
+                        {totalLeads === 0 && leads.length > 0 && (
+                            <button
+                                className="w-10 h-10 rounded-xl font-bold text-xs transition-all bg-[var(--accent-primary)] text-white"
+                            >
+                                {currentPage}
+                            </button>
                         )}
                     </div>
 

@@ -62,6 +62,7 @@ const AdminManagerLeads = lazy(() => import("../dashboards/admin/pages/ManagerLe
 const AdminCombinedLeads = lazy(() => import("../dashboards/admin/pages/CombinedLeads"));
 const AdminPendingRequests = lazy(() => import("../dashboards/admin/pages/PendingRequests"));
 const AdminUsersManagement = lazy(() => import("../dashboards/admin/pages/UsersManagement"));
+const SuperAdminPortal = lazy(() => import("../dashboards/admin/pages/SuperAdminPortal"));
 
 // Centralized Configuration
 export const dashboardConfig = [
@@ -77,6 +78,7 @@ export const dashboardConfig = [
       { name: 'Managers', path: 'manager-leads', component: AdminManagerLeads, icon: <LeadsIcon />, showInSidebar: true },
       { name: 'Pending Requests', path: 'pending-requests', component: AdminPendingRequests, icon: <UsersIcon />, showInSidebar: true },
       { name: 'Users Management', path: 'users', component: AdminUsersManagement, icon: <UsersIcon />, showInSidebar: false },
+      { name: 'LQ Assign', path: 'super-admin', component: SuperAdminPortal, icon: <SettingsIcon />, showInSidebar: true, allowedRoles: ['Super Admin'] },
     ],
   },
   {

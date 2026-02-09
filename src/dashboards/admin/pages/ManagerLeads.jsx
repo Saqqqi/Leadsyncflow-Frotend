@@ -180,7 +180,7 @@ export default function ManagerLeads() {
     if (loading && leads.length === 0 && team.length === 0) return <SharedLoader />;
 
     return (
-        <div className="p-4 sm:p-6 md:p-8 space-y-6 animate-fadeIn max-w-[1700px] mx-auto">
+        <div className="p-4 md:p-6 space-y-6 max-w-[1400px] mx-auto animate-fadeIn min-h-screen">
             {/* Header */}
             <div className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-[32px] p-6 shadow-xl relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-80 h-80 bg-amber-500 opacity-5 rounded-full blur-[100px] -mr-40 -mt-40 transition-all group-hover:opacity-10" />

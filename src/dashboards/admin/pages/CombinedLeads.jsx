@@ -12,6 +12,8 @@ const CombinedLeads = () => {
     status: '',
     lqStatus: ''
   });
+  const [selectedLead, setSelectedLead] = useState(null);
+  const [copiedId, setCopiedId] = useState(null);
 
   useEffect(() => {
     fetchCombinedLeads();
@@ -20,24 +22,14 @@ const CombinedLeads = () => {
   const fetchCombinedLeads = async () => {
     try {
       setLoading(true);
-      console.log('🎯 CombinedLeads: Fetching leads with filters:', filters);
 
       const response = await combinedAPI.getAllLeadsCombined();
 
       if (response.success) {
         setLeads(response.leads || []);
-        console.log('📊 CombinedLeads: Total leads fetched:', response.leads?.length);
-
-        // Log role breakdown
-        const dataMinerLeads = response.leads?.filter(l => !l.lqUpdatedBy) || [];
-        const leadQualifierLeads = response.leads?.filter(l => l.lqUpdatedBy) || [];
-        console.log('👥 Role Breakdown:', {
-          dataMinerLeads: dataMinerLeads.length,
-          leadQualifierLeads: leadQualifierLeads.length
-        });
       }
     } catch (error) {
-      console.error('❌ CombinedLeads: Error fetching leads:', error);
+      // Error handled by UI or Interceptor
     } finally {
       setLoading(false);
     }
@@ -90,12 +82,6 @@ const CombinedLeads = () => {
           ...(lead.sources?.map(s => s.link || '') || [])
         ].join(' ').toLowerCase();
 
-        console.log('🔍 Search Debug:', {
-          searchTerm: searchLower,
-          searchableString: searchableString.substring(0, 200) + '...',
-          found: searchableString.includes(searchLower)
-        });
-
         return searchableString.includes(searchLower);
       })();
 
@@ -109,12 +95,20 @@ const CombinedLeads = () => {
 
 
 
-  // Toggle contact expansion for a lead
-  const toggleContactExpansion = (leadId) => {
-    setExpandedContacts(prev => ({
-      ...prev,
-      [leadId]: !prev[leadId]
-    }));
+  // Handle contact modal
+  const openContactDetails = (lead) => {
+    setSelectedLead(lead);
+  };
+
+  const closeContactDetails = () => {
+    setSelectedLead(null);
+    setCopiedId(null);
+  };
+
+  const handleCopy = (text, id) => {
+    navigator.clipboard.writeText(text);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
   };
 
   // Get unique filter options
@@ -311,37 +305,16 @@ const CombinedLeads = () => {
                         <span className="text-[10px] font-bold text-[var(--text-secondary)]">{lead.phones?.length || 0}</span>
                       </div>
 
-                      {/* Expand button if more contacts */}
+                      {/* View button */}
                       {(lead.emails?.length > 0 || lead.phones?.length > 0) && (
                         <button
-                          onClick={() => toggleContactExpansion(lead._id)}
-                          className="p-1 rounded-lg bg-[var(--bg-tertiary)] text-[var(--accent-primary)] hover:bg-[var(--accent-primary)] hover:text-white transition-all shadow-md"
+                          onClick={() => openContactDetails(lead)}
+                          className="px-3 py-1.5 rounded-lg bg-[var(--accent-primary)]/10 text-[var(--accent-primary)] hover:bg-[var(--accent-primary)] hover:!text-white transition-all duration-300 shadow-sm border border-[var(--accent-primary)]/20 font-black text-[9px] uppercase tracking-wider"
                         >
-                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d={expandedContacts[lead._id] ? "M19 9l-7 7-7-7" : "M9 5l7 7-7 7"} />
-                          </svg>
+                          View Details
                         </button>
                       )}
                     </div>
-
-                    {/* Expanded contact details */}
-                    {expandedContacts[lead._id] && (
-                      <div className="mt-2 space-y-1 text-[9px]">
-                        {lead.emails?.map((email, idx) => (
-                          <div key={`email-${idx}`} className="flex items-center gap-1 text-[var(--text-secondary)]">
-                            <div className={`w-1.5 h-1.5 rounded-full ${email.status === 'ACTIVE' ? 'bg-green-400' : 'bg-yellow-400'
-                              }`}></div>
-                            <span className="truncate">{email.value}</span>
-                          </div>
-                        ))}
-                        {lead.phones?.map((phone, idx) => (
-                          <div key={`phone-${idx}`} className="flex items-center gap-1 text-[var(--text-secondary)]">
-                            <div className="w-1.5 h-1.5 rounded-full bg-blue-400"></div>
-                            <span>{phone}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
                   </td>
                   {/* Stage */}
                   <td className="px-4 py-2 align-middle">
@@ -422,13 +395,165 @@ const CombinedLeads = () => {
           )
         }
       </div>
-      <style jsx>{`
+      {/* Contact Details Modal */}
+      {selectedLead && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-[var(--bg-secondary)] border border-white/10 rounded-[28px] w-full max-w-md shadow-2xl overflow-hidden animate-slideUp p-0 relative">
+            {/* Modal Header - More Compact */}
+            <div className="p-5 pb-4 border-b border-white/5 relative">
+              <div className="absolute top-0 right-0 p-3">
+                <button
+                  onClick={closeContactDetails}
+                  className="p-2 rounded-lg bg-white/5 hover:bg-red-500/10 hover:text-red-500 transition-all text-white/40"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="flex items-center gap-4">
+                <div className={`w-12 h-12 rounded-[18px] flex items-center justify-center text-xl font-black shadow-xl ${selectedLead.lqUpdatedBy
+                  ? 'bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-green-500/20'
+                  : 'bg-gradient-to-br from-blue-500 to-cyan-600 text-white shadow-blue-500/20'
+                  }`}>
+                  {selectedLead.name?.[0] || 'L'}
+                </div>
+                <div>
+                  <div className="text-[7px] font-black uppercase tracking-[0.3em] text-[var(--accent-primary)] mb-0.5 opacity-60">Lead Intelligence</div>
+                  <h3 className="text-lg font-black text-[var(--text-primary)] uppercase tracking-tight leading-tight truncate max-w-[200px]">{selectedLead.name || 'Anonymous'}</h3>
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <span className="text-[8px] font-black px-1.5 py-0.5 rounded bg-white/5 border border-white/10 text-white/40">📍 {selectedLead.location || 'GLOBAL'}</span>
+                    <span className={`text-[8px] font-black px-1.5 py-0.5 rounded border ${selectedLead.stage === 'DONE' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-blue-500/10 text-blue-400 border-blue-500/20'}`}>{selectedLead.stage}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Content - Tighter Gaps */}
+            <div className="p-5 space-y-5">
+              {/* Emails Section - 2 Columns */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1 rounded bg-blue-500/10 text-blue-400">
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <span className="text-[9px] font-black uppercase tracking-widest text-[var(--text-secondary)]">Emails</span>
+                  </div>
+                  <span className="text-[8px] font-black text-blue-400/50">{selectedLead.emails?.length || 0} TOTAL</span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  {selectedLead.emails?.map((email, idx) => (
+                    <div key={idx} className="flex flex-col p-2.5 rounded-xl bg-white/5 border border-white/5 hover:border-blue-500/30 transition-all group/email relative h-full">
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center gap-1.5">
+                          <div className={`w-1.5 h-1.5 rounded-full ${email.status === 'ACTIVE' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]' : 'bg-yellow-500 shadow-[0_0_8px_rgba(234,179,8,0.4)]'}`} />
+                          <span className={`text-[7px] font-black uppercase tracking-tight ${email.status === 'ACTIVE' ? 'text-green-500' : 'text-yellow-500'}`}>{email.status}</span>
+                        </div>
+                        <button
+                          onClick={() => handleCopy(email.value, `email-${idx}`)}
+                          className="p-1 rounded-md hover:bg-white/10 text-white/20 hover:text-blue-400 transition-all"
+                          title="Copy Email"
+                        >
+                          {copiedId === `email-${idx}` ? (
+                            <svg className="w-3 h-3 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          ) : (
+                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                            </svg>
+                          )}
+                        </button>
+                      </div>
+                      <span className="text-[10px] font-bold text-white group-hover/email:text-blue-400 transition-colors truncate w-full tracking-tight pr-6">{email.value}</span>
+                    </div>
+                  ))}
+                  {(!selectedLead.emails || selectedLead.emails.length === 0) && (
+                    <div className="col-span-2 text-center py-3 text-[9px] font-bold text-white/20 uppercase tracking-widest italic border border-dashed border-white/5 rounded-xl">No Synchronized Emails</div>
+                  )}
+                </div>
+              </div>
+
+              {/* Phones Section - 2 Columns */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1 rounded bg-green-500/10 text-green-400">
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                      </svg>
+                    </div>
+                    <span className="text-[9px] font-black uppercase tracking-widest text-[var(--text-secondary)]">Phone Lines</span>
+                  </div>
+                  <span className="text-[8px] font-black text-green-400/50">{selectedLead.phones?.length || 0} TOTAL</span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  {selectedLead.phones?.map((phone, idx) => (
+                    <div key={idx} className="flex items-center justify-between p-2.5 rounded-xl bg-white/5 border border-white/5 hover:border-green-500/30 transition-all group/phone">
+                      <div className="flex items-center gap-2 overflow-hidden">
+                        <div className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)] flex-shrink-0" />
+                        <span className="text-[11px] font-black text-white group-hover/phone:text-green-400 transition-colors tracking-tighter truncate">{phone}</span>
+                      </div>
+                      <button
+                        onClick={() => handleCopy(phone, `phone-${idx}`)}
+                        className="p-1 rounded-md hover:bg-white/10 text-white/20 hover:text-green-400 transition-all flex-shrink-0"
+                        title="Copy Number"
+                      >
+                        {copiedId === `phone-${idx}` ? (
+                          <svg className="w-3 h-3 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        ) : (
+                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                          </svg>
+                        )}
+                      </button>
+                    </div>
+                  ))}
+                  {(!selectedLead.phones || selectedLead.phones.length === 0) && (
+                    <div className="col-span-2 text-center py-3 text-[9px] font-bold text-white/20 uppercase tracking-widest italic border border-dashed border-white/5 rounded-xl">No Established Lines</div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer - more compact */}
+            <div className="p-4 bg-white/5 border-t border-white/5 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+                <span className="text-[8px] font-black text-white/30 uppercase tracking-[0.2em]">Secure Node</span>
+              </div>
+              <button
+                onClick={closeContactDetails}
+                className="px-5 py-2 rounded-lg bg-[var(--accent-primary)] text-white font-black text-[9px] uppercase tracking-widest hover:brightness-110 active:scale-95 transition-all shadow-lg"
+              >
+                Exit Profile
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <style dangerouslySetInnerHTML={{
+        __html: `
         .animate-fadeIn { animation: fadeIn 0.4s ease-out forwards; }
+        .animate-slideUp { animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
+          from { opacity: 0; }
+          to { opacity: 1; }
         }
-      `}</style>
+        @keyframes slideUp {
+          from { opacity: 0; transform: translateY(30px) scale(0.95); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+      `}} />
     </div>
   );
 };

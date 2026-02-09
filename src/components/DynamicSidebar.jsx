@@ -30,18 +30,17 @@ export default function DynamicSidebar({ isOpen, onClose, onToggle, user }) {
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
       `}
         style={{
-          backgroundColor: 'var(--bg-secondary)',
-          borderColor: 'var(--border-primary)'
+          backgroundColor: '#0F2A3F',
+          borderColor: 'rgba(255,255,255,0.1)'
         }}>
 
         {/* Sidebar Header */}
         <div className="h-20 border-b flex items-center justify-center px-4 md:px-6"
-          style={{ borderColor: 'var(--border-primary)' }}>
+          style={{ borderColor: 'rgba(255,255,255,0.1)' }}>
           {/* Mobile close button */}
           <button
             onClick={onToggle}
-            className="absolute left-4 md:left-6 p-1.5 rounded-lg hover:bg-[var(--bg-tertiary)] transition-all active:scale-95"
-            style={{ color: 'var(--text-primary)' }}
+            className="absolute left-4 md:left-6 p-1.5 rounded-lg hover:bg-white/5 transition-all active:scale-95 text-white/70 hover:text-white"
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
@@ -110,7 +109,7 @@ export default function DynamicSidebar({ isOpen, onClose, onToggle, user }) {
                     className="flex items-center gap-2 md:gap-3 px-3 py-2.5 rounded-xl transition-all duration-300 group/item"
                     style={{
                       backgroundColor: isPageActive ? 'var(--accent-primary)' : 'transparent',
-                      color: isPageActive ? '#FFFFFF' : 'var(--text-secondary)',
+                      color: isPageActive ? '#FFFFFF' : 'rgba(255,255,255,0.6)',
                       boxShadow: isPageActive ? '0 10px 20px -5px var(--accent-primary)' : 'none'
                     }}
                   >
@@ -132,12 +131,12 @@ export default function DynamicSidebar({ isOpen, onClose, onToggle, user }) {
 
         {/* Sidebar Footer */}
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t"
-          style={{ borderColor: 'var(--border-primary)' }}>
+          style={{ borderColor: 'rgba(255,255,255,0.1)' }}>
           <div className="text-center">
-            <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+            <p className="text-xs text-white/40">
               Multi-Dashboard System
             </p>
-            <p className="text-xs mt-1" style={{ color: 'var(--text-tertiary)' }}>
+            <p className="text-xs mt-1 text-white/40">
               Version 2.0.0
             </p>
           </div>

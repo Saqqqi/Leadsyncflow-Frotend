@@ -127,8 +127,7 @@ export default function TokenStatus() {
 
   return (
     <div className="fixed bottom-6 right-6 z-[9999] flex items-center gap-2 px-3 py-1.5 rounded-full border border-teal-500/20 bg-slate-900/40 backdrop-blur-md shadow-lg opacity-40 hover:opacity-100 transition-opacity cursor-default group">
-      <div className="h-1.5 w-1.5 rounded-full bg-teal-500 animate-pulse" />
-      <span className="text-[10px] font-bold text-teal-400/80 tracking-widest uppercase">System Encrypted & Active</span>
+
     </div>
   );
 }

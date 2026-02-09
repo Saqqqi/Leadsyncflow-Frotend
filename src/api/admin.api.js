@@ -6,12 +6,8 @@ export const adminAPI = {
   getOverview: async (params = {}) => {
     try {
       const response = await axiosInstance.get('/api/superadmin/overview', { params });
-      console.groupCollapsed('%c📊 Admin Overview API', 'color: #8b5cf6; font-weight: bold; font-size: 12px;');
-      console.log('%cPayload:', 'color: #a78bfa; font-weight: bold;', response.data);
-      console.groupEnd();
       return response.data;
     } catch (error) {
-      console.error('❌ Overview API Error:', error);
       throw error;
     }
   },
@@ -43,42 +39,24 @@ export const adminAPI = {
   getLeadsByStage: async (stage, limit = 20, skip = 0, extraFilters = {}) => {
     const params = { limit, skip, ...extraFilters };
     if (stage) params.stage = stage;
-    
-    console.groupCollapsed(`%c🔍 Frontend: Fetching Leads by Stage: ${stage || 'ALL'}`, 'color: #3b82f6; font-weight: bold; font-size: 12px;');
-    console.log('%c📤 Frontend Sending Params:', 'color: #60a5fa; font-weight: bold;', params);
-    console.log('%c🌐 Full URL:', 'color: #60a5fa; font-weight: bold;', `/api/superadmin/leads?${new URLSearchParams(params).toString()}`);
-    
     const response = await axiosInstance.get('/api/superadmin/leads', { params });
-    
-    console.log('%c📥 Backend Response:', 'color: #60a5fa; font-weight: bold;', response.data);
-    console.log('%c📊 Response Summary:', 'color: #60a5fa; font-weight: bold;', {
-      total: response.data.total,
-      returned: response.data.leads?.length,
-      stages: [...new Set(response.data.leads?.map(l => l.stage) || [])]
-    });
-    console.groupEnd();
-    
     return response.data;
   },
 
-  // Specific shortcuts for each role stage - FIXED TO FETCH SPECIFIC DATA
+  // Specific shortcuts for each role stage
   getManagerLeads: async (limit = 20, skip = 0, extraFilters = {}) => {
-    // Only fetch MANAGER, DONE, REJECTED stages for managers
     return adminAPI.getLeadsByStage('MANAGER', limit, skip, extraFilters);
   },
-  
+
   getLeadQualifierLeads: async (limit = 20, skip = 0, extraFilters = {}) => {
-    // Only fetch LQ stage leads for lead qualifiers
     return adminAPI.getLeadsByStage('LQ', limit, skip, extraFilters);
   },
-  
+
   getVerifierLeads: async (limit = 20, skip = 0, extraFilters = {}) => {
-    // Only fetch DM stage leads for verifiers
     return adminAPI.getLeadsByStage('DM', limit, skip, extraFilters);
   },
-  
+
   getDataMinerLeads: async (limit = 20, skip = 0, extraFilters = {}) => {
-    // Only fetch DM stage leads for data miners (not all leads)
     return adminAPI.getLeadsByStage('DM', limit, skip, extraFilters);
   },
 
@@ -89,18 +67,7 @@ export const adminAPI = {
 
   getDMStageLeads: async (limit = 20, skip = 0, extraFilters = {}) => {
     const params = { limit, skip, stage: 'DM', ...extraFilters };
-    
-    console.groupCollapsed('%c🔍 Fetching DM Stage Leads', 'color: #3b82f6; font-weight: bold; font-size: 12px;');
-    console.log('%cParams:', 'color: #60a5fa; font-weight: bold;', params);
-    console.log('%cURL will be:', 'color: #60a5fa; font-weight: bold;', `/api/superadmin/leads?${new URLSearchParams(params).toString()}`);
-    
     const response = await axiosInstance.get('/api/superadmin/leads', { params });
-    
-    console.log('%cResponse:', 'color: #60a5fa; font-weight: bold;', response.data);
-    console.log('%cLeads count:', 'color: #60a5fa; font-weight: bold;', response.data.leads?.length);
-    console.log('%cStages in response:', 'color: #60a5fa; font-weight: bold;', [...new Set(response.data.leads?.map(l => l.stage) || [])]);
-    console.groupEnd();
-    
     return response.data;
   },
 
@@ -124,24 +91,9 @@ export const adminAPI = {
   getPerformance: async (role, extraParams = {}) => {
     try {
       const params = { role, ...extraParams };
-      
-      console.groupCollapsed(`%c📈 Frontend: Performance API: ${role}`, 'color: #10b981; font-weight: bold; font-size: 12px;');
-      console.log('%c📤 Frontend Sending Params:', 'color: #34d399; font-weight: bold;', params);
-      console.log('%c🌐 Full URL:', 'color: #34d399; font-weight: bold;', `/api/superadmin/performance?${new URLSearchParams(params).toString()}`);
-      
       const response = await axiosInstance.get('/api/superadmin/performance', { params });
-      
-      console.log('%c📥 Backend Response:', 'color: #34d399; font-weight: bold;', response.data);
-      console.log('%c📊 Performance Summary:', 'color: #34d399; font-weight: bold;', {
-        role: response.data.role,
-        userCount: response.data.rows?.length,
-        users: response.data.rows?.map(r => ({ name: r.name, metrics: r.metrics }))
-      });
-      console.groupEnd();
-      
       return response.data;
     } catch (error) {
-      console.error(`❌ Performance API Error (${role}):`, error);
       throw error;
     }
   },
@@ -149,98 +101,24 @@ export const adminAPI = {
   // Get all leads with comprehensive filtering by stage and role
   getAllLeadsByRole: async (limit = 20, skip = 0, filters = {}) => {
     const params = { limit, skip, ...filters };
-    
-    // 🎯 Special logging for DM and LQ stages
-    const isDMRequest = filters.stage === 'DM';
-    const isLQRequest = filters.stage === 'LQ';
-    
-    console.groupCollapsed(
-      isDMRequest ? '%c🛠️ Frontend: Fetching Data Miner Leads (created by Data Minors)' : 
-      isLQRequest ? '%c🎯 Frontend: Fetching Lead Qualifier Leads (processed by Lead Qualifiers)' :
-      '%c🔍 Frontend: Fetching All Leads by Role', 
-      isDMRequest ? 'color: #3b82f6; font-weight: bold; font-size: 12px;' : 
-      isLQRequest ? 'color: #8b5cf6; font-weight: bold; font-size: 12px;' :
-      'color: #f59e0b; font-weight: bold; font-size: 12px;'
-    );
-    console.log('%c📤 Frontend Sending Params:', 'color: #fbbf24; font-weight: bold;', params);
-    console.log('%c🌐 Full URL:', 'color: #fbbf24; font-weight: bold;', `/api/superadmin/leads?${new URLSearchParams(params).toString()}`);
-    
     const response = await axiosInstance.get('/api/superadmin/leads', { params });
-    
-    console.log('%c📥 Backend Response:', 'color: #fbbf24; font-weight: bold;', response.data);
-    
-    if (isDMRequest) {
-      console.log('%c🛠️ Data Miner Leads Summary:', 'color: #3b82f6; font-weight: bold;', {
-        total: response.data.total,
-        returned: response.data.leads?.length,
-        sampleLeads: response.data.leads?.slice(0, 3).map(l => ({
-          name: l.name,
-          createdBy: l.createdBy?.name,
-          stage: l.stage,
-          emailCount: l.emails?.length || 0,
-          phoneCount: l.phones?.length || 0
-        }))
-      });
-    } else if (isLQRequest) {
-      console.log('%c🎯 Lead Qualifier Leads Summary:', 'color: #8b5cf6; font-weight: bold;', {
-        total: response.data.total,
-        returned: response.data.leads?.length,
-        sampleLeads: response.data.leads?.slice(0, 3).map(l => ({
-          name: l.name,
-          lqStatus: l.lqStatus,
-          lqUpdatedBy: l.lqUpdatedBy?.name,
-          stage: l.stage,
-          assignedTo: l.assignedTo?.name,
-          commentCount: l.comments?.length || 0
-        }))
-      });
-    } else {
-      console.log('%c� Response Summary:', 'color: #fbbf24; font-weight: bold;', {
-        total: response.data.total,
-        returned: response.data.leads?.length,
-        stages: [...new Set(response.data.leads?.map(l => l.stage) || [])],
-        stageBreakdown: response.data.leads?.reduce((acc, lead) => {
-          acc[lead.stage] = (acc[lead.stage] || 0) + 1;
-          return acc;
-        }, {})
-      });
-    }
-    console.groupEnd();
-    
     return response.data;
   },
 
   // Debug function to see what stages actually exist
   getStagesDebug: async () => {
     try {
-      console.groupCollapsed('%c🔍 DEBUG: Checking what stages exist in database', 'color: #ff6b6b; font-weight: bold; font-size: 14px;');
-      
       const response = await axiosInstance.get('/api/superadmin/leads', { params: { limit: 1000, skip: 0 } });
-      
       if (response.data.success) {
         const stages = [...new Set(response.data.leads?.map(l => l.stage) || [])];
         const stageBreakdown = response.data.leads?.reduce((acc, lead) => {
           acc[lead.stage] = (acc[lead.stage] || 0) + 1;
           return acc;
         }, {});
-        
-        console.log('%c📊 Available Stages:', 'color: #ff6b6b; font-weight: bold;', stages);
-        console.log('%c📈 Stage Breakdown:', 'color: #ff6b6b; font-weight: bold;', stageBreakdown);
-        console.log('%c📋 Total Leads:', 'color: #ff6b6b; font-weight: bold;', response.data.leads?.length);
-        
-        // Check specifically for DM stage
         const dmLeads = response.data.leads?.filter(l => l.stage === 'DM') || [];
-        console.log('%c🛠️ DM Stage Leads:', 'color: #ff6b6b; font-weight: bold;', dmLeads.length);
-        
-        if (dmLeads.length > 0) {
-          console.log('%c📝 Sample DM Lead:', 'color: #ff6b6b; font-weight: bold;', dmLeads[0]);
-        }
-        
-        console.groupEnd();
         return { stages, stageBreakdown, total: response.data.leads?.length, dmCount: dmLeads.length };
       }
     } catch (error) {
-      console.error('❌ Debug Stages Error:', error);
       throw error;
     }
   },

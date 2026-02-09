@@ -14,6 +14,7 @@ export default function DashboardLayout() {
 
   /* Global Theme Management */
   const { theme, toggleTheme } = useTheme();
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   // Find current dashboard & page
   const currentDashboard = dashboardConfig.find(db =>
@@ -24,7 +25,6 @@ export default function DashboardLayout() {
     currentDashboard?.hideSidebar ? false : window.innerWidth >= 1024
   );
   const [user, setUser] = useState(null);
-
 
   const currentPage = currentDashboard?.pages.find(page => {
     const fullPath = `${currentDashboard.basePath}${page.path ? '/' + page.path : ''}`;
@@ -46,7 +46,7 @@ export default function DashboardLayout() {
     const roleLabel = role ? getRoleDisplayName(role) : null;
 
     const baseTitle = 'Lead Sync ';
-    const dashboardLabel = currentDashboard?.name || getDashboardTitleFromPath(location.pathname);
+    const dashboardLabel = currentDashboard?.name || getDashboardTitleFromPath(location.pathname, user?.role || user?.department);
     const pageLabel = currentPage?.name;
 
     const parts = [baseTitle];
@@ -83,7 +83,7 @@ export default function DashboardLayout() {
     tokenManager.initializeMonitoring();
   }, [navigate]);
 
-  const handleLogout = () => {
+  const confirmLogout = () => {
     tokenManager.clearAuthData();
     navigate('/login');
   };
@@ -99,138 +99,113 @@ export default function DashboardLayout() {
         user={user}
       />
 
-
-
       <div
         className={`flex-1 flex flex-col transition-all duration-300 ${isSidebarOpen ? 'lg:ml-64' : 'lg:ml-0'
           }`}
       >
         {/* Header */}
         <header
-          className="h-16 border-b flex items-center justify-between px-4 md:px-6 transition-colors duration-300"
-          style={{ borderColor: 'var(--border-primary)', backgroundColor: 'var(--bg-primary)' }}
+          className="h-16 flex items-center justify-between px-6 transition-all duration-300 sticky top-0 z-[60] border-b"
+          style={{
+            borderColor: 'rgba(255,255,255,0.1)',
+            backgroundColor: '#0F2A3F',
+            color: '#FFFFFF'
+          }}
         >
           <div className="flex items-center gap-4">
-            {/* Mobile menu toggle */}
-
-
             {/* Desktop sidebar toggle - shows when sidebar is closed */}
             {!isSidebarOpen && !currentDashboard?.hideSidebar && (
               <button
                 onClick={() => setIsSidebarOpen(true)}
-                className="flex fixed left-4 ml-4 translate-y-1/2 z-[70] p-3 rounded-lg hover:bg-[var(--bg-secondary)] transition-all duration-300 group border-2"
-                style={{
-                  color: 'var(--accent-primary)',
-                  borderColor: 'var(--accent-primary)',
-                  backgroundColor: 'var(--accent-primary)/10'
-                }}
+                className="p-2.5 rounded-xl hover:bg-white/5 transition-all duration-300 group border border-white/10 shadow-sm text-[var(--accent-primary)]"
                 title="Show Sidebar"
               >
                 <svg className="h-5 w-5 transition-transform group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h8M4 18h16" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 6h16M4 12h8M4 18h16" />
                 </svg>
               </button>
             )}
 
-            {/* Dashboard info */}
-            {currentDashboard && (
-              <div className="hidden sm:flex items-center gap-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-600">
-                  {currentDashboard.icon || '📊'}
-                </div>
-                <div>
-                  <div className="text-xs font-medium uppercase tracking-wider opacity-60" style={{ color: 'var(--text-secondary)' }}>
-                    Dashboard
+            {/* Portal Identity - Premium Design */}
+            <div className="flex items-center gap-4">
+              {!isSidebarOpen && !currentDashboard?.hideSidebar && (
+                <div className="h-10 w-px bg-white/10 hidden md:block mr-2" />
+              )}
+              {currentDashboard && (
+                <div className="flex flex-col">
+                  <div className="text-[7px] font-black text-[var(--accent-primary)] uppercase tracking-[0.3em] leading-none mb-1.5 opacity-80">
+                    System Architecture
                   </div>
-                  <div className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
-                    {currentDashboard.name}
+                  <div className="text-xs sm:text-[15px] font-black text-white uppercase tracking-[-0.02em] leading-none">
+                    {getDashboardTitleFromPath(location.pathname, user?.role || user?.department)}
                   </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
 
           <div className="flex items-center gap-4">
+            {/* Page Context Pill */}
+            {currentDashboard && (
+              <div className="hidden lg:flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10">
+                <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent-primary)] animate-pulse" />
+                <span className="text-[10px] font-black text-white/70 uppercase tracking-widest">
+                  {currentPage?.name || 'Overview'}
+                </span>
+              </div>
+            )}
 
-            {/* Theme Toggle Button */}
+            {/* Theme Toggle - High Visibility */}
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-lg hover:bg-[var(--bg-secondary)] transition-colors"
-              style={{ color: 'var(--text-primary)' }}
+              className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 transition-all duration-300 group border border-white/10 hover:border-white/20 shadow-lg text-white"
               title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
             >
               {theme === 'dark' ? (
-                // Sun Icon for Dark Mode (to switch to Light)
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-5 h-5 transition-transform group-hover:rotate-45 text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.4)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
                 </svg>
               ) : (
-                // Moon Icon for Light Mode (to switch to Dark)
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-5 h-5 transition-transform group-hover:-rotate-12 text-blue-300 drop-shadow-[0_0_8px_rgba(147,197,253,0.4)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
                 </svg>
               )}
             </button>
 
-            {/* Current context pill */}
-            {currentDashboard && (
-              <div className="hidden sm:flex flex-col items-end px-3 py-1 rounded-lg border"
-                style={{ backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-primary)' }}>
-                <span className="text-[8px] font-bold uppercase tracking-widest" style={{ color: 'var(--accent-primary)' }}>
-                  Workspace
-                </span>
-                <div className="flex items-center gap-2 text-[11px]" style={{ color: 'var(--text-primary)' }}>
-                  <span className="font-extrabold">{currentDashboard.name}</span>
-                  <div className="w-1 h-1 rounded-full" style={{ backgroundColor: 'var(--accent-primary)' }} />
-                  <span className="opacity-70">{currentPage?.name || 'Overview'}</span>
+            {/* User Profile - Streamlined & Minimalist */}
+            <div className="flex items-center gap-4 border-l border-white/15 pl-6 ml-2">
+              <div className="flex flex-col items-end">
+                <div className="text-[11px] sm:text-[13px] font-black text-white uppercase tracking-tight leading-none truncate max-w-[80px] sm:max-w-[150px]">
+                  {user?.name || 'User'}
                 </div>
-              </div>
-            )}
-
-            {/* Notification */}
-            <button
-              className="p-2 rounded-lg hover:bg-[var(--bg-secondary)] relative transition-colors"
-              style={{ color: 'var(--text-primary)' }}
-            >
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-                />
-              </svg>
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-[var(--bg-primary)]" />
-            </button>
-
-            {/* User profile & logout */}
-            <div className="flex items-center gap-3 pl-4 border-l" style={{ borderColor: 'var(--border-primary)' }}>
-              <div className="text-right">
-                <div className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{user?.name || 'User'}</div>
-                <div className="text-[10px] font-medium uppercase tracking-wide px-2 py-0.5 mt-0.5 rounded bg-green-500/10 text-green-400 border border-green-500/20">
-                  {user?.department || user?.role || 'Team'}
+                <div className="text-[7px] sm:text-[8px] font-bold text-white/30 uppercase tracking-[0.1em] mt-1">
+                  Active Session
                 </div>
               </div>
 
-              <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-black text-lg shadow-lg transition-transform hover:scale-105 cursor-pointer"
-                style={{
-                  background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
-                }}
-              >
-                {user?.name?.[0]?.toUpperCase() || 'U'}
+              <div className="relative group/user cursor-pointer">
+                <div
+                  className="w-10 h-10 rounded-2xl flex items-center justify-center text-white font-black text-lg shadow-xl shadow-[var(--accent-primary)]/10 transition-all group-hover/user:scale-105 group-hover/user:rotate-2 border-2 border-white/10 ring-4 ring-transparent group-hover/user:ring-white/5"
+                  style={{
+                    background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
+                  }}
+                >
+                  {user?.name?.[0]?.toUpperCase() || 'U'}
+                </div>
+                <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 border-2 border-[#0F2A3F] rounded-full shadow-lg" />
               </div>
 
+              {/* Logout Button */}
               <button
-                onClick={handleLogout}
-                className="p-2 rounded-lg hover:bg-red-500/10 text-gray-400 hover:text-red-400 transition-colors"
-                title="Logout"
+                onClick={() => setShowLogoutConfirm(true)}
+                className="p-2.5 rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all duration-300 border border-red-500/20 shadow-lg shadow-red-500/5 hover:scale-110 group/logout active:scale-95"
+                title="Secure Logout"
               >
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    strokeWidth={2}
+                    strokeWidth={2.5}
                     d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
                   />
                 </svg>
@@ -239,11 +214,55 @@ export default function DashboardLayout() {
           </div>
         </header>
 
+        {/* Logout Confirmation Modal */}
+        {showLogoutConfirm && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fadeIn">
+            <div className="bg-[var(--bg-secondary)] border border-white/10 rounded-[32px] w-full max-w-sm shadow-2xl overflow-hidden animate-slideUp p-8 text-center">
+              <div className="w-20 h-20 bg-red-500/10 rounded-3xl flex items-center justify-center text-red-500 mx-auto mb-6 border border-red-500/20 shadow-lg">
+                <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-black text-[var(--text-primary)] uppercase tracking-tight mb-2">Secure Logout?</h3>
+              <p className="text-sm font-medium text-[var(--text-tertiary)] opacity-60 mb-8 px-4">
+                Are you sure you want to end your session? You will need to re-authenticate to access the dashboard.
+              </p>
+              <div className="flex flex-col gap-3">
+                <button
+                  onClick={confirmLogout}
+                  className="w-full py-4 bg-red-500 text-white rounded-2xl font-black text-xs uppercase tracking-[0.3em] shadow-xl shadow-red-500/20 hover:brightness-110 active:scale-95 transition-all"
+                >
+                  Confirm Logout
+                </button>
+                <button
+                  onClick={() => setShowLogoutConfirm(false)}
+                  className="w-full py-4 bg-[var(--bg-tertiary)] text-[var(--text-primary)] rounded-2xl font-black text-xs uppercase tracking-[0.3em] border border-[var(--border-primary)] hover:bg-[var(--bg-secondary)] active:scale-95 transition-all"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Content */}
         <main className="flex-1 overflow-auto p-6" style={{ backgroundColor: 'var(--bg-primary)' }}>
           <Outlet />
         </main>
       </div>
+      <style dangerouslySetInnerHTML={{
+        __html: `
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes slideUp {
+          from { opacity: 0; transform: translateY(20px) scale(0.95); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .animate-fadeIn { animation: fadeIn 0.3s ease-out forwards; }
+        .animate-slideUp { animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+      `}} />
     </div>
   );
 }

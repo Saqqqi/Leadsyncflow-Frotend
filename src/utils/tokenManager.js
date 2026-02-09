@@ -116,7 +116,6 @@ class TokenManager {
     if (!token) return;
 
     this.checkInterval = setInterval(() => {
-      console.log(`[TokenManager] Running periodic check at ${new Date().toLocaleTimeString()}`);
       const currentToken = this.getToken();
       if (!currentToken || this.isTokenExpired(currentToken)) {
         this.handleTokenExpired();

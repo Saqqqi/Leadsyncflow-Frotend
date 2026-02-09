@@ -44,10 +44,6 @@ export default function AdminDashboard() {
         try {
             setLoading(true);
             const params = getDateRange(activeFilter);
-
-            // Log for debugging
-            console.log(`Fetching Dashboard with filter: ${activeFilter}`, params);
-
             const res = await adminAPI.getOverview(params);
             if (res.success) {
                 setData(res);

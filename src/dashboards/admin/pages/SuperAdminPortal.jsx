@@ -13,6 +13,8 @@ export default function SuperAdminPortal() {
     const [selectedManager, setSelectedManager] = useState('');
     const [selectedLqs, setSelectedLqs] = useState([]);
     const [viewingManagerLqs, setViewingManagerLqs] = useState(null);
+    const [managerSearch, setManagerSearch] = useState('');
+    const [lqSearch, setLqSearch] = useState('');
 
     const showToast = (message, type = 'success') => {
         setToast({ message, type });
@@ -160,68 +162,139 @@ export default function SuperAdminPortal() {
                             )}
                         </div>
 
-                        <div className="grid grid-cols-1 gap-5">
-                            {/* Manager Selection */}
-                            <div className="relative">
-                                <label className="flex justify-between text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] mb-2 mr-1 ml-1">
-                                    <span>Target Manager</span>
-                                    {selectedManager && <span className="text-[var(--accent-primary)] animate-pulse">● Selected</span>}
+                        <div className="space-y-6">
+                            {/* Manager Selection - Improved Searchable Selector */}
+                            <div className="relative group/manager">
+                                <label className="flex justify-between text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] mb-3 px-1">
+                                    <span>Target Manager Selection</span>
+                                    {selectedManager && <span className="text-[var(--accent-primary)] animate-pulse">Linked Manager Confirmed</span>}
                                 </label>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 max-h-40 overflow-y-auto pr-1 custom-scrollbar">
-                                    {[...managersWithoutLQs, ...managersWithLQs]
-                                        .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
-                                        .map(m => (
-                                            <div
-                                                key={m._id}
-                                                onClick={() => setSelectedManager(m._id)}
-                                                className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center gap-2.5 ${selectedManager === m._id
-                                                    ? 'bg-[var(--accent-primary)]/10 border-[var(--accent-primary)]/50 shadow-sm'
-                                                    : 'bg-[var(--bg-tertiary)]/30 border-[var(--border-primary)] hover:border-[var(--accent-primary)]/30'}`}
-                                            >
-                                                <div className={`w-7 h-7 rounded-lg flex items-center justify-center font-black text-[10px] ${selectedManager === m._id ? 'bg-[var(--accent-primary)] text-white' : 'bg-[var(--bg-tertiary)] text-[var(--accent-primary)]'}`}>
-                                                    {m.name.charAt(0)}
+
+                                <div className="space-y-3">
+                                    <div className="relative">
+                                        <input
+                                            type="text"
+                                            placeholder="SEARCH MANAGERS..."
+                                            value={managerSearch}
+                                            onChange={(e) => setManagerSearch(e.target.value)}
+                                            className="w-full bg-[var(--bg-tertiary)]/30 border border-[var(--border-primary)] rounded-xl py-2.5 pl-10 pr-4 text-[10px] font-bold text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] placeholder:opacity-40 focus:border-[var(--accent-primary)]/50 focus:ring-1 focus:ring-[var(--accent-primary)]/20 transition-all outline-none uppercase tracking-widest"
+                                        />
+                                        <svg className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                        </svg>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 max-h-48 overflow-y-auto pr-1 custom-scrollbar pb-1">
+                                        {[...managersWithoutLQs, ...managersWithLQs]
+                                            .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
+                                            .filter(m => !managerSearch || m.name.toLowerCase().includes(managerSearch.toLowerCase()) || m.email.toLowerCase().includes(managerSearch.toLowerCase()))
+                                            .map(m => (
+                                                <div
+                                                    key={m._id}
+                                                    onClick={() => setSelectedManager(m._id)}
+                                                    className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center gap-3 group/mitem ${selectedManager === m._id
+                                                        ? 'bg-[var(--accent-primary)]/10 border-[var(--accent-primary)] shadow-[0_0_15px_rgba(var(--accent-primary-rgb),0.1)]'
+                                                        : 'bg-[var(--bg-tertiary)]/10 border-[var(--border-primary)]/40 hover:border-[var(--accent-primary)]/30 hover:bg-[var(--bg-tertiary)]/20'}`}
+                                                >
+                                                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-black text-[11px] flex-shrink-0 transition-all ${selectedManager === m._id ? 'bg-[var(--accent-primary)] text-white scale-110 shadow-lg shadow-[var(--accent-primary)]/20' : 'bg-[var(--bg-tertiary)] text-[var(--accent-primary)] group-hover/mitem:scale-105'}`}>
+                                                        {m.name.charAt(0)}
+                                                    </div>
+                                                    <div className="min-w-0 flex-1">
+                                                        <div className={`text-[9px] font-black uppercase truncate tracking-tight transition-colors ${selectedManager === m._id ? 'text-[var(--accent-primary)]' : 'text-[var(--text-primary)]'}`}>{m.name}</div>
+                                                        <div className="text-[7px] font-black text-[var(--text-tertiary)] opacity-30 uppercase truncate tracking-tighter">{m.email}</div>
+                                                    </div>
                                                 </div>
-                                                <div className="min-w-0">
-                                                    <div className="text-[9px] font-black uppercase truncate">{m.name}</div>
-                                                    <div className="text-[7px] font-bold opacity-40 uppercase truncate">{m.email}</div>
-                                                </div>
+                                            ))}
+                                        {([...managersWithoutLQs, ...managersWithLQs].filter(m => !managerSearch || m.name.toLowerCase().includes(managerSearch.toLowerCase()))).length === 0 && (
+                                            <div className="col-span-full py-8 text-center bg-[var(--bg-tertiary)]/5 border border-dashed border-[var(--border-primary)] rounded-2xl">
+                                                <p className="text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-widest opacity-30">No Managers Matching Search</p>
                                             </div>
-                                        ))}
+                                        )}
+                                    </div>
                                 </div>
                             </div>
 
-                            {/* LQ Selection Pool */}
-                            <div className="relative">
-                                <label className="block text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] mb-2 mr-1 ml-1">Available Lead Qualifiers</label>
-                                <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 max-h-56 overflow-y-auto p-1.5 rounded-2xl border border-[var(--border-primary)]/40 bg-[var(--bg-tertiary)]/10 custom-scrollbar shadow-inner">
-                                    {unassignedLqs.map(lq => (
-                                        <label key={lq.id} className={`flex flex-col p-3 rounded-xl border transition-all cursor-pointer group/item relative ${selectedLqs.includes(lq.id) ? 'bg-[var(--accent-primary)]/5 border-[var(--accent-primary)]/30 shadow-sm' : 'bg-[var(--bg-secondary)] border-[var(--border-primary)]/60 hover:border-[var(--accent-primary)]/30'}`}>
-                                            <div className="flex items-center justify-between mb-1.5">
-                                                <div className={`w-6 h-6 rounded flex items-center justify-center font-black text-[9px] ${selectedLqs.includes(lq.id) ? 'bg-[var(--accent-primary)] text-white' : 'bg-[var(--bg-tertiary)] text-[var(--text-tertiary)]'}`}>
-                                                    {lq.name?.charAt(0)}
-                                                </div>
-                                                <div className={`w-3.5 h-3.5 rounded-md border transition-all ${selectedLqs.includes(lq.id) ? 'bg-[var(--accent-primary)] border-[var(--accent-primary)]' : 'border-[var(--border-primary)]'}`}>
-                                                    {selectedLqs.includes(lq.id) && <svg className="w-2.5 h-2.5 text-white mx-auto mt-0.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>}
-                                                </div>
+                            {/* LQ Selection Pool - Advanced Multi-select */}
+                            <div className="relative group/lq">
+                                <div className="flex justify-between items-center mb-3">
+                                    <label className="text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] px-1">Lead Qualifiers Pool</label>
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => {
+                                                const filtered = unassignedLqs
+                                                    .filter(lq => !lqSearch || lq.name.toLowerCase().includes(lqSearch.toLowerCase()))
+                                                    .map(lq => lq.id);
+                                                setSelectedLqs(Array.from(new Set([...selectedLqs, ...filtered])));
+                                            }}
+                                            className="text-[8px] font-black text-[var(--accent-primary)] uppercase tracking-widest hover:brightness-125 transition-all"
+                                        >
+                                            Select Page
+                                        </button>
+                                        <button
+                                            onClick={() => setSelectedLqs([])}
+                                            className="text-[8px] font-black text-red-500/60 hover:text-red-500 uppercase tracking-widest transition-all"
+                                        >
+                                            Clear All
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-3">
+                                    <div className="relative">
+                                        <input
+                                            type="text"
+                                            placeholder="FILTER QUALIFIERS (NAME OR EMAIL)..."
+                                            value={lqSearch}
+                                            onChange={(e) => setLqSearch(e.target.value)}
+                                            className="w-full bg-[var(--bg-tertiary)]/30 border border-[var(--border-primary)] rounded-xl py-2.5 pl-10 pr-4 text-[10px] font-bold text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] placeholder:opacity-40 focus:border-[var(--accent-primary)]/50 focus:ring-1 focus:ring-[var(--accent-primary)]/20 transition-all outline-none uppercase tracking-widest"
+                                        />
+                                        <svg className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                                        </svg>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 max-h-64 overflow-y-auto p-1 rounded-2xl border border-[var(--border-primary)]/20 custom-scrollbar">
+                                        {unassignedLqs
+                                            .filter(lq => !lqSearch || lq.name.toLowerCase().includes(lqSearch.toLowerCase()) || lq.email.toLowerCase().includes(lqSearch.toLowerCase()))
+                                            .map(lq => (
+                                                <label key={lq.id} className={`flex flex-col p-2.5 rounded-xl border transition-all cursor-pointer group/uitem relative overflow-hidden ${selectedLqs.includes(lq.id) ? 'bg-[var(--accent-primary)]/5 border-[var(--accent-primary)]/40 shadow-sm' : 'bg-[var(--bg-tertiary)]/10 border-[var(--border-primary)]/20 hover:border-[var(--accent-primary)]/20'}`}>
+                                                    <div className="flex items-start justify-between mb-1.5 relative z-10">
+                                                        <div className={`w-7 h-7 rounded-lg flex items-center justify-center font-black text-[10px] transition-all ${selectedLqs.includes(lq.id) ? 'bg-[var(--accent-primary)] text-white shadow shadow-[var(--accent-primary)]/30' : 'bg-[var(--bg-tertiary)] text-[var(--text-tertiary)]'}`}>
+                                                            {lq.name?.charAt(0)}
+                                                        </div>
+                                                        <div className={`w-4 h-4 rounded-md border-2 transition-all flex items-center justify-center ${selectedLqs.includes(lq.id) ? 'bg-[var(--accent-primary)] border-[var(--accent-primary)]' : 'border-[var(--border-primary)]/40 bg-white/5 group-hover/uitem:border-[var(--accent-primary)]/40'}`}>
+                                                            {selectedLqs.includes(lq.id) && <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>}
+                                                        </div>
+                                                    </div>
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={selectedLqs.includes(lq.id)}
+                                                        onChange={(e) => {
+                                                            if (e.target.checked) setSelectedLqs([...selectedLqs, lq.id]);
+                                                            else setSelectedLqs(selectedLqs.filter(id => id !== lq.id));
+                                                        }}
+                                                        className="hidden"
+                                                    />
+                                                    <div className="relative z-10">
+                                                        <span className={`text-[9px] font-black uppercase tracking-tight transition-colors truncate block ${selectedLqs.includes(lq.id) ? 'text-[var(--accent-primary)]' : 'text-[var(--text-primary)]'}`}>{lq.name}</span>
+                                                        <span className="text-[7px] font-black text-[var(--text-tertiary)] uppercase opacity-30 truncate block tracking-tighter">{lq.email}</span>
+                                                    </div>
+                                                    {selectedLqs.includes(lq.id) && (
+                                                        <div className="absolute top-0 right-0 w-8 h-8 bg-[var(--accent-primary)] opacity-5 rounded-bl-full translate-x-2 -translate-y-2 pointer-events-none" />
+                                                    )}
+                                                </label>
+                                            ))}
+                                        {unassignedLqs.length > 0 && unassignedLqs.filter(lq => !lqSearch || lq.name.toLowerCase().includes(lqSearch.toLowerCase())).length === 0 && (
+                                            <div className="col-span-full py-12 text-center bg-[var(--bg-tertiary)]/5 border border-dashed border-[var(--border-primary)] rounded-3xl">
+                                                <p className="text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-widest opacity-30">No Qualifiers Match Your Criteria</p>
                                             </div>
-                                            <input
-                                                type="checkbox"
-                                                checked={selectedLqs.includes(lq.id)}
-                                                onChange={(e) => {
-                                                    if (e.target.checked) setSelectedLqs([...selectedLqs, lq.id]);
-                                                    else setSelectedLqs(selectedLqs.filter(id => id !== lq.id));
-                                                }}
-                                                className="hidden"
-                                            />
-                                            <span className="text-[9px] font-black text-[var(--text-primary)] truncate uppercase tracking-tight">{lq.name}</span>
-                                            <span className="text-[7px] font-bold text-[var(--text-tertiary)] uppercase mt-0.5 opacity-40 truncate">{lq.email}</span>
-                                        </label>
-                                    ))}
-                                    {unassignedLqs.length === 0 && (
-                                        <div className="col-span-full py-8 text-center">
-                                            <p className="text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-widest opacity-20">No Lead Qualifiers Available</p>
-                                        </div>
-                                    )}
+                                        )}
+                                        {unassignedLqs.length === 0 && (
+                                            <div className="col-span-full py-12 text-center">
+                                                <p className="text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] opacity-30">The Pool is Currently Empty</p>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
 
@@ -369,7 +442,8 @@ export default function SuperAdminPortal() {
                 </div>
             )}
 
-            <style jsx>{`
+            <style dangerouslySetInnerHTML={{
+                __html: `
                 .animate-slideUp {
                     animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
                 }
@@ -403,13 +477,13 @@ export default function SuperAdminPortal() {
                     border-radius: 10px;
                 }
                 .custom-scrollbar::-webkit-scrollbar-thumb {
-                    background: rgba(var(--accent-primary-rgb, 99, 102, 241), 0.15);
+                    background: rgba(99, 102, 241, 0.15);
                     border-radius: 10px;
                 }
                 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
                     background: var(--accent-primary);
                 }
-            `}</style>
+            `}} />
         </div>
     );
 }

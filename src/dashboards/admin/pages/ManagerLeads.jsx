@@ -8,6 +8,7 @@ export default function ManagerLeads() {
     const [loading, setLoading] = useState(true);
     const [view, setView] = useState('ALL_LEADS'); // ALL_LEADS, TEAM, INDIVIDUAL_LEADS
     const [selectedUser, setSelectedUser] = useState(null);
+    const isFetching = React.useRef(false);
 
     const [searchTerm, setSearchTerm] = useState('');
     const [filterDate, setFilterDate] = useState('');
@@ -20,59 +21,44 @@ export default function ManagerLeads() {
     const [showContactModal, setShowContactModal] = useState(false);
 
     const fetchAllLeads = async () => {
+        if (isFetching.current) return;
         try {
+            isFetching.current = true;
             setLoading(true);
-            console.log('🎯 ManagerLeads: Fetching Manager stage leads');
+            console.log('🎯 ManagerLeads: Fetching all relevant leads');
 
-            // Fetch ALL relevant stages for managers
-            const [
-                managerRes,
-                doneRes,
-                completedRes,
-                rejectedRes,
-                approvedRes
-            ] = await Promise.all([
-                adminAPI.getAllLeadsByRole(1000, 0, { stage: 'MANAGER' }),
-                adminAPI.getAllLeadsByRole(1000, 0, { stage: 'DONE' }),
-                adminAPI.getAllLeadsByRole(1000, 0, { stage: 'COMPLETED' }),
-                adminAPI.getAllLeadsByRole(1000, 0, { stage: 'REJECTED' }),
-                adminAPI.getAllLeadsByRole(1000, 0, { stage: 'MANAGER_APPROVED' })
-            ]);
+            // Fetch all leads in one call instead of 5 separate calls for each stage
+            // We use a larger limit to ensure we capture enough leads for all relevant stages
+            const response = await adminAPI.getAllLeads(2000, 0);
 
-            let allManagerLeads = [];
+            if (response.success) {
+                const managerStages = ['MANAGER', 'DONE', 'COMPLETED', 'REJECTED', 'MANAGER_APPROVED'];
+                const allManagerLeads = (response.leads || []).filter(lead =>
+                    managerStages.includes(lead.stage)
+                );
 
-            if (managerRes.success) allManagerLeads.push(...(managerRes.leads || []));
-            if (doneRes.success) allManagerLeads.push(...(doneRes.leads || []));
-            if (completedRes.success) allManagerLeads.push(...(completedRes.leads || []));
-            if (rejectedRes.success) allManagerLeads.push(...(rejectedRes.leads || []));
-            if (approvedRes.success) allManagerLeads.push(...(approvedRes.leads || []));
+                console.log('📊 ManagerLeads Breakdown:',
+                    allManagerLeads.reduce((acc, lead) => {
+                        acc[lead.stage] = (acc[lead.stage] || 0) + 1;
+                        return acc;
+                    }, {})
+                );
 
-            console.log('📊 ManagerLeads Breakdown:', {
-                manager: managerRes.leads?.length || 0,
-                done: doneRes.leads?.length || 0,
-                completed: completedRes.leads?.length || 0,
-                rejected: rejectedRes.leads?.length || 0,
-                approved: approvedRes.leads?.length || 0
-            });
-
-            console.log('🔍 ManagerLeads: Total Manager-involved leads:', allManagerLeads.length);
-            console.log('📈 ManagerLeads: Stage breakdown:',
-                allManagerLeads.reduce((acc, lead) => {
-                    acc[lead.stage] = (acc[lead.stage] || 0) + 1;
-                    return acc;
-                }, {})
-            );
-
-            setLeads(allManagerLeads);
+                console.log('🔍 ManagerLeads: Total Manager-involved leads:', allManagerLeads.length);
+                setLeads(allManagerLeads);
+            }
         } catch (error) {
             console.error('❌ ManagerLeads: Error fetching leads:', error);
         } finally {
             setLoading(false);
+            isFetching.current = false;
         }
     };
 
     const fetchTeam = async () => {
+        if (isFetching.current) return;
         try {
+            isFetching.current = true;
             setLoading(true);
             const params = {};
             if (filterMonth !== 'ALL') {
@@ -91,6 +77,7 @@ export default function ManagerLeads() {
             console.error('Error fetching team:', error);
         } finally {
             setLoading(false);
+            isFetching.current = false;
         }
     };
 
@@ -111,9 +98,18 @@ export default function ManagerLeads() {
         }
     };
 
+    // Fetch leads when view changes
     useEffect(() => {
-        if (view === 'ALL_LEADS') fetchAllLeads();
-        else if (view === 'TEAM') fetchTeam();
+        if (view === 'ALL_LEADS') {
+            fetchAllLeads();
+        }
+    }, [view]);
+
+    // Fetch team performance when view or filterMonth changes
+    useEffect(() => {
+        if (view === 'TEAM') {
+            fetchTeam();
+        }
     }, [view, filterMonth]);
 
     const filteredLeads = useMemo(() => {

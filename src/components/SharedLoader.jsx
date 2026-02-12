@@ -41,7 +41,7 @@ export default function SharedLoader() {
         </div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         @keyframes loader-bar {
           0%, 100% { height: 40%; opacity: 0.5; }
           50% { height: 100%; opacity: 1; }

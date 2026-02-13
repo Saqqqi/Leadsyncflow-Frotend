@@ -7,9 +7,10 @@ export const authAPI = {
     return response.data;
   },
 
- 
+
   login: async (credentials) => {
-    const response = await axiosInstance.post('/api/auth/login', credentials);
+    // Add timestamp to force fresh request and bypass any browser/network caching
+    const response = await axiosInstance.post(`/api/auth/login?_t=${Date.now()}`, credentials);
     return response.data;
   },
 
@@ -23,7 +24,7 @@ export const authAPI = {
     const response = await axiosInstance.get(`/api/users/${userId}`);
     return response.data;
   },
-  
+
 };
 
 export default authAPI;

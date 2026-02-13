@@ -1,489 +1,490 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { superAdminAPI } from '../../../api/super-admin';
 import SharedLoader from '../../../components/SharedLoader';
 
 export default function SuperAdminPortal() {
-    const [managersWithLQs, setManagersWithLQs] = useState([]);
+    const [activeTab, setActiveTab] = useState(null); // null | 'assignment' | 'hierarchy'
+
+    // Data states
     const [managersWithoutLQs, setManagersWithoutLQs] = useState([]);
     const [unassignedLqs, setUnassignedLqs] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [actionLoading, setActionLoading] = useState(null);
+    const [managersWithLQs, setManagersWithLQs] = useState([]);
+
+    const [selectedManagerId, setSelectedManagerId] = useState('');
+    const [selectedLqIds, setSelectedLqIds] = useState([]);
+
+    // UI states
+    const [loading, setLoading] = useState(false);
+    const [assignmentLoaded, setAssignmentLoaded] = useState(false);
+    const [hierarchyLoaded, setHierarchyLoaded] = useState(false);
+    const [actionLoading, setActionLoading] = useState(false);
     const [error, setError] = useState(null);
     const [toast, setToast] = useState(null);
-    const [selectedManager, setSelectedManager] = useState('');
-    const [selectedLqs, setSelectedLqs] = useState([]);
-    const [viewingManagerLqs, setViewingManagerLqs] = useState(null);
+
+    // Search
     const [managerSearch, setManagerSearch] = useState('');
     const [lqSearch, setLqSearch] = useState('');
 
-    const showToast = (message, type = 'success') => {
-        setToast({ message, type });
+    const showToast = (msg, type = 'success') => {
+        setToast({ msg, type });
         setTimeout(() => setToast(null), 3000);
     };
 
-    useEffect(() => {
-        fetchData();
-    }, []);
-
-    const fetchData = async () => {
+    const loadAssignmentData = async () => {
         setLoading(true);
+        setError(null);
         try {
-            const [withRes, withoutRes, unassignedRes] = await Promise.all([
-                superAdminAPI.getManagersWithLQs(),
+            const [without, unassigned] = await Promise.all([
                 superAdminAPI.getManagersWithoutLQs(),
-                superAdminAPI.getUnassignedLeadQualifiers()
+                superAdminAPI.getUnassignedLeadQualifiers(),
             ]);
-            setManagersWithLQs(withRes.managers || []);
-            setManagersWithoutLQs(withoutRes.managers || []);
-            setUnassignedLqs(unassignedRes.leadQualifiers || []);
+            setManagersWithoutLQs(without.managers || []);
+            setUnassignedLqs(unassigned.leadQualifiers || []);
+            setAssignmentLoaded(true);
         } catch (err) {
-            console.error('Error fetching data:', err);
-            setError('Failed to fetch data');
+            setError('Failed to load assignment data');
+            console.error(err);
         } finally {
             setLoading(false);
         }
     };
 
-    const handleAssignLqs = async () => {
-        if (!selectedManager || selectedLqs.length === 0) return;
+    const loadHierarchyData = async () => {
+        setLoading(true);
+        setError(null);
         try {
-            setActionLoading('assign');
-            await superAdminAPI.assignLqsToManager(selectedManager, selectedLqs);
-            await fetchData();
-            setSelectedLqs([]);
-            setSelectedManager('');
-            showToast('LQs assigned successfully');
+            const res = await superAdminAPI.getManagersWithLQs();
+            setManagersWithLQs(res.managers || []);
+            setHierarchyLoaded(true);
         } catch (err) {
-            setError(err.response?.data?.message || 'Failed to assign LQs');
+            setError('Failed to load hierarchy data');
+            console.error(err);
         } finally {
-            setActionLoading(null);
+            setLoading(false);
         }
     };
 
-    const handleUnassignLqs = async (lqIds) => {
-        try {
-            setActionLoading('unassign');
-            await superAdminAPI.unassignLqs(lqIds);
-            await fetchData();
-            showToast('LQs unassigned successfully');
-        } catch (err) {
-            setError(err.response?.data?.message || 'Failed to unassign LQs');
-        } finally {
-            setActionLoading(null);
+    const handleTabChange = (tab) => {
+        setActiveTab(tab);
+        setSelectedManagerId('');
+        setSelectedLqIds([]);
+        if (tab === 'assignment' && !assignmentLoaded) {
+            loadAssignmentData();
+        }
+        if (tab === 'hierarchy' && !hierarchyLoaded) {
+            loadHierarchyData();
         }
     };
 
-    if (loading) return <SharedLoader />;
+    const handleAssign = async () => {
+        if (!selectedManagerId || selectedLqIds.length === 0) return;
+
+        setActionLoading(true);
+        try {
+            await superAdminAPI.assignLqsToManager(selectedManagerId, selectedLqIds);
+            setSelectedLqIds([]);
+            setSelectedManagerId('');
+            await Promise.all([loadAssignmentData(), loadHierarchyData()]);
+            showToast('Successfully assigned!');
+        } catch (err) {
+            const errorMsg = err?.response?.data?.message || 'Failed to assign';
+            setError(errorMsg);
+            showToast(errorMsg, 'error');
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
+    const handleUnassign = async (lqId) => {
+        setActionLoading(true);
+        try {
+            await superAdminAPI.unassignLqs([lqId]);
+            await Promise.all([loadAssignmentData(), loadHierarchyData()]);
+            showToast('Unassigned successfully');
+        } catch (err) {
+            const errorMsg = err?.response?.data?.message || 'Failed to unassign';
+            setError(errorMsg);
+            showToast(errorMsg, 'error');
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
+    const refresh = () => {
+        if (activeTab === 'assignment') loadAssignmentData();
+        if (activeTab === 'hierarchy') loadHierarchyData();
+    };
 
     return (
-        <div className="p-4 md:p-6 space-y-6 max-w-[1400px] mx-auto animate-fadeIn min-h-screen relative">
-            {/* Custom Toast Notification - UI Enhancement */}
+        <div className="min-h-screen p-4 md:p-8 relative">
+            <div className="pointer-events-none absolute inset-0 -z-10">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(35,76,106,0.45),_rgba(15,42,63,0.95)_55%,_rgba(15,42,63,1))]" />
+                <div className="absolute -top-28 -right-24 w-80 h-80 bg-[var(--accent-primary)]/15 blur-[120px] rounded-full" />
+                <div className="absolute -bottom-24 -left-16 w-72 h-72 bg-[var(--bg-tertiary)]/40 blur-[130px] rounded-full" />
+            </div>
+
+            {/* Toast */}
             {toast && (
-                <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[200] animate-toastIn">
-                    <div className={`px-6 py-3 rounded-2xl border shadow-2xl flex items-center gap-3 ${toast.type === 'success'
-                        ? 'bg-[#06140d] border-emerald-500/20 text-emerald-400'
-                        : 'bg-[#140606] border-red-500/20 text-red-400'
-                        }`}>
-                        <div className={`w-2 h-2 rounded-full ${toast.type === 'success' ? 'bg-emerald-500' : 'bg-red-500'} animate-pulse`} />
-                        <span className="text-[11px] font-black uppercase tracking-widest">{toast.message}</span>
+                <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 animate-fadeIn">
+                    <div
+                        className={`px-6 py-3 rounded-2xl border shadow-2xl text-[11px] font-black uppercase tracking-widest flex items-center gap-3 ${
+                            toast.type === 'success'
+                                ? 'bg-[var(--bg-secondary)] border-emerald-500/30 text-emerald-400'
+                                : 'bg-[var(--bg-secondary)] border-red-500/30 text-red-400'
+                        }`}
+                    >
+                        <span className="text-[12px]">{toast.type === 'success' ? 'OK' : 'X'}</span>
+                        {toast.msg}
                     </div>
                 </div>
             )}
 
-            {/* Header Section */}
-            <div className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-[24px] p-4 shadow-xl relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-48 h-48 bg-[var(--accent-primary)] opacity-5 rounded-full blur-[80px] -mr-24 -mt-24" />
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative z-10">
-                    <div>
-                        <div className="flex items-center gap-3 mb-1">
-                            <div className="p-2 bg-[var(--accent-primary)]/10 rounded-xl text-[var(--accent-primary)]">
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                                </svg>
-                            </div>
-                            <h1 className="text-xl font-black tracking-tight text-[var(--text-primary)]">
-                                LeadSync<span className="text-[var(--accent-primary)]">Flow</span>
+            {/* Header */}
+            <div className="max-w-[1500px] mx-auto">
+                <div className="bg-[var(--bg-secondary)] rounded-[28px] shadow-2xl border border-[var(--border-primary)] p-6 md:p-8 mb-8">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                        <div>
+                            <h1 className="text-3xl font-black text-[var(--text-primary)]">
+                                Super Admin Dashboard
                             </h1>
+                            <p className="text-[var(--text-secondary)] mt-1 text-sm uppercase tracking-[0.2em]">
+                                Manage Managers & Lead Qualifiers
+                            </p>
                         </div>
-                        <p className="text-[11px] font-bold text-[var(--text-secondary)] opacity-70 uppercase tracking-widest pl-1">
-                            Super Admin Dashboard | Manager & LQ Assignment
-                        </p>
-                    </div>
-                    <div className="flex gap-3">
-                        <div className="px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-primary)] rounded-xl flex flex-col items-center min-w-[100px]">
-                            <span className="text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-widest">Managers</span>
-                            <span className="text-sm font-black text-[var(--accent-primary)]">{managersWithLQs.length + managersWithoutLQs.length}</span>
-                        </div>
-                        <div className="px-4 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-primary)] rounded-xl flex flex-col items-center min-w-[100px]">
-                            <span className="text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-widest">Unassigned LQs</span>
-                            <span className="text-sm font-black text-emerald-500">{unassignedLqs.length}</span>
+
+                        <div className="flex items-center gap-4 flex-wrap">
+                            <div className="flex bg-[var(--bg-tertiary)]/60 border border-[var(--border-primary)] rounded-2xl p-1.5 shadow-sm">
+                                <button
+                                    onClick={() => handleTabChange('assignment')}
+                                    className={`px-6 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${
+                                        activeTab === 'assignment'
+                                            ? 'bg-[var(--bg-secondary)] text-[var(--accent-primary)] shadow'
+                                            : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)]'
+                                    }`}
+                                >
+                                    Assignment
+                                </button>
+                                <button
+                                    onClick={() => handleTabChange('hierarchy')}
+                                    className={`px-6 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${
+                                        activeTab === 'hierarchy'
+                                            ? 'bg-[var(--bg-secondary)] text-[var(--accent-primary)] shadow'
+                                            : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)]'
+                                    }`}
+                                >
+                                    View Assigned LQs
+                                </button>
+                            </div>
+
+                            <button
+                                onClick={refresh}
+                                disabled={!activeTab || loading || actionLoading}
+                                className="px-5 py-2.5 bg-[var(--bg-tertiary)]/60 border border-[var(--border-primary)] rounded-xl text-[11px] font-black uppercase tracking-widest text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition disabled:opacity-40 disabled:hover:text-[var(--text-secondary)]"
+                            >
+                                {loading ? 'Loading...' : 'Refresh'}
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Error Message */}
             {error && (
-                <div className="mx-1 p-3 rounded-xl border animate-shake bg-red-500/10 border-red-500/20">
-                    <div className="flex items-center gap-2">
-                        <svg className="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                        </svg>
-                        <span className="text-red-500 text-[10px] font-bold uppercase tracking-widest">{error}</span>
-                    </div>
+                <div className="max-w-[1500px] mx-auto bg-red-500/10 border border-red-500/20 text-red-300 p-5 rounded-2xl mb-8 text-[11px] font-black uppercase tracking-widest">
+                    {error}
                 </div>
             )}
 
-            {/* Main Content Areas */}
-            <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
+            {loading && (
+                <div className="flex justify-center py-20">
+                    <SharedLoader size="large" />
+                </div>
+            )}
 
-                {/* Left Column: Assignment Panel (7 cols wide) */}
-                <div className="xl:col-span-7 space-y-4">
-                    <div className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-[24px] p-5 shadow-xl relative overflow-hidden group/card backdrop-blur-md">
-                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[var(--accent-primary)] to-transparent opacity-40" />
+            {/* Assignment View */}
+            {activeTab === 'assignment' && !loading && (
+                <div className="grid lg:grid-cols-2 gap-6 max-w-[1500px] mx-auto">
+                    {/* Managers */}
+                    <div className="bg-[var(--bg-secondary)] rounded-[24px] shadow-xl border border-[var(--border-primary)] p-6">
+                        <h2 className="text-[12px] font-black uppercase tracking-[0.3em] text-[var(--text-primary)] mb-5">
+                            Select Manager
+                        </h2>
 
-                        <div className="flex items-center justify-between mb-5">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-[var(--accent-primary)]/10 flex items-center justify-center text-[var(--accent-primary)] shadow border border-[var(--accent-primary)]/20">
-                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
-                                </div>
-                                <div>
-                                    <h3 className="text-[10px] font-black text-[var(--text-primary)] uppercase tracking-[0.3em]">Manager Assignment</h3>
-                                    <p className="text-[8px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest mt-0.5 opacity-60">Link Lead Qualifiers to Managers</p>
-                                </div>
+                        <input
+                            type="text"
+                            placeholder="Search by name or email..."
+                            value={managerSearch}
+                            onChange={(e) => setManagerSearch(e.target.value)}
+                            className="w-full bg-[var(--bg-tertiary)]/40 border border-[var(--border-primary)] rounded-xl px-4 py-3 text-[11px] font-bold uppercase tracking-widest text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] placeholder:opacity-40 mb-5 outline-none focus:border-[var(--accent-primary)]/40"
+                        />
+
+                        {managersWithoutLQs.length === 0 ? (
+                            <div className="text-center py-10 text-[var(--text-tertiary)] text-[11px] font-black uppercase tracking-widest">
+                                No managers available for assignment
                             </div>
-                            {selectedLqs.length > 0 && (
+                        ) : (
+                            <div className="max-h-[60vh] overflow-y-auto space-y-3 pr-2 custom-scrollbar">
+                                {managersWithoutLQs
+                                    .filter(
+                                        (m) =>
+                                            m.name?.toLowerCase().includes(managerSearch.toLowerCase()) ||
+                                            m.email?.toLowerCase().includes(managerSearch.toLowerCase())
+                                    )
+                                    .map((manager) => (
+                                        <div
+                                            key={manager._id}
+                                            onClick={() => setSelectedManagerId(manager._id)}
+                                            className={`p-4 rounded-xl border cursor-pointer transition-all ${
+                                                selectedManagerId === manager._id
+                                                    ? 'bg-[var(--accent-primary)]/15 border-[var(--accent-primary)]/40'
+                                                    : 'bg-[var(--bg-tertiary)]/20 border-[var(--border-primary)] hover:border-[var(--accent-primary)]/30'
+                                            }`}
+                                        >
+                                            <div className="text-[12px] font-black text-[var(--text-primary)]">{manager.name}</div>
+                                            <div className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase opacity-70">
+                                                {manager.email}
+                                            </div>
+                                        </div>
+                                    ))}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Lead Qualifiers */}
+                    <div className="bg-[var(--bg-secondary)] rounded-[24px] shadow-xl border border-[var(--border-primary)] p-6">
+                        <div className="flex justify-between items-center mb-5">
+                            <h2 className="text-[12px] font-black uppercase tracking-[0.3em] text-[var(--text-primary)]">
+                                Unassigned Lead Qualifiers
+                            </h2>
+                            {selectedLqIds.length > 0 && (
                                 <button
-                                    onClick={() => setSelectedLqs([])}
-                                    className="px-3 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-[8px] font-black uppercase tracking-widest rounded-lg transition-all"
+                                    onClick={() => setSelectedLqIds([])}
+                                    className="text-[10px] font-black uppercase tracking-widest text-red-400 hover:text-red-300"
                                 >
-                                    Clear Selection ({selectedLqs.length})
+                                    Clear selection ({selectedLqIds.length})
                                 </button>
                             )}
                         </div>
 
-                        <div className="space-y-6">
-                            {/* Manager Selection - Improved Searchable Selector */}
-                            <div className="relative group/manager">
-                                <label className="flex justify-between text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] mb-3 px-1">
-                                    <span>Target Manager Selection</span>
-                                    {selectedManager && <span className="text-[var(--accent-primary)] animate-pulse">Linked Manager Confirmed</span>}
-                                </label>
+                        <input
+                            type="text"
+                            placeholder="Search qualifiers..."
+                            value={lqSearch}
+                            onChange={(e) => setLqSearch(e.target.value)}
+                            className="w-full bg-[var(--bg-tertiary)]/40 border border-[var(--border-primary)] rounded-xl px-4 py-3 text-[11px] font-bold uppercase tracking-widest text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] placeholder:opacity-40 mb-5 outline-none focus:border-[var(--accent-primary)]/40"
+                        />
 
-                                <div className="space-y-3">
-                                    <div className="relative">
-                                        <input
-                                            type="text"
-                                            placeholder="SEARCH MANAGERS..."
-                                            value={managerSearch}
-                                            onChange={(e) => setManagerSearch(e.target.value)}
-                                            className="w-full bg-[var(--bg-tertiary)]/30 border border-[var(--border-primary)] rounded-xl py-2.5 pl-10 pr-4 text-[10px] font-bold text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] placeholder:opacity-40 focus:border-[var(--accent-primary)]/50 focus:ring-1 focus:ring-[var(--accent-primary)]/20 transition-all outline-none uppercase tracking-widest"
-                                        />
-                                        <svg className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                        </svg>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 max-h-48 overflow-y-auto pr-1 custom-scrollbar pb-1">
-                                        {[...managersWithoutLQs, ...managersWithLQs]
-                                            .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
-                                            .filter(m => !managerSearch || m.name.toLowerCase().includes(managerSearch.toLowerCase()) || m.email.toLowerCase().includes(managerSearch.toLowerCase()))
-                                            .map(m => (
-                                                <div
-                                                    key={m._id}
-                                                    onClick={() => setSelectedManager(m._id)}
-                                                    className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center gap-3 group/mitem ${selectedManager === m._id
-                                                        ? 'bg-[var(--accent-primary)]/10 border-[var(--accent-primary)] shadow-[0_0_15px_rgba(var(--accent-primary-rgb),0.1)]'
-                                                        : 'bg-[var(--bg-tertiary)]/10 border-[var(--border-primary)]/40 hover:border-[var(--accent-primary)]/30 hover:bg-[var(--bg-tertiary)]/20'}`}
-                                                >
-                                                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-black text-[11px] flex-shrink-0 transition-all ${selectedManager === m._id ? 'bg-[var(--accent-primary)] text-white scale-110 shadow-lg shadow-[var(--accent-primary)]/20' : 'bg-[var(--bg-tertiary)] text-[var(--accent-primary)] group-hover/mitem:scale-105'}`}>
-                                                        {m.name.charAt(0)}
-                                                    </div>
-                                                    <div className="min-w-0 flex-1">
-                                                        <div className={`text-[9px] font-black uppercase truncate tracking-tight transition-colors ${selectedManager === m._id ? 'text-[var(--accent-primary)]' : 'text-[var(--text-primary)]'}`}>{m.name}</div>
-                                                        <div className="text-[7px] font-black text-[var(--text-tertiary)] opacity-30 uppercase truncate tracking-tighter">{m.email}</div>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        {([...managersWithoutLQs, ...managersWithLQs].filter(m => !managerSearch || m.name.toLowerCase().includes(managerSearch.toLowerCase()))).length === 0 && (
-                                            <div className="col-span-full py-8 text-center bg-[var(--bg-tertiary)]/5 border border-dashed border-[var(--border-primary)] rounded-2xl">
-                                                <p className="text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-widest opacity-30">No Managers Matching Search</p>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
+                        {unassignedLqs.length === 0 ? (
+                            <div className="text-center py-10 text-[var(--text-tertiary)] text-[11px] font-black uppercase tracking-widest">
+                                No unassigned qualifiers
                             </div>
-
-                            {/* LQ Selection Pool - Advanced Multi-select */}
-                            <div className="relative group/lq">
-                                <div className="flex justify-between items-center mb-3">
-                                    <label className="text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] px-1">Lead Qualifiers Pool</label>
-                                    <div className="flex gap-2">
-                                        <button
-                                            onClick={() => {
-                                                const filtered = unassignedLqs
-                                                    .filter(lq => !lqSearch || lq.name.toLowerCase().includes(lqSearch.toLowerCase()))
-                                                    .map(lq => lq.id);
-                                                setSelectedLqs(Array.from(new Set([...selectedLqs, ...filtered])));
-                                            }}
-                                            className="text-[8px] font-black text-[var(--accent-primary)] uppercase tracking-widest hover:brightness-125 transition-all"
+                        ) : (
+                            <div className="max-h-[60vh] overflow-y-auto space-y-3 pr-2 custom-scrollbar">
+                                {unassignedLqs
+                                    .filter(
+                                        (lq) =>
+                                            lq.name?.toLowerCase().includes(lqSearch.toLowerCase()) ||
+                                            lq.email?.toLowerCase().includes(lqSearch.toLowerCase())
+                                    )
+                                    .map((lq) => (
+                                        <label
+                                            key={lq._id}
+                                            className={`flex items-center p-4 rounded-xl border cursor-pointer transition-all ${
+                                                selectedLqIds.includes(lq._id)
+                                                    ? 'bg-[var(--accent-primary)]/15 border-[var(--accent-primary)]/40'
+                                                    : 'bg-[var(--bg-tertiary)]/20 border-[var(--border-primary)] hover:border-[var(--accent-primary)]/30'
+                                            }`}
                                         >
-                                            Select Page
-                                        </button>
-                                        <button
-                                            onClick={() => setSelectedLqs([])}
-                                            className="text-[8px] font-black text-red-500/60 hover:text-red-500 uppercase tracking-widest transition-all"
-                                        >
-                                            Clear All
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-3">
-                                    <div className="relative">
-                                        <input
-                                            type="text"
-                                            placeholder="FILTER QUALIFIERS (NAME OR EMAIL)..."
-                                            value={lqSearch}
-                                            onChange={(e) => setLqSearch(e.target.value)}
-                                            className="w-full bg-[var(--bg-tertiary)]/30 border border-[var(--border-primary)] rounded-xl py-2.5 pl-10 pr-4 text-[10px] font-bold text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] placeholder:opacity-40 focus:border-[var(--accent-primary)]/50 focus:ring-1 focus:ring-[var(--accent-primary)]/20 transition-all outline-none uppercase tracking-widest"
-                                        />
-                                        <svg className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                                        </svg>
-                                    </div>
-
-                                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 max-h-64 overflow-y-auto p-1 rounded-2xl border border-[var(--border-primary)]/20 custom-scrollbar">
-                                        {unassignedLqs
-                                            .filter(lq => !lqSearch || lq.name.toLowerCase().includes(lqSearch.toLowerCase()) || lq.email.toLowerCase().includes(lqSearch.toLowerCase()))
-                                            .map(lq => (
-                                                <label key={lq.id} className={`flex flex-col p-2.5 rounded-xl border transition-all cursor-pointer group/uitem relative overflow-hidden ${selectedLqs.includes(lq.id) ? 'bg-[var(--accent-primary)]/5 border-[var(--accent-primary)]/40 shadow-sm' : 'bg-[var(--bg-tertiary)]/10 border-[var(--border-primary)]/20 hover:border-[var(--accent-primary)]/20'}`}>
-                                                    <div className="flex items-start justify-between mb-1.5 relative z-10">
-                                                        <div className={`w-7 h-7 rounded-lg flex items-center justify-center font-black text-[10px] transition-all ${selectedLqs.includes(lq.id) ? 'bg-[var(--accent-primary)] text-white shadow shadow-[var(--accent-primary)]/30' : 'bg-[var(--bg-tertiary)] text-[var(--text-tertiary)]'}`}>
-                                                            {lq.name?.charAt(0)}
-                                                        </div>
-                                                        <div className={`w-4 h-4 rounded-md border-2 transition-all flex items-center justify-center ${selectedLqs.includes(lq.id) ? 'bg-[var(--accent-primary)] border-[var(--accent-primary)]' : 'border-[var(--border-primary)]/40 bg-white/5 group-hover/uitem:border-[var(--accent-primary)]/40'}`}>
-                                                            {selectedLqs.includes(lq.id) && <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>}
-                                                        </div>
-                                                    </div>
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={selectedLqs.includes(lq.id)}
-                                                        onChange={(e) => {
-                                                            if (e.target.checked) setSelectedLqs([...selectedLqs, lq.id]);
-                                                            else setSelectedLqs(selectedLqs.filter(id => id !== lq.id));
-                                                        }}
-                                                        className="hidden"
-                                                    />
-                                                    <div className="relative z-10">
-                                                        <span className={`text-[9px] font-black uppercase tracking-tight transition-colors truncate block ${selectedLqs.includes(lq.id) ? 'text-[var(--accent-primary)]' : 'text-[var(--text-primary)]'}`}>{lq.name}</span>
-                                                        <span className="text-[7px] font-black text-[var(--text-tertiary)] uppercase opacity-30 truncate block tracking-tighter">{lq.email}</span>
-                                                    </div>
-                                                    {selectedLqs.includes(lq.id) && (
-                                                        <div className="absolute top-0 right-0 w-8 h-8 bg-[var(--accent-primary)] opacity-5 rounded-bl-full translate-x-2 -translate-y-2 pointer-events-none" />
-                                                    )}
-                                                </label>
-                                            ))}
-                                        {unassignedLqs.length > 0 && unassignedLqs.filter(lq => !lqSearch || lq.name.toLowerCase().includes(lqSearch.toLowerCase())).length === 0 && (
-                                            <div className="col-span-full py-12 text-center bg-[var(--bg-tertiary)]/5 border border-dashed border-[var(--border-primary)] rounded-3xl">
-                                                <p className="text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-widest opacity-30">No Qualifiers Match Your Criteria</p>
-                                            </div>
-                                        )}
-                                        {unassignedLqs.length === 0 && (
-                                            <div className="col-span-full py-12 text-center">
-                                                <p className="text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] opacity-30">The Pool is Currently Empty</p>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <button
-                                onClick={handleAssignLqs}
-                                disabled={!selectedManager || selectedLqs.length === 0 || actionLoading === 'assign'}
-                                className="w-full py-3.5 rounded-xl bg-[var(--accent-primary)] text-white text-[11px] font-black uppercase tracking-[0.4em] shadow-lg shadow-[var(--accent-primary)]/20 hover:brightness-110 active:scale-[0.99] transition-all disabled:opacity-20 disabled:scale-100 flex items-center justify-center gap-4 group/btn"
-                            >
-                                {actionLoading === 'assign' ? (
-                                    <div className="w-5 h-5 border-3 border-white/20 border-t-white rounded-full animate-spin" />
-                                ) : (
-                                    <>
-                                        ASSIGN TO MANAGER
-                                        <svg className="w-4 h-4 transition-transform group-hover/btn:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
-                                    </>
-                                )}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Right Column: Organization Hierarchy (5 cols wide) */}
-                <div className="xl:col-span-5 space-y-4 sticky top-6">
-                    <div className="bg-white/[0.03] border border-white/5 rounded-[24px] p-4 backdrop-blur-xl min-h-[400px] flex flex-col shadow-2xl relative">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--accent-primary)] opacity-5 rounded-full blur-[60px] -mr-16 -mt-16" />
-
-                        <div className="flex items-center justify-between mb-5 px-1 relative z-10">
-                            <h2 className="text-[10px] font-black text-[var(--text-primary)] uppercase tracking-[0.2em] flex items-center gap-2">
-                                <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-primary)] animate-pulse" />
-                                Organization Hierarchy
-                            </h2>
-                            <div className="px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
-                                <span className="text-[7px] font-black text-emerald-500 uppercase tracking-widest leading-none">Active</span>
-                            </div>
-                        </div>
-
-                        <div className="flex-1 overflow-y-auto pr-1.5 custom-scrollbar space-y-2.5 relative z-10">
-                            {managersWithLQs.map(manager => (
-                                <div key={manager._id} className="bg-gradient-to-br from-white/[0.05] to-transparent border border-white/5 rounded-xl p-3 hover:border-[var(--accent-primary)]/40 hover:shadow-lg hover:shadow-[var(--accent-primary)]/5 transition-all duration-300 group shadow-md relative overflow-hidden group/item">
-                                    <div className="absolute top-0 right-0 w-20 h-20 bg-[var(--accent-primary)] opacity-0 group-hover:opacity-[0.03] rounded-full blur-xl transition-opacity" />
-
-                                    <div className="flex items-center justify-between relative z-10">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center font-black text-[var(--accent-primary)] text-xs shadow-inner group-hover/item:bg-[var(--accent-primary)] group-hover/item:text-white transition-all duration-500">
-                                                {manager.name?.charAt(0)}
-                                            </div>
-                                            <div className="min-w-0">
-                                                <h4 className="text-[10px] font-black text-[var(--text-primary)] truncate uppercase tracking-tight leading-3 group-hover/item:text-white transition-colors">{manager.name}</h4>
-                                                <div className="flex items-center gap-1.5 mt-1">
-                                                    <span className="text-[6px] font-bold text-[var(--text-tertiary)] uppercase opacity-40 truncate">{manager.email}</span>
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedLqIds.includes(lq._id)}
+                                                onChange={(e) => {
+                                                    if (e.target.checked) {
+                                                        setSelectedLqIds([...selectedLqIds, lq._id]);
+                                                    } else {
+                                                        setSelectedLqIds(selectedLqIds.filter(id => id !== lq._id));
+                                                    }
+                                                }}
+                                                className="h-4 w-4 accent-[var(--accent-primary)] mr-4"
+                                            />
+                                            <div>
+                                                <div className="text-[12px] font-black text-[var(--text-primary)]">{lq.name}</div>
+                                                <div className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase opacity-70">
+                                                    {lq.email}
                                                 </div>
                                             </div>
-                                        </div>
+                                        </label>
+                                    ))}
+                            </div>
+                        )}
 
-                                        <button
-                                            onClick={() => setViewingManagerLqs(manager)}
-                                            className="flex items-center gap-3 pl-3 border-l border-white/5 group/mbtn"
-                                        >
-                                            <div className="text-right">
-                                                <div className="text-lg font-black text-[var(--text-primary)] tabular-nums group-hover/mbtn:text-[var(--accent-primary)] transition-colors leading-none">
-                                                    {String(manager.assignedLQs?.length || 0).padStart(2, '0')}
-                                                </div>
-                                                <div className="text-[6px] font-black text-[var(--text-tertiary)] uppercase mt-0.5 opacity-60">LQs</div>
-                                            </div>
-                                            <div className="w-6 h-6 rounded-lg bg-white/5 border border-white/5 flex items-center justify-center text-[var(--text-tertiary)] group-hover/mbtn:text-[var(--accent-primary)] group-hover/mbtn:border-[var(--accent-primary)] transition-all shadow-sm">
-                                                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                                                </svg>
-                                            </div>
-                                        </button>
-                                    </div>
-                                </div>
-                            ))}
-                            {managersWithLQs.length === 0 && (
-                                <div className="flex flex-col items-center justify-center py-20 text-center opacity-20">
-                                    <svg className="w-10 h-10 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
-                                    <p className="text-[9px] font-black uppercase tracking-[0.2em]">No hierarchy established</p>
-                                </div>
+                        <button
+                            onClick={handleAssign}
+                            disabled={!selectedManagerId || selectedLqIds.length === 0 || actionLoading}
+                            className="mt-6 w-full bg-[var(--accent-primary)] text-white py-4 rounded-2xl transition disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-[var(--accent-primary)]/20 flex items-center justify-center gap-2 text-[12px] font-black uppercase tracking-[0.3em]"
+                        >
+                            {actionLoading ? (
+                                'Assigning...'
+                            ) : (
+                                <>
+                                    Assign {selectedLqIds.length || ''} Qualifier{selectedLqIds.length !== 1 ? 's' : ''}
+                                </>
                             )}
-                        </div>
+                        </button>
                     </div>
                 </div>
-            </div>
+            )}
 
-            {/* Assigned Units Modal */}
-            {viewingManagerLqs && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fadeIn">
-                    <div className="bg-[var(--bg-secondary)] border border-white/10 rounded-[32px] w-full max-w-xl shadow-2xl overflow-hidden animate-slideUp">
-                        <div className="p-5 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 bg-[var(--accent-primary)]/10 rounded-2xl flex items-center justify-center text-[var(--accent-primary)] border border-[var(--accent-primary)]/20 shadow-lg">
-                                    <span className="text-xl font-black">{viewingManagerLqs.name?.charAt(0)}</span>
-                                </div>
-                                <div>
-                                    <h3 className="text-base font-black text-[var(--text-primary)] uppercase tracking-tight">{viewingManagerLqs.name}</h3>
-                                    <p className="text-[8px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest opacity-40">{viewingManagerLqs.email}</p>
-                                </div>
+            {/* Hierarchy View */}
+            {activeTab === 'hierarchy' && !loading && (
+                <div className="max-w-[1400px] mx-auto bg-[var(--bg-secondary)] rounded-[28px] shadow-xl border border-[var(--border-primary)] p-6">
+                    <h2 className="text-[12px] font-black uppercase tracking-[0.3em] text-[var(--text-primary)] mb-6">
+                        Assigned Lead Qualifiers
+                    </h2>
+
+                    <div className="space-y-5">
+                        {managersWithLQs.length === 0 ? (
+                            <div className="text-center py-16 text-[11px] font-black uppercase tracking-widest text-[var(--text-tertiary)] opacity-60">
+                                No assigned Lead Qualifiers yet
                             </div>
-                            <button
-                                onClick={() => setViewingManagerLqs(null)}
-                                className="w-10 h-10 rounded-full hover:bg-white/5 flex items-center justify-center text-[var(--text-tertiary)] transition-all"
-                            >
-                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                            </button>
-                        </div>
-
-                        <div className="p-5 max-h-[40vh] overflow-y-auto custom-scrollbar">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                {viewingManagerLqs.assignedLQs?.map(lq => (
-                                    <div key={lq._id} className="flex items-center justify-between p-3.5 rounded-2xl bg-[var(--bg-tertiary)]/20 border border-white/5 group/unit hover:border-red-500/20 transition-all">
-                                        <div className="flex items-center gap-3 min-w-0">
-                                            <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-[var(--accent-primary)] font-black text-[10px] group-hover/unit:text-red-500 transition-colors">
-                                                {lq.name?.charAt(0)}
+                        ) : (
+                            managersWithLQs.map((manager) => (
+                                <div
+                                    key={manager._id}
+                                    className="border border-[var(--border-primary)] rounded-2xl p-5 bg-[var(--bg-tertiary)]/30 hover:border-[var(--accent-primary)]/30 transition"
+                                >
+                                    <div className="flex justify-between items-center mb-4">
+                                        <div>
+                                            <h3 className="text-[14px] font-black text-[var(--text-primary)]">{manager.name}</h3>
+                                            <p className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase opacity-70">
+                                                {manager.email}
+                                            </p>
+                                        </div>
+                                        <div className="text-right">
+                                            <div className="text-3xl font-black text-[var(--accent-primary)]">
+                                                {manager.assignedLQs?.length || 0}
                                             </div>
-                                            <div className="min-w-0">
-                                                <div className="text-[10px] font-black text-[var(--text-primary)] uppercase truncate">{lq.name}</div>
-                                                <div className="text-[7px] font-bold text-[var(--text-tertiary)] opacity-30 uppercase truncate mt-0.5">{lq.email}</div>
+                                            <div className="text-[10px] font-black uppercase tracking-widest text-[var(--text-tertiary)]">
+                                                Lead Qualifiers
                                             </div>
                                         </div>
-                                        <button
-                                            onClick={() => {
-                                                handleUnassignLqs([lq._id]);
-                                                setViewingManagerLqs(null);
-                                            }}
-                                            className="px-2.5 py-1.5 bg-red-500/10 text-red-500 text-[7px] font-black uppercase tracking-widest rounded-lg hover:bg-red-500 hover:text-white transition-all transform active:scale-95 shadow-sm border border-red-500/10"
-                                        >
-                                            Unassign
-                                        </button>
                                     </div>
-                                ))}
-                                {(!viewingManagerLqs.assignedLQs || viewingManagerLqs.assignedLQs.length === 0) && (
-                                    <div className="col-span-full py-12 text-center opacity-20">
-                                        <div className="text-[9px] font-black uppercase tracking-widest">No assigned Lead Qualifiers</div>
-                                    </div>
-                                )}
+
+                                    {manager.assignedLQs?.length > 0 && (
+                                        <div className="grid sm:grid-cols-2 gap-4 pt-4 border-t border-[var(--border-primary)]">
+                                            {manager.assignedLQs.map((lq) => (
+                                                <div
+                                                    key={lq._id}
+                                                    className="flex justify-between items-center p-4 bg-[var(--bg-tertiary)]/40 rounded-xl border border-[var(--border-primary)] hover:border-[var(--accent-primary)]/20 transition"
+                                                >
+                                                    <div>
+                                                        <div className="text-[12px] font-black text-[var(--text-primary)]">{lq.name}</div>
+                                                        <div className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase opacity-70">
+                                                            {lq.email}
+                                                        </div>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => handleUnassign(lq._id)}
+                                                        disabled={actionLoading}
+                                                        className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-300 rounded-lg text-[10px] font-black uppercase tracking-widest transition disabled:opacity-50"
+                                                    >
+                                                        Unassign
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            ))
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* Welcome / No Tab Selected */}
+            {!activeTab && !loading && (
+                <div className="bg-[var(--bg-secondary)] rounded-[32px] shadow-2xl border border-[var(--border-primary)] p-10 md:p-14 max-w-[1200px] mx-auto relative overflow-hidden">
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(0,190,155,0.12),_transparent_55%)]" />
+                    <div className="relative z-10 grid lg:grid-cols-[1.2fr_1fr] gap-8 items-center">
+                        <div className="space-y-5">
+                            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--bg-tertiary)]/60 border border-[var(--border-primary)] text-[9px] font-black uppercase tracking-widest text-[var(--text-tertiary)]">
+                                Super Admin Control Center
+                            </div>
+                            <h2 className="text-3xl font-black text-[var(--text-primary)]">
+                                Assign & Manage Lead Qualifiers
+                            </h2>
+                            <p className="text-[12px] font-bold uppercase tracking-widest text-[var(--text-secondary)] opacity-70 max-w-xl">
+                                Assign LQs to managers • View all assigned LQs • Unassign LQs when needed • All data loads only when you choose an action
+                            </p>
+                            <div className="flex flex-wrap gap-4">
+                                <button
+                                    onClick={() => handleTabChange('assignment')}
+                                    className="px-8 py-4 bg-[var(--accent-primary)] text-white rounded-2xl text-[11px] font-black uppercase tracking-[0.3em] shadow-lg shadow-[var(--accent-primary)]/20 hover:brightness-110 transition"
+                                >
+                                    Open Assignments
+                                </button>
+                                <button
+                                    onClick={() => handleTabChange('hierarchy')}
+                                    className="px-8 py-4 bg-[var(--bg-tertiary)]/70 text-[var(--text-primary)] rounded-2xl text-[11px] font-black uppercase tracking-[0.3em] border border-[var(--border-primary)] hover:border-[var(--accent-primary)]/40 transition"
+                                >
+                                    View Assigned LQs
+                                </button>
                             </div>
                         </div>
-
-                        <div className="p-4 bg-white/5 border-t border-white/5 flex justify-center items-center">
-                            <span className="text-[9px] font-black text-[var(--text-primary)] uppercase tracking-widest">
-                                {viewingManagerLqs.assignedLQs?.length || 0} ASSIGNED LEAD QUALIFIERS
-                            </span>
+                        <div className="space-y-4">
+                            <div className="p-4 rounded-[24px] bg-[var(--bg-tertiary)]/50 border border-[var(--border-primary)]">
+                                <div className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--text-tertiary)]">
+                                    Assignment
+                                </div>
+                                <div className="text-lg font-black text-[var(--text-primary)] mt-2">Assign LQs to Managers</div>
+                                <div className="mt-3 space-y-2">
+                                    <div className="text-[9px] font-bold uppercase tracking-widest text-[var(--text-secondary)]">
+                                        Select manager & multiple LQs
+                                    </div>
+                                    <div className="text-[9px] font-bold uppercase tracking-widest text-[var(--text-secondary)]">
+                                        Confirm assignment
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="p-4 rounded-[24px] bg-[var(--bg-tertiary)]/50 border border-[var(--border-primary)]">
+                                <div className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--text-tertiary)]">
+                                    View & Unassign
+                                </div>
+                                <div className="text-lg font-black text-[var(--text-primary)] mt-2">See Assigned LQs</div>
+                                <div className="mt-3 space-y-2">
+                                    <div className="text-[9px] font-bold uppercase tracking-widest text-[var(--text-secondary)]">
+                                        View all current assignments
+                                    </div>
+                                    <div className="text-[9px] font-bold uppercase tracking-widest text-[var(--text-secondary)]">
+                                        Unassign LQs from managers
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             )}
 
-            <style dangerouslySetInnerHTML={{
-                __html: `
-                .animate-slideUp {
-                    animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-                }
-                @keyframes slideUp {
-                    from { opacity: 0; transform: translateY(20px) scale(0.98); }
-                    to { opacity: 1; transform: translateY(0) scale(1); }
-                }
-
-                .animate-fadeIn {
-                    animation: fadeIn 0.3s ease-out forwards;
-                }
-                .animate-shake {
-                    animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
-                }
-                @keyframes fadeIn {
-                    from { opacity: 0; }
-                    to { opacity: 1; }
-                }
-                @keyframes shake {
-                    10%, 90% { transform: translate3d(-1px, 0, 0); }
-                    20%, 80% { transform: translate3d(2px, 0, 0); }
-                    30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
-                    40%, 60% { transform: translate3d(4px, 0, 0); }
-                }
-                .custom-scrollbar::-webkit-scrollbar {
-                    width: 4px;
-                    height: 4px;
-                }
-                .custom-scrollbar::-webkit-scrollbar-track {
-                    background: rgba(255,255,255,0.01);
-                    border-radius: 10px;
-                }
-                .custom-scrollbar::-webkit-scrollbar-thumb {
-                    background: rgba(99, 102, 241, 0.15);
-                    border-radius: 10px;
-                }
-                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-                    background: var(--accent-primary);
-                }
-            `}} />
+            <style
+                dangerouslySetInnerHTML={{
+                    __html: `
+                    .custom-scrollbar::-webkit-scrollbar {
+                        width: 5px;
+                        height: 5px;
+                    }
+                    .custom-scrollbar::-webkit-scrollbar-track {
+                        background: rgba(255, 255, 255, 0.03);
+                        border-radius: 10px;
+                    }
+                    .custom-scrollbar::-webkit-scrollbar-thumb {
+                        background: rgba(0, 190, 155, 0.35);
+                        border-radius: 10px;
+                    }
+                    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                        background: var(--accent-primary);
+                    }
+                `,
+                }}
+            />
         </div>
     );
 }

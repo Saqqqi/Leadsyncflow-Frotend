@@ -15,12 +15,8 @@ export default function LoginPage() {
 
     // Clear expired tokens and stop monitoring on login page
     useEffect(() => {
-        // Clear any expired tokens when on login page to prevent redirect loops
-        const token = tokenManager.getToken();
-        if (token && !tokenManager.isCurrentTokenValid()) {
-            console.log('Clearing expired or invalid token on login page');
-            tokenManager.clearAuthData();
-        }
+        // Always clear tokens when on login page to ensure a fresh session and prevent stale token issues
+        tokenManager.clearAuthData();
 
         // Stop token monitoring on login page
         tokenManager.stopExpiryMonitoring();

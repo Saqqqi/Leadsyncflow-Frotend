@@ -35,7 +35,15 @@ export const adminAPI = {
     return response.data;
   },
 
-  // Generic helper to fetch leads by stage with pagination
+  // --- Leads Management ---
+
+  /**
+   * Generic helper to fetch leads by stage with pagination
+   * @param {string|null} stage - The specific stage (e.g., 'DM', 'LQ', 'Manager') or null for all
+   * @param {number} limit - Number of items per page
+   * @param {number} skip - Number of items to skip
+   * @param {object} extraFilters - Additional query parameters
+   */
   getLeadsByStage: async (stage, limit = 20, skip = 0, extraFilters = {}) => {
     const params = { limit, skip, ...extraFilters };
     if (stage) params.stage = stage;
@@ -43,89 +51,66 @@ export const adminAPI = {
     return response.data;
   },
 
-  // Specific shortcuts for each role stage
-  getManagerLeads: async (limit = 20, skip = 0, extraFilters = {}) => {
-    return adminAPI.getLeadsByStage('MANAGER', limit, skip, extraFilters);
-  },
+  // Role-specific lead fetchers (Shorthands)
+  getAllLeads: async (limit = 20, skip = 0, filters = {}) =>
+    adminAPI.getLeadsByStage(null, limit, skip, filters),
 
-  getLeadQualifierLeads: async (limit = 20, skip = 0, extraFilters = {}) => {
-    return adminAPI.getLeadsByStage('LQ', limit, skip, extraFilters);
-  },
+  getDMLeads: async (limit = 20, skip = 0, filters = {}) =>
+    adminAPI.getLeadsByStage('DM', limit, skip, filters),
 
-  getVerifierLeads: async (limit = 20, skip = 0, extraFilters = {}) => {
-    return adminAPI.getLeadsByStage('DM', limit, skip, extraFilters);
-  },
+  getVerifierLeads: async (limit = 20, skip = 0, filters = {}) =>
+    adminAPI.getLeadsByStage('Verifier', limit, skip, filters),
 
-  getDataMinerLeads: async (limit = 20, skip = 0, extraFilters = {}) => {
-    return adminAPI.getLeadsByStage('DM', limit, skip, extraFilters);
-  },
+  getLQLeads: async (limit = 20, skip = 0, filters = {}) =>
+    adminAPI.getLeadsByStage('LQ', limit, skip, filters),
 
-  // Additional specific stage filters
-  getAllLeads: async (limit = 20, skip = 0, extraFilters = {}) => {
-    return adminAPI.getLeadsByStage(null, limit, skip, extraFilters);
-  },
+  getManagerLeads: async (limit = 20, skip = 0, filters = {}) =>
+    adminAPI.getLeadsByStage('Manager', limit, skip, filters),
 
-  getDMStageLeads: async (limit = 20, skip = 0, extraFilters = {}) => {
-    const params = { limit, skip, stage: 'DM', ...extraFilters };
-    const response = await axiosInstance.get('/api/superadmin/leads', { params });
-    return response.data;
-  },
+  getDoneLeads: async (limit = 20, skip = 0, filters = {}) =>
+    adminAPI.getLeadsByStage('DONE', limit, skip, filters),
 
-  getLQStageLeads: async (limit = 20, skip = 0, extraFilters = {}) => {
-    return adminAPI.getLeadsByStage('LQ', limit, skip, extraFilters);
-  },
+  getRejectedLeads: async (limit = 20, skip = 0, filters = {}) =>
+    adminAPI.getLeadsByStage('REJECTED', limit, skip, filters),
 
-  getManagerStageLeads: async (limit = 20, skip = 0, extraFilters = {}) => {
-    return adminAPI.getLeadsByStage('MANAGER', limit, skip, extraFilters);
-  },
+  // --- Analytics & Performance ---
 
-  getDoneStageLeads: async (limit = 20, skip = 0, extraFilters = {}) => {
-    return adminAPI.getLeadsByStage('DONE', limit, skip, extraFilters);
-  },
-
-  getRejectedStageLeads: async (limit = 20, skip = 0, extraFilters = {}) => {
-    return adminAPI.getLeadsByStage('REJECTED', limit, skip, extraFilters);
-  },
-
-  // Get performance metrics for a specific role
+  /**
+   * Get performance metrics for a specific role
+   * @param {string} role - The role to fetch performance for
+   */
   getPerformance: async (role, extraParams = {}) => {
-    try {
-      const params = { role, ...extraParams };
-      const response = await axiosInstance.get('/api/superadmin/performance', { params });
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  },
-
-  // Get all leads with comprehensive filtering by stage and role
-  getAllLeadsByRole: async (limit = 20, skip = 0, filters = {}) => {
-    const params = { limit, skip, ...filters };
-    const response = await axiosInstance.get('/api/superadmin/leads', { params });
+    const params = { role, ...extraParams };
+    const response = await axiosInstance.get('/api/superadmin/performance', { params });
     return response.data;
   },
 
-  // Debug function to see what stages actually exist
-  getStagesDebug: async () => {
-    try {
-      const response = await axiosInstance.get('/api/superadmin/leads', { params: { limit: 1000, skip: 0 } });
-      if (response.data.success) {
-        const stages = [...new Set(response.data.leads?.map(l => l.stage) || [])];
-        const stageBreakdown = response.data.leads?.reduce((acc, lead) => {
-          acc[lead.stage] = (acc[lead.stage] || 0) + 1;
-          return acc;
-        }, {});
-        const dmLeads = response.data.leads?.filter(l => l.stage === 'DM') || [];
-        return { stages, stageBreakdown, total: response.data.leads?.length, dmCount: dmLeads.length };
-      }
-    } catch (error) {
-      throw error;
-    }
-  },
+  // --- User Management ---
 
-  // Make user a super admin
+  /**
+   * Promote a user to Super Admin status
+   */
   makeSuperAdmin: async (userId) => {
     const response = await axiosInstance.patch(`/api/superadmin/users/${userId}/make-super-admin`);
+    return response.data;
+  },
+
+  /**
+   * Debug utility to retrieve and analyze lead stages
+   */
+  getStagesDebug: async () => {
+    const response = await axiosInstance.get('/api/superadmin/leads', {
+      params: { limit: 1000, skip: 0 }
+    });
+    if (response.data.success) {
+      const leads = response.data.leads || [];
+      const stages = [...new Set(leads.map(l => l.stage))];
+      const stageBreakdown = leads.reduce((acc, lead) => {
+        acc[lead.stage] = (acc[lead.stage] || 0) + 1;
+        return acc;
+      }, {});
+      return { stages, stageBreakdown, total: leads.length };
+    }
     return response.data;
   },
 };

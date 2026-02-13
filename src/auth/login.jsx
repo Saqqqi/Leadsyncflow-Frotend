@@ -75,15 +75,38 @@ export default function LoginPage() {
                     setError("Invalid response from server");
                 }
             } catch (err) {
-                console.error('Login error:', err);
-                const msg = err?.response?.data?.message || err?.response?.data?.error || err?.message || "Login failed";
+                // Detailed Console Logging for Debugging
+                console.group('🚨 LOGIN FAILURE DIAGNOSTICS');
+                console.error('Error Object:', err);
+                console.error('Error Message:', err.message);
+                console.error('Error Code:', err.code);
 
-                // Filter out technical timeout messages if they still leak through
-                if (msg.includes('timeout') || msg.includes('15000')) {
-                    setError("The server is taking too long to respond. Please try again.");
+                if (err.response) {
+                    console.error('❌ Server Handled Error:', err.response.status);
+                    console.error('Response Data:', err.response.data);
+                } else if (err.request) {
+                    console.error('🚫 No Response Received (Network/Timeout):', err.request);
                 } else {
-                    setError(msg);
+                    console.error('⚠️ Request Setup Error:', err.message);
                 }
+                console.groupEnd();
+
+                // detailed error message for Frontend
+                let msg = err?.response?.data?.message || err?.response?.data?.error || err?.message || "Login failed";
+
+                if (err.code === 'ECONNABORTED' || msg.includes('timeout')) {
+                    msg = `Connection Timeout: Server took too long to respond. (Limit: ${err.config?.timeout || 'default'}ms)`;
+                } else if (!err.response && !err.request) {
+                    // Request setup error
+                    msg = `Internal Error: Could not set up request. (${err.message})`;
+                } else if (!err.response) {
+                    // Network error (server down, cors, DNS, etc)
+                    msg = `Network Error: Unable to reach server. Please check your connection. (${err.message})`;
+                } else if (err.response?.status === 500) {
+                    msg = `Server Error (500): Something went wrong on the backend.`;
+                }
+
+                setError(msg);
             } finally {
                 setLoading(false);
             }

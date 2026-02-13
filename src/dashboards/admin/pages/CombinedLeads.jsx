@@ -7,6 +7,7 @@ const CombinedLeads = () => {
   const [loading, setLoading] = useState(true);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [expandedContacts, setExpandedContacts] = useState({});
   const [filters, setFilters] = useState({
     stage: '',
@@ -26,11 +27,22 @@ const CombinedLeads = () => {
     itemsPerPage: 20
   });
 
+  // Debounce search term to prevent excessive API calls
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+      // Reset to page 1 when searching
+      if (searchTerm) {
+        setPagination(prev => ({ ...prev, currentPage: 1 }));
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
   useEffect(() => {
     fetchCombinedLeads();
-  }, [filters, pagination.currentPage, searchTerm]); // Trigger fetch on any filter/page change
-
-  // Debounced search effect could be added here for optimization
+  }, [filters, pagination.currentPage, debouncedSearchTerm]);
 
   const fetchCombinedLeads = async () => {
     try {
@@ -41,7 +53,7 @@ const CombinedLeads = () => {
       // Prepare filters - remove limit/skip from filter object, pass separately
       const filterParams = {
         ...filters,
-        search: searchTerm // Keep search if user still tries to use it, though backend ignores it
+        search: debouncedSearchTerm
       };
 
       // Remove empty filters

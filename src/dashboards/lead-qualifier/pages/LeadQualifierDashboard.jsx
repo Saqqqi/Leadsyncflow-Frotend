@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLeadManager } from '../hooks/useLeadManager';
+import SharedLoader from '../../../components/SharedLoader';
 
 export default function LeadQualifierDashboard() {
   const { leads: allLeads, loading, refreshLeads } = useLeadManager();
@@ -99,16 +100,7 @@ export default function LeadQualifierDashboard() {
     </div>
   );
 
-  if (loading) return (
-    <div className="flex items-center justify-center min-h-[400px]">
-      <div className="relative">
-        <div className="w-16 h-16 rounded-full border-4 border-[var(--accent-primary)]/20 border-t-[var(--accent-primary)] animate-spin" />
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-8 h-8 rounded-full border-4 border-[var(--accent-primary)]/40 border-b-[var(--accent-primary)] animate-spin-slow" />
-        </div>
-      </div>
-    </div>
-  );
+  if (loading) return <SharedLoader />;
 
   return (
     <div className="space-y-8 animate-fadeIn">

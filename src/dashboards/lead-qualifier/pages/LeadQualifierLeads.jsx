@@ -183,7 +183,7 @@ export default function LeadQualifierLeads() {
         const s = (status || 'PENDING').toUpperCase();
         switch (s) {
             case 'QUALIFIED': return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.05)]';
-            case 'IN_CONVERSATION': return 'bg-blue-500/10 text-blue-400 border-blue-500/20 shadow-[0_0_15px_rgba(59,130,246,0.05)]';
+            case 'REACHED': return 'bg-blue-500/10 text-blue-400 border-blue-500/20 shadow-[0_0_15px_rgba(59,130,246,0.05)]';
             case 'DEAD': return 'bg-rose-500/10 text-rose-400 border-rose-500/20 shadow-[0_0_15px_rgba(244,63,94,0.05)]';
             case 'PENDING': return 'bg-slate-500/10 text-slate-400 border-slate-500/20';
             default: return 'bg-slate-500/10 text-slate-400 border-slate-500/20';
@@ -257,7 +257,7 @@ export default function LeadQualifierLeads() {
                         >
                             <option value="ALL">ALL STATUS</option>
                             <option value="PENDING">PENDING</option>
-                            <option value="IN_CONVERSATION">IN-CONV</option>
+                            <option value="REACHED">REACHED</option>
                             <option value="QUALIFIED">QUALIFIED</option>
                             <option value="DEAD">DEAD</option>
                         </select>
@@ -303,14 +303,42 @@ export default function LeadQualifierLeads() {
                                     </td>
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-3">
-                                            <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-blue-500/5 border border-blue-500/10">
-                                                <svg className="w-3 h-3 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
-                                                <span className="text-[10px] font-black text-blue-500/80">{lead.emails?.length || 0}</span>
-                                            </div>
-                                            <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-emerald-500/5 border border-emerald-500/10">
-                                                <svg className="w-3 h-3 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
-                                                <span className="text-[10px] font-black text-emerald-500/80">{lead.phones?.length || 0}</span>
-                                            </div>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    const allEmails = (lead.emails || []).map(em => em.value).join(', ');
+                                                    if (allEmails) handleCopy(allEmails, `table-emails-${lead._id}`);
+                                                }}
+                                                title="Copy All Emails"
+                                                className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-blue-500/5 border border-blue-500/10 hover:bg-blue-500/20 transition-all group/icon relative"
+                                            >
+                                                {copiedId === `table-emails-${lead._id}` ? (
+                                                    <span className="text-[8px] font-black text-blue-600 uppercase">Copied!</span>
+                                                ) : (
+                                                    <>
+                                                        <svg className="w-3 h-3 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                                                        <span className="text-[10px] font-black text-blue-500/80">{lead.emails?.length || 0}</span>
+                                                    </>
+                                                )}
+                                            </button>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    const allPhones = (lead.phones || []).join(', ');
+                                                    if (allPhones) handleCopy(allPhones, `table-phones-${lead._id}`);
+                                                }}
+                                                title="Copy All Phones"
+                                                className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-emerald-500/5 border border-emerald-500/10 hover:bg-emerald-500/20 transition-all group/icon relative"
+                                            >
+                                                {copiedId === `table-phones-${lead._id}` ? (
+                                                    <span className="text-[8px] font-black text-emerald-600 uppercase">Copied!</span>
+                                                ) : (
+                                                    <>
+                                                        <svg className="w-3 h-3 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
+                                                        <span className="text-[10px] font-black text-emerald-500/80">{lead.phones?.length || 0}</span>
+                                                    </>
+                                                )}
+                                            </button>
                                             <button
                                                 onClick={() => { setSelectedLead(lead); setIsContactModalOpen(true); }}
                                                 className="px-3 py-1 bg-[var(--accent-primary)]/10 text-[var(--accent-primary)] rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-[var(--accent-primary)] hover:text-white transition-all shadow-sm border border-[var(--accent-primary)]/20"
@@ -327,7 +355,7 @@ export default function LeadQualifierLeads() {
                                                 className={`w-full appearance-none px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-[0.15em] border outline-none cursor-pointer transition-all duration-300 hover:brightness-110 active:scale-[0.98] shadow-sm ${getStatusStyle(lead.lqStatus)}`}
                                             >
                                                 <option value="PENDING" className="bg-[#121212] text-slate-400">● PENDING</option>
-                                                <option value="IN_CONVERSATION" className="bg-[#121212] text-blue-400">● IN-CONV</option>
+                                                <option value="REACHED" className="bg-[#121212] text-blue-400">● REACHED</option>
                                                 <option value="QUALIFIED" className="bg-[#121212] text-emerald-400">● QUALIFIED</option>
                                                 <option value="DEAD" className="bg-[#121212] text-rose-400">● DEAD</option>
                                             </select>
@@ -445,9 +473,9 @@ export default function LeadQualifierLeads() {
 
             {/* Contact Details Modal (Shared Design) */}
             {isContactModalOpen && selectedLead && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 backdrop-blur-md bg-black/50 animate-fadeIn">
-                    <div className="bg-[var(--bg-secondary)] border border-white/10 rounded-[32px] w-full max-w-md shadow-[0_32px_128px_rgba(0,0,0,0.6)] overflow-hidden animate-slideUp">
-                        <div className="p-6 pb-4 border-b border-white/5 relative bg-[var(--bg-tertiary)]/20">
+                <div className="fixed inset-0 z-[100] flex items-start justify-center p-4 backdrop-blur-md bg-black/50 animate-fadeIn overflow-y-auto">
+                    <div className="bg-[var(--bg-secondary)] border border-white/10 rounded-[32px] w-full max-w-md max-h-[80vh] shadow-[0_32px_128px_rgba(0,0,0,0.6)] overflow-hidden animate-slideUp flex flex-col my-auto md:my-10">
+                        <div className="p-6 pb-4 border-b border-white/5 relative bg-[var(--bg-tertiary)]/20 flex-shrink-0">
                             <button onClick={() => setIsContactModalOpen(false)} className="absolute top-6 right-6 p-2 rounded-xl bg-[var(--bg-tertiary)]/50 hover:bg-rose-500/10 hover:text-rose-500 transition-all text-[var(--text-tertiary)]"><svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg></button>
 
                             <div className="flex items-center gap-5">
@@ -460,11 +488,28 @@ export default function LeadQualifierLeads() {
                             </div>
                         </div>
 
-                        <div className="p-6 space-y-6">
+                        <div className="p-6 space-y-6 overflow-y-auto flex-1 custom-scrollbar">
                             {/* Emails */}
                             <div className="space-y-3">
                                 <div className="flex items-center justify-between px-1">
-                                    <div className="flex items-center gap-2"><div className="p-1 rounded bg-blue-500/10 text-blue-500"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg></div><span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">Established Emails</span></div>
+                                    <button
+                                        onClick={() => {
+                                            const allEmails = (selectedLead.emails || []).map(e => e.value).join(', ');
+                                            if (allEmails) handleCopy(allEmails, 'modal-all-emails');
+                                        }}
+                                        className="flex items-center gap-2 group/header hover:opacity-80 transition-all"
+                                    >
+                                        <div className="p-1 rounded bg-blue-500/10 text-blue-500 group-hover/header:bg-blue-500 group-hover/header:text-white transition-all">
+                                            {copiedId === 'modal-all-emails' ? (
+                                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                                            ) : (
+                                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                                            )}
+                                        </div>
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">
+                                            {copiedId === 'modal-all-emails' ? 'Emails Copied!' : 'Established Emails'}
+                                        </span>
+                                    </button>
                                     <span className="text-[8px] font-black text-blue-400 opacity-60">{selectedLead.emails?.length || 0} TOTAL</span>
                                 </div>
                                 <div className="grid grid-cols-1 gap-2">
@@ -485,7 +530,24 @@ export default function LeadQualifierLeads() {
                             {/* Phones */}
                             <div className="space-y-3">
                                 <div className="flex items-center justify-between px-1">
-                                    <div className="flex items-center gap-2"><div className="p-1 rounded bg-emerald-500/10 text-emerald-500"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg></div><span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">Voice Channels</span></div>
+                                    <button
+                                        onClick={() => {
+                                            const allPhones = (selectedLead.phones || []).join(', ');
+                                            if (allPhones) handleCopy(allPhones, 'modal-all-phones');
+                                        }}
+                                        className="flex items-center gap-2 group/header hover:opacity-80 transition-all"
+                                    >
+                                        <div className="p-1 rounded bg-emerald-500/10 text-emerald-500 group-hover/header:bg-emerald-500 group-hover/header:text-white transition-all">
+                                            {copiedId === 'modal-all-phones' ? (
+                                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                                            ) : (
+                                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
+                                            )}
+                                        </div>
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">
+                                            {copiedId === 'modal-all-phones' ? 'Phones Copied!' : 'Voice Channels'}
+                                        </span>
+                                    </button>
                                     <span className="text-[8px] font-black text-emerald-400 opacity-60">{selectedLead.phones?.length || 0} TOTAL</span>
                                 </div>
                                 <div className="grid grid-cols-1 gap-2">
@@ -504,7 +566,7 @@ export default function LeadQualifierLeads() {
                             </div>
                         </div>
 
-                        <div className="p-6 bg-[var(--bg-tertiary)]/20 border-t border-white/5 flex items-center justify-between">
+                        <div className="p-6 bg-[var(--bg-tertiary)]/20 border-t border-white/5 flex items-center justify-between flex-shrink-0">
                             <span className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest">Profile Snapshot v1.0</span>
                             <button onClick={() => setIsContactModalOpen(false)} className="px-8 py-3 rounded-xl bg-[var(--accent-primary)] text-white font-black text-[10px] uppercase tracking-widest hover:brightness-110 active:scale-95 transition-all shadow-lg shadow-[var(--accent-primary)]/20">Acknowledge</button>
                         </div>
@@ -514,10 +576,10 @@ export default function LeadQualifierLeads() {
 
             {/* Premium Observation Log (Notes) Modal */}
             {isCommentModalOpen && selectedLead && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 backdrop-blur-md bg-black/60 animate-fadeIn">
-                    <div className="bg-[var(--bg-secondary)] border border-white/10 rounded-[32px] w-full max-w-xl overflow-hidden shadow-[0_32px_128px_rgba(0,0,0,0.8)] animate-slideUp">
+                <div className="fixed inset-0 z-[100] flex items-start justify-center p-4 backdrop-blur-md bg-black/60 animate-fadeIn overflow-y-auto">
+                    <div className="bg-[var(--bg-secondary)] border border-white/10 rounded-[32px] w-full max-w-xl max-h-[80vh] overflow-hidden shadow-[0_32px_128px_rgba(0,0,0,0.8)] animate-slideUp flex flex-col my-auto md:my-10">
                         {/* Modal Header with Lead Identity */}
-                        <div className="p-5 border-b border-white/5 bg-gradient-to-r from-[var(--bg-tertiary)]/40 to-transparent flex justify-between items-center">
+                        <div className="p-5 border-b border-white/5 bg-gradient-to-r from-[var(--bg-tertiary)]/40 to-transparent flex justify-between items-center flex-shrink-0">
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-xl bg-[var(--accent-primary)]/10 flex items-center justify-center text-[var(--accent-primary)] shadow-inner">
                                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -542,7 +604,7 @@ export default function LeadQualifierLeads() {
                             </button>
                         </div>
 
-                        <div className="flex flex-col h-[420px]">
+                        <div className="flex flex-col flex-1 min-h-0">
                             {/* Scrollable Timeline Section */}
                             <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
                                 {(selectedLead?.comments || []).length === 0 ? (
@@ -616,9 +678,9 @@ export default function LeadQualifierLeads() {
 
             {/* Handover Modal Refined */}
             {isAssignModalOpen && selectedLead && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 backdrop-blur-md bg-black/40 animate-fadeIn">
-                    <div className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-[32px] w-full max-w-md overflow-hidden shadow-2xl animate-slideUp">
-                        <div className="px-6 py-6 border-b border-[var(--border-primary)] flex justify-between items-center bg-[var(--bg-tertiary)]/20">
+                <div className="fixed inset-0 z-[100] flex items-start justify-center p-4 backdrop-blur-md bg-black/40 animate-fadeIn overflow-y-auto">
+                    <div className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-[32px] w-full max-w-md max-h-[80vh] overflow-hidden shadow-2xl animate-slideUp flex flex-col my-auto md:my-10">
+                        <div className="px-6 py-6 border-b border-[var(--border-primary)] flex justify-between items-center bg-[var(--bg-tertiary)]/20 flex-shrink-0">
                             <div>
                                 <h3 className="text-lg font-black text-[var(--text-primary)]">Pipeline Handover</h3>
                                 <p className="text-[9px] font-black uppercase tracking-widest text-[var(--accent-primary)] opacity-70">Transfer To Management</p>
@@ -626,7 +688,7 @@ export default function LeadQualifierLeads() {
                             <button onClick={() => setIsAssignModalOpen(false)} className="w-10 h-10 rounded-xl bg-[var(--bg-tertiary)]/40 hover:bg-rose-500/10 hover:text-rose-500 flex items-center justify-center transition-all text-[var(--text-tertiary)]"><svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg></button>
                         </div>
 
-                        <div className="p-6 space-y-5">
+                        <div className="p-6 space-y-5 overflow-y-auto flex-1 custom-scrollbar">
                             <div className="space-y-2">
                                 <label className="text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-widest pl-1">Assign To Manager</label>
                                 <div className="relative">
@@ -701,7 +763,7 @@ export default function LeadQualifierLeads() {
                 .animate-slideUp { animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
                 .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
                 .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-                .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(var(--accent-primary-rgb), 0.2); border-radius: 10px; }
+                .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(59, 130, 246, 0.4); border-radius: 10px; }
                 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
                 @keyframes slideUp { from { opacity: 0; transform: translateY(30px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
                 `

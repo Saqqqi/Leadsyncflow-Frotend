@@ -147,25 +147,27 @@ export default function LeadQualifierDashboard() {
             </svg>
           }
         />
+
         <StatCard
-          title="This Month"
-          value={`${stats.monthPerformance.toFixed(0)}%`}
-          subtitle="Efficiency"
-          color="bg-amber-500/10 text-amber-500"
-          icon={
-            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-            </svg>
-          }
-        />
-        <StatCard
-          title="Conversations"
+          title="Reached"
           value={stats.inConversation}
           subtitle="Wait Reply"
           color="bg-indigo-500/10 text-indigo-500"
           icon={
             <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+            </svg>
+          }
+        />
+
+        <StatCard
+          title="Dead"
+          value={stats.dead}
+          subtitle="Closed Lost"
+          color="bg-rose-500/10 text-rose-500"
+          icon={
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636" />
             </svg>
           }
         />
@@ -180,107 +182,60 @@ export default function LeadQualifierDashboard() {
             </svg>
           }
         />
-        <StatCard
-          title="Dead"
-          value={stats.dead}
-          subtitle="Closed Lost"
-          color="bg-rose-500/10 text-rose-500"
-          icon={
-            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636" />
-            </svg>
-          }
-        />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Recent Activity List */}
-        <div className="lg:col-span-2 bg-[var(--bg-secondary)] rounded-3xl border border-[var(--border-primary)] overflow-hidden shadow-xl">
-          <div className="p-6 border-b border-[var(--border-primary)] flex justify-between items-center bg-[var(--bg-tertiary)]/30">
-            <div>
-              <h2 className="text-xl font-black text-[var(--text-primary)]">Recent Assignments</h2>
-              <p className="text-[var(--text-tertiary)] text-[10px] uppercase font-bold tracking-widest mt-1">Last {recentLeads.length} items</p>
+      {/* Most Recent Lead Entry */}
+      <div className="bg-[var(--bg-secondary)] rounded-2xl border border-[var(--border-primary)] overflow-hidden shadow-xl animate-slideUp w-full">
+        <div className="px-5 py-3 border-b border-[var(--border-primary)] flex justify-between items-center bg-[var(--bg-tertiary)]/20">
+          <div className="flex items-center gap-3">
+            <h2 className="text-sm font-black text-[var(--text-primary)] uppercase tracking-tighter">Latest Pipeline Entry</h2>
+            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-[8px] font-black text-emerald-500 uppercase tracking-widest">Live Monitoring</span>
             </div>
-            <button className="text-[var(--accent-primary)] hover:underline text-xs font-bold uppercase tracking-wider">
-              View Pipeline
-            </button>
           </div>
-          <div className="divide-y divide-[var(--border-primary)]">
-            {recentLeads.length === 0 ? (
-              <div className="p-12 text-center">
-                <div className="inline-flex p-4 rounded-full bg-[var(--bg-tertiary)] text-[var(--text-tertiary)] mb-4">
-                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-                  </svg>
-                </div>
-                <p className="text-[var(--text-secondary)] font-medium">Your queue is currently empty</p>
-              </div>
-            ) : (
-              recentLeads.map(lead => (
-                <div key={lead._id} className="p-5 hover:bg-[var(--bg-tertiary)]/20 transition-all flex items-center justify-between group">
-                  <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-[var(--accent-primary)] to-[var(--accent-primary)]/60 flex items-center justify-center font-black text-white text-xl shadow-lg shadow-[var(--accent-primary)]/20 group-hover:scale-110 transition-transform">
-                      {lead.name?.[0]?.toUpperCase()}
-                    </div>
-                    <div>
-                      <div className="text-[var(--text-primary)] font-bold text-base leading-tight">{lead.name}</div>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="text-[10px] text-[var(--text-tertiary)] font-bold uppercase tracking-wider">{lead.location || 'Global'}</span>
-                        <span className="w-1 h-1 rounded-full bg-[var(--border-primary)]" />
-                        <span className="text-[10px] text-[var(--text-tertiary)] font-bold">{new Date(lead.assignedAt || lead.createdAt).toLocaleDateString()}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className={`px-3 py-1.5 rounded-xl border text-[10px] font-black uppercase tracking-widest shadow-sm ${lead.lqStatus === 'QUALIFIED' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' :
-                    lead.lqStatus === 'DEAD' ? 'bg-rose-500/10 text-rose-500 border-rose-500/20' :
-                      lead.lqStatus === 'IN_CONVERSATION' ? 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20' :
-                        'bg-amber-500/10 text-amber-500 border-amber-500/20'
-                    }`}>
-                    {lead.lqStatus || 'NEW'}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
+          <p className="text-[var(--text-tertiary)] text-[8px] uppercase font-black tracking-[0.2em] opacity-40">Most Recent Acquisition</p>
         </div>
-
-        {/* Monthly Performance */}
-        <div className="bg-[var(--bg-secondary)] rounded-3xl border border-[var(--border-primary)] p-6 shadow-xl space-y-6">
-          <div>
-            <h3 className="text-lg font-black text-[var(--text-primary)]">Monthly Analytics</h3>
-            <p className="text-[var(--text-tertiary)] text-[10px] uppercase font-bold tracking-widest">Leads per Month</p>
-          </div>
-
-          <div className="h-48 flex items-end justify-between gap-4 px-2">
-            {stats.monthlyLeads.slice().reverse().map((m, i) => (
-              <div key={i} className="flex-1 group relative flex flex-col items-center gap-2 h-full justify-end">
-                <div
-                  className="w-full bg-gradient-to-t from-[var(--accent-primary)] to-[var(--accent-primary)]/40 rounded-t-xl transition-all duration-500 group-hover:to-[var(--accent-primary)] group-hover:shadow-[0_0_20px_rgba(0,190,155,0.4)]"
-                  style={{ height: `${(m.count / (Math.max(...stats.monthlyLeads.map(ml => ml.count)) || 1)) * 100}%` }}
-                />
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-[var(--bg-tertiary)] px-2 py-1 rounded text-[10px] font-black pointer-events-none border border-[var(--border-primary)]">
-                  {m.count} Leads
+        <div className="p-4">
+          {stats.lastLead ? (
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-[var(--accent-primary)] to-[var(--accent-primary)]/60 flex items-center justify-center font-black text-white text-xl shadow-lg shadow-[var(--accent-primary)]/10">
+                  {stats.lastLead.name?.[0]?.toUpperCase()}
                 </div>
-                <span className="text-[9px] text-[var(--text-tertiary)] font-black uppercase tracking-widest text-center">{m.name.split(' ')[0]}</span>
+                <div className="space-y-1">
+                  <div className="text-[var(--text-primary)] font-black text-lg leading-none tracking-tight">{stats.lastLead.name}</div>
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1 text-[var(--text-tertiary)]">
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                      <span className="text-[9px] font-bold uppercase tracking-wider">{stats.lastLead.location || 'Global Reach'}</span>
+                    </div>
+                    <div className="w-1 h-1 rounded-full bg-[var(--border-primary)] opacity-30" />
+                    <div className="flex items-center gap-1 text-[var(--accent-primary)]">
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                      <span className="text-[9px] font-black uppercase tracking-tight">
+                        {new Date(stats.lastLead.assignedAt || stats.lastLead.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        <span className="ml-1.5 font-bold opacity-40">
+                          {new Date(stats.lastLead.assignedAt || stats.lastLead.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                        </span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
               </div>
-            ))}
-          </div>
-
-          <div className="pt-4 border-t border-[var(--border-primary)] space-y-4">
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-[var(--text-secondary)] font-medium">Performance Rating</span>
-              <span className="text-[var(--accent-primary)] font-black">{(stats.monthPerformance / 10).toFixed(1)} / 10</span>
+              <div className={`px-4 py-1.5 rounded-xl border text-[9px] font-black uppercase tracking-[0.15em] shadow-md transition-all duration-300 hover:brightness-110 ${stats.lastLead.lqStatus === 'QUALIFIED' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-emerald-500/5' :
+                  stats.lastLead.lqStatus === 'DEAD' ? 'bg-rose-500/10 text-rose-400 border-rose-500/20 shadow-rose-500/5' :
+                    stats.lastLead.lqStatus === 'REACHED' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20 shadow-blue-500/5' :
+                      'bg-amber-500/10 text-amber-500 border-amber-500/20 shadow-amber-500/5'
+                }`}>
+                ● {stats.lastLead.lqStatus || 'NEW ENTRY'}
+              </div>
             </div>
-            <div className="w-full h-1.5 bg-[var(--bg-tertiary)] rounded-full overflow-hidden">
-              <div
-                className="h-full bg-[var(--accent-primary)] transition-all duration-1000"
-                style={{ width: `${stats.monthPerformance}%` }}
-              />
+          ) : (
+            <div className="flex flex-col items-center justify-center py-6 opacity-20">
+              <p className="text-xs font-black uppercase tracking-widest text center">Queue currently empty</p>
             </div>
-            <p className="text-[10px] text-[var(--text-tertiary)] font-bold italic leading-relaxed">
-              You converted <span className="text-[var(--accent-primary)]">{stats.monthPerformance.toFixed(0)}%</span> of leads assigned this month.
-            </p>
-          </div>
+          )}
         </div>
       </div>
     </div>

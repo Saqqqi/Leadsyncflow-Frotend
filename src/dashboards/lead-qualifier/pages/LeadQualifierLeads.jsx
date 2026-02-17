@@ -244,10 +244,10 @@ export default function LeadQualifierLeads() {
                             onChange={(e) => setDateFilter(e.target.value)}
                             className="bg-[var(--bg-tertiary)]/40 border border-[var(--border-primary)] rounded-xl px-4 py-2.5 text-[10px] font-black text-[var(--text-primary)] outline-none cursor-pointer uppercase tracking-widest focus:ring-2 focus:ring-[var(--accent-primary)]/20 transition-all"
                         >
-                            <option value="ALL">ALL TIME</option>
-                            <option value="TODAY">TODAY</option>
-                            <option value="THIS_WEEK">THIS WEEK</option>
-                            <option value="THIS_MONTH">THIS MONTH</option>
+                            <option value="ALL" className="bg-[#121212] text-white">ALL TIME</option>
+                            <option value="TODAY" className="bg-[#121212] text-white">TODAY</option>
+                            <option value="THIS_WEEK" className="bg-[#121212] text-white">THIS WEEK</option>
+                            <option value="THIS_MONTH" className="bg-[#121212] text-white">THIS MONTH</option>
                         </select>
 
                         <select
@@ -255,11 +255,11 @@ export default function LeadQualifierLeads() {
                             onChange={(e) => setActiveTab(e.target.value)}
                             className="bg-[var(--bg-tertiary)]/40 border border-[var(--border-primary)] rounded-xl px-4 py-2.5 text-[10px] font-black text-[var(--text-primary)] outline-none cursor-pointer uppercase tracking-widest focus:ring-2 focus:ring-[var(--accent-primary)]/20 transition-all"
                         >
-                            <option value="ALL">ALL STATUS</option>
-                            <option value="PENDING">PENDING</option>
-                            <option value="REACHED">REACHED</option>
-                            <option value="QUALIFIED">QUALIFIED</option>
-                            <option value="DEAD">DEAD</option>
+                            <option value="ALL" className="bg-[#121212] text-white">ALL STATUS</option>
+                            <option value="PENDING" className="bg-[#121212] text-white">PENDING</option>
+                            <option value="REACHED" className="bg-[#121212] text-white">REACHED</option>
+                            <option value="QUALIFIED" className="bg-[#121212] text-white">QUALIFIED</option>
+                            <option value="DEAD" className="bg-[#121212] text-white">DEAD</option>
                         </select>
 
                         <button

@@ -36,29 +36,18 @@ export const lqAPI = {
         return response.data;
     },
 
-    // Assign lead to a Manager
-    assignToManager: async (leadId, managerId, commentText = '', responseType, responseValue) => {
+    // Submit lead to the assigned Manager (multi-contact)
+    submitToMyManager: async (leadId, selectedEmails = [], selectedPhones = []) => {
         const token = tokenManager.getToken();
         const response = await axiosInstance.post(
-            `/api/lq/leads/${leadId}/assign-manager`,
-            { managerId, commentText, responseType, responseValue },
+            `/api/lq/leads/${leadId}/submit-to-manager`,
+            { selectedEmails, selectedPhones },
             {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
             }
         );
-        return response.data;
-    },
-
-    // Get list of managers (needed for assignment)
-    getManagers: async () => {
-        const token = tokenManager.getToken();
-        const response = await axiosInstance.get('/api/lq/managers', {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        });
         return response.data;
     }
 };

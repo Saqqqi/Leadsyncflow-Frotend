@@ -1,50 +1,40 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { lqAPI } from '../../../api/lead-qualifier.api';
 
 export const useLeadManager = () => {
     const [leads, setLeads] = useState([]);
-    const [managers, setManagers] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+    const [leadsError, setLeadsError] = useState(null);
 
-    const fetchLeads = useCallback(async () => {
+    // Use refs to prevent redundant/parallel overlapping fetches
+    const isFetchingLeads = useRef(false);
+
+    const fetchLeads = useCallback(async (force = false) => {
+        if (isFetchingLeads.current && !force) return;
+
         try {
+            isFetchingLeads.current = true;
             setLoading(true);
-            const response = await lqAPI.getMyLeads(200, 0);
+            const response = await lqAPI.getMyLeads(20, 0);
             if (response.success) {
                 setLeads(response.leads || []);
+                setLeadsError(null);
+            } else {
+                setLeadsError(response.message || "Failed to fetch leads");
             }
         } catch (err) {
-            console.error(err);
-            setError("Failed to fetch leads");
+            console.error("Fetch leads error:", err);
+            setLeadsError("Network error while fetching leads");
         } finally {
+            isFetchingLeads.current = false;
             setLoading(false);
         }
     }, []);
 
-    const fetchManagers = useCallback(async () => {
-        try {
-            const response = await lqAPI.getManagers();
-            if (response.success && response.managers && response.managers.length > 0) {
-                const formattedManagers = response.managers.map(m => ({
-                    ...m,
-                    _id: m.id || m._id
-                }));
-                setManagers(formattedManagers);
-            } else {
-                // Formatting fallback or mock data if needed, but keeping it clean for now
-                setManagers([]);
-            }
-        } catch (err) {
-            console.error("Fetch managers error:", err);
-            // Fallback for development/demo
-            setManagers([
-                { _id: 'mock-1', name: 'Zeeshan Manager', email: 'zeeshan@globaldigitsolutions.com' },
-                { _id: 'mock-2', name: 'Ayesha Manager', email: 'ayesha@globaldigitsolutions.com' },
-                { _id: 'mock-3', name: 'Usman Manager', email: 'usman@globaldigitsolutions.com' }
-            ]);
-        }
-    }, []);
+    // Initial load
+    useEffect(() => {
+        fetchLeads();
+    }, [fetchLeads]);
 
     const updateLeadStatus = async (leadId, newStatus) => {
         if (newStatus === "PENDING") return;
@@ -70,7 +60,7 @@ export const useLeadManager = () => {
                         const newComments = [...(l.comments || []), {
                             text: commentText,
                             createdByRole: 'Lead Qualifiers',
-                            createdDate: new Date().toISOString().split('T')[0]
+                            createdDate: new Date().toISOString()
                         }];
                         return { ...l, comments: newComments };
                     }
@@ -85,43 +75,27 @@ export const useLeadManager = () => {
         return false;
     };
 
-    const assignLeadManager = async (leadId, managerId, comment, responseType, responseValue) => {
+    const assignLeadManager = async (leadId, selectedEmails, selectedPhones) => {
         try {
-            const response = await lqAPI.assignToManager(
-                leadId,
-                managerId,
-                comment,
-                responseType,
-                responseValue
-            );
+            const response = await lqAPI.submitToMyManager(leadId, selectedEmails, selectedPhones);
             if (response.success) {
-                setLeads(prev => prev.map(l =>
-                    l._id === leadId
-                        ? { ...l, stage: 'MANAGER', assignedTo: managerId, lqUpdatedBy: 'me' } // Simplified for local update
-                        : l
-                ));
+                setLeads(prev => prev.filter(l => l._id !== leadId));
                 return true;
             }
         } catch (err) {
-            console.error("Assign manager error:", err);
+            console.error("Submit to manager error:", err);
             return false;
         }
         return false;
     };
 
-    useEffect(() => {
-        fetchLeads();
-        fetchManagers();
-    }, [fetchLeads, fetchManagers]);
-
     return {
         leads,
-        managers,
         loading,
-        error,
+        error: leadsError, // Main error for UI
         updateLeadStatus,
         addLeadComment,
         assignLeadManager,
-        refreshLeads: fetchLeads
+        refreshLeads: () => fetchLeads(true)
     };
 };

@@ -3,47 +3,56 @@ import React, { useState, useEffect } from 'react';
 export default function AssignManagerModal({
     isOpen,
     onClose,
-    managers,
     selectedLead,
     onAssign
 }) {
-    const [selectedManagerId, setSelectedManagerId] = useState('');
-    const [assignComment, setAssignComment] = useState('');
-    const [responseType, setResponseType] = useState('EMAIL');
-    const [responseValue, setResponseValue] = useState('');
+    const [selectedEmails, setSelectedEmails] = useState([]);
+    const [selectedPhones, setSelectedPhones] = useState([]);
 
     useEffect(() => {
         if (selectedLead) {
-            setSelectedManagerId('');
-            setAssignComment('');
+            // By default, select the first email and first phone if they exist
             const emails = selectedLead.emails || [];
             const phones = selectedLead.phones || [];
 
-            if (emails.length > 0) {
-                setResponseType('EMAIL');
-                setResponseValue(String(emails[0].value || ''));
-            } else if (phones.length > 0) {
-                setResponseType('PHONE');
-                setResponseValue(String(phones[0] || ''));
-            } else {
-                setResponseType('EMAIL');
-                setResponseValue('');
-            }
+            setSelectedEmails(emails.length > 0 ? [emails[0].normalized] : []);
+            setSelectedPhones(phones.length > 0 ? [phones[0]] : []);
         }
-    }, [selectedLead]);
+    }, [selectedLead, isOpen]);
+
+    const toggleEmail = (emailNorm) => {
+        setSelectedEmails(prev =>
+            prev.includes(emailNorm)
+                ? prev.filter(e => e !== emailNorm)
+                : [...prev, emailNorm]
+        );
+    };
+
+    const togglePhone = (phone) => {
+        setSelectedPhones(prev =>
+            prev.includes(phone)
+                ? prev.filter(p => p !== phone)
+                : [...prev, phone]
+        );
+    };
 
     const handleAssign = () => {
-        if (!selectedManagerId || !selectedLead || !responseType || !responseValue) return;
+        if (!selectedLead) return;
+        if (selectedEmails.length === 0 && selectedPhones.length === 0) {
+            alert("Please select at least one contact method.");
+            return;
+        }
         onAssign({
             leadId: selectedLead._id,
-            managerId: selectedManagerId,
-            assignComment,
-            responseType,
-            responseValue
+            selectedEmails,
+            selectedPhones
         });
     };
 
     if (!isOpen) return null;
+
+    const emails = selectedLead?.emails || [];
+    const phones = selectedLead?.phones || [];
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 backdrop-blur-xl bg-black/60 animate-fadeIn">
@@ -60,110 +69,88 @@ export default function AssignManagerModal({
                         <svg className="h-6 w-6 group-hover:rotate-90 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
                     </button>
                 </div>
-                <div className="p-8 space-y-6">
-                    <div className="space-y-2">
-                        <label className="block text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] px-1">Target Manager</label>
-                        <div className="relative group">
-                            <select
-                                value={selectedManagerId}
-                                onChange={(e) => setSelectedManagerId(e.target.value)}
-                                className="w-full appearance-none bg-[var(--bg-tertiary)]/30 border border-[var(--border-primary)] text-[var(--text-primary)] rounded-2xl px-6 py-4.5 focus:outline-none focus:border-[var(--accent-primary)] font-black text-sm transition-all shadow-inner group-hover:border-[var(--accent-primary)]/40"
-                            >
-                                <option value="">Select a manager...</option>
-                                {managers.map(m => (
-                                    <option key={m._id} value={m._id}>{m.name} ({m.email})</option>
-                                ))}
-                            </select>
-                            <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--accent-primary)]">
-                                <svg className="w-6 h-6 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" /></svg>
-                            </div>
-                        </div>
-                    </div>
 
-                    <div className="space-y-2">
-                        <label className="block text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] px-1">Platform</label>
-                        <div className="relative group">
-                            <select
-                                value={responseType}
-                                onChange={(e) => {
-                                    const nextType = e.target.value;
-                                    const emails = (selectedLead && selectedLead.emails) ? selectedLead.emails : [];
-                                    const phones = (selectedLead && selectedLead.phones) ? selectedLead.phones : [];
-
-                                    setResponseType(nextType);
-
-                                    if (nextType === 'EMAIL') {
-                                        setResponseValue(emails.length > 0 ? String(emails[0].value || '') : '');
-                                    } else {
-                                        setResponseValue(phones.length > 0 ? String(phones[0] || '') : '');
-                                    }
-                                }}
-                                className="w-full appearance-none bg-[var(--bg-tertiary)]/30 border border-[var(--border-primary)] text-[var(--text-primary)] rounded-2xl px-6 py-4.5 focus:outline-none focus:border-[var(--accent-primary)] font-black text-sm transition-all shadow-inner group-hover:border-[var(--accent-primary)]/40"
-                            >
-                                <option value="EMAIL">Email</option>
-                                <option value="PHONE">GB</option>
-                            </select>
-                            <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--accent-primary)]">
-                                <svg className="w-6 h-6 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" /></svg>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="space-y-2">
+                <div className="p-8 space-y-8">
+                    {/* Emails Section */}
+                    <div className="space-y-4">
                         <label className="block text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] px-1">
-                            {responseType === 'EMAIL' ? 'Select Email' : 'Select GB Number'}
+                            Verified Emails
                         </label>
-                        <div className="relative group">
-                            <select
-                                value={responseValue}
-                                onChange={(e) => setResponseValue(e.target.value)}
-                                disabled={
-                                    !selectedLead ||
-                                    (responseType === 'EMAIL'
-                                        ? !((selectedLead.emails || []).length)
-                                        : !((selectedLead.phones || []).length))
-                                }
-                                className="w-full appearance-none bg-[var(--bg-tertiary)]/30 border border-[var(--border-primary)] text-[var(--text-primary)] rounded-2xl px-6 py-4.5 focus:outline-none focus:border-[var(--accent-primary)] font-black text-sm transition-all shadow-inner group-hover:border-[var(--accent-primary)]/40 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                {responseType === 'EMAIL' ? (
-                                    (selectedLead?.emails || []).length > 0 ? (
-                                        (selectedLead.emails || []).map((em, idx) => (
-                                            <option key={idx} value={String(em.value || '')}>{String(em.value || '')}</option>
-                                        ))
-                                    ) : (
-                                        <option value="">No emails available</option>
-                                    )
-                                ) : (
-                                    (selectedLead?.phones || []).length > 0 ? (
-                                        (selectedLead.phones || []).map((ph, idx) => (
-                                            <option key={idx} value={String(ph || '')}>{String(ph || '')}</option>
-                                        ))
-                                    ) : (
-                                        <option value="">No numbers available</option>
-                                    )
-                                )}
-                            </select>
-                            <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-[var(--accent-primary)]">
-                                <svg className="w-6 h-6 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" /></svg>
+                        {emails.length > 0 ? (
+                            <div className="grid gap-2">
+                                {emails.map((em, idx) => (
+                                    <button
+                                        key={idx}
+                                        onClick={() => toggleEmail(em.normalized)}
+                                        className={`flex items-center justify-between p-4 rounded-2xl border transition-all ${selectedEmails.includes(em.normalized)
+                                                ? 'bg-[var(--accent-primary)]/10 border-[var(--accent-primary)] text-[var(--accent-primary)]'
+                                                : 'bg-[var(--bg-tertiary)]/30 border-[var(--border-primary)] text-[var(--text-secondary)] hover:border-[var(--accent-primary)]/40'
+                                            }`}
+                                    >
+                                        <span className="text-sm font-bold">{em.value}</span>
+                                        <div className={`w-6 h-6 rounded-lg flex items-center justify-center border-2 transition-all ${selectedEmails.includes(em.normalized)
+                                                ? 'bg-[var(--accent-primary)] border-[var(--accent-primary)]'
+                                                : 'border-[var(--border-primary)]'
+                                            }`}>
+                                            {selectedEmails.includes(em.normalized) && (
+                                                <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                                </svg>
+                                            )}
+                                        </div>
+                                    </button>
+                                ))}
                             </div>
-                        </div>
+                        ) : (
+                            <div className="p-4 rounded-2xl bg-[var(--bg-tertiary)]/20 border border-dashed border-[var(--border-primary)] text-center">
+                                <span className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest">No Emails Available</span>
+                            </div>
+                        )}
                     </div>
 
-                    <div className="space-y-2">
-                        <label className="block text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] px-1">Handover Instructions</label>
-                        <textarea
-                            value={assignComment}
-                            onChange={(e) => setAssignComment(e.target.value)}
-                            placeholder="Add context for the manager..."
-                            className="w-full bg-[var(--bg-tertiary)]/30 border border-[var(--border-primary)] text-[var(--text-primary)] rounded-3xl px-6 py-5 h-36 focus:outline-none focus:border-[var(--accent-primary)] font-medium transition-all shadow-inner resize-none group-hover:border-[var(--accent-primary)]/40"
-                        />
+                    {/* Phones Section */}
+                    <div className="space-y-4">
+                        <label className="block text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em] px-1">
+                            Verified GB Numbers
+                        </label>
+                        {phones.length > 0 ? (
+                            <div className="grid gap-2">
+                                {phones.map((ph, idx) => (
+                                    <button
+                                        key={idx}
+                                        onClick={() => togglePhone(ph)}
+                                        className={`flex items-center justify-between p-4 rounded-2xl border transition-all ${selectedPhones.includes(ph)
+                                                ? 'bg-[var(--accent-primary)]/10 border-[var(--accent-primary)] text-[var(--accent-primary)]'
+                                                : 'bg-[var(--bg-tertiary)]/30 border-[var(--border-primary)] text-[var(--text-secondary)] hover:border-[var(--accent-primary)]/40'
+                                            }`}
+                                    >
+                                        <span className="text-sm font-bold">{ph}</span>
+                                        <div className={`w-6 h-6 rounded-lg flex items-center justify-center border-2 transition-all ${selectedPhones.includes(ph)
+                                                ? 'bg-[var(--accent-primary)] border-[var(--accent-primary)]'
+                                                : 'border-[var(--border-primary)]'
+                                            }`}>
+                                            {selectedPhones.includes(ph) && (
+                                                <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                                </svg>
+                                            )}
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="p-4 rounded-2xl bg-[var(--bg-tertiary)]/20 border border-dashed border-[var(--border-primary)] text-center">
+                                <span className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-widest">No Numbers Available</span>
+                            </div>
+                        )}
                     </div>
+
                     <button
                         onClick={handleAssign}
-                        disabled={!selectedManagerId || !responseValue}
+                        disabled={selectedEmails.length === 0 && selectedPhones.length === 0}
                         className="w-full h-16 bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-primary)]/80 hover:scale-[1.02] disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed text-white font-black text-sm uppercase tracking-[0.2em] rounded-2xl transition-all shadow-2xl shadow-[var(--accent-primary)]/20 active:scale-95"
                     >
-                        Transfer Ownership
+                        Transfer to Manager
                     </button>
                 </div>
             </div>

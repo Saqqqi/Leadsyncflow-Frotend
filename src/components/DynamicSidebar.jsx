@@ -25,22 +25,17 @@ export default function DynamicSidebar({ isOpen, onClose, onToggle, user }) {
       {/* Sidebar */}
       <div className={`
         fixed top-0 left-0 z-[60] h-full transform transition-all duration-300 ease-in-out
-        w-64 border-r shadow-2xl group/sidebar
+        w-64 border-r border-[var(--border-primary)] shadow-xl group/sidebar bg-[var(--bg-secondary)]
         sm:fixed sm:translate-x-0 sm:shadow-none
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-      `}
-        style={{
-          backgroundColor: '#0F2A3F',
-          borderColor: 'rgba(255,255,255,0.1)'
-        }}>
+      `}>
 
         {/* Sidebar Header */}
-        <div className="h-20 border-b flex items-center justify-center px-4 md:px-6"
-          style={{ borderColor: 'rgba(255,255,255,0.1)' }}>
+        <div className="h-20 border-b border-[var(--border-primary)] flex items-center justify-center px-4 md:px-6">
           {/* Mobile close button */}
           <button
             onClick={onToggle}
-            className="absolute left-4 md:left-6 p-1.5 rounded-lg hover:bg-white/5 transition-all active:scale-95 text-white/70 hover:text-white"
+            className="absolute left-4 md:left-6 p-1.5 rounded-lg hover:bg-[var(--bg-tertiary)] transition-all active:scale-95 text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
@@ -106,17 +101,15 @@ export default function DynamicSidebar({ isOpen, onClose, onToggle, user }) {
                     onClick={() => {
                       if (window.innerWidth < 1024) onClose();
                     }}
-                    className="flex items-center gap-2 md:gap-3 px-3 py-2.5 rounded-xl transition-all duration-300 group/item"
-                    style={{
-                      backgroundColor: isPageActive ? 'var(--accent-primary)' : 'transparent',
-                      color: isPageActive ? '#FFFFFF' : 'rgba(255,255,255,0.6)',
-                      boxShadow: isPageActive ? '0 10px 20px -5px var(--accent-primary)' : 'none'
-                    }}
+                    className={`flex items-center gap-2 md:gap-3 px-3 py-2.5 rounded-xl transition-all duration-300 group/item ${isPageActive
+                        ? 'bg-[var(--accent-primary)] text-white shadow-lg shadow-[var(--accent-primary)]/20'
+                        : 'text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--text-primary)]'
+                      }`}
                   >
                     <span className={`flex-shrink-0 text-base md:text-lg ${isPageActive ? 'text-white' : 'group-hover/item:text-[var(--accent-primary)]'}`}>
                       {page.icon}
                     </span>
-                    <span className={`text-sm md:text-base font-bold ${isPageActive ? 'text-white' : 'group-hover/item:text-[var(--text-primary)]'}`}>
+                    <span className="text-sm md:text-base font-bold">
                       {page.name}
                     </span>
                     {isPageActive && (
@@ -130,13 +123,12 @@ export default function DynamicSidebar({ isOpen, onClose, onToggle, user }) {
         </nav>
 
         {/* Sidebar Footer */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t"
-          style={{ borderColor: 'rgba(255,255,255,0.1)' }}>
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-[var(--border-primary)] bg-[var(--bg-tertiary)]/50">
           <div className="text-center">
-            <p className="text-xs text-white/40">
+            <p className="text-xs text-[var(--text-tertiary)] font-bold">
               Multi-Dashboard System
             </p>
-            <p className="text-xs mt-1 text-white/40">
+            <p className="text-xs mt-1 text-[var(--text-tertiary)] opacity-60">
               Version 2.0.0
             </p>
           </div>

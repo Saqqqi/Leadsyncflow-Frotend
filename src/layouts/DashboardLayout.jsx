@@ -105,12 +105,7 @@ export default function DashboardLayout() {
       >
         {/* Header */}
         <header
-          className="h-16 flex items-center justify-between px-6 transition-all duration-300 sticky top-0 z-[60] border-b"
-          style={{
-            borderColor: 'rgba(255,255,255,0.1)',
-            backgroundColor: '#0F2A3F',
-            color: '#FFFFFF'
-          }}
+          className="h-16 flex items-center justify-between px-6 transition-all duration-300 sticky top-0 z-[60] border-b bg-[var(--bg-secondary)] border-[var(--border-primary)] shadow-sm"
         >
           <div className="flex items-center gap-4">
             {/* Desktop sidebar toggle - shows when sidebar is closed */}
@@ -129,14 +124,14 @@ export default function DashboardLayout() {
             {/* Portal Identity - Premium Design */}
             <div className="flex items-center gap-4">
               {!isSidebarOpen && !currentDashboard?.hideSidebar && (
-                <div className="h-10 w-px bg-white/10 hidden md:block mr-2" />
+                <div className="h-10 w-px bg-[var(--border-primary)] hidden md:block mr-2" />
               )}
               {currentDashboard && (
                 <div className="flex flex-col">
                   <div className="text-[7px] font-black text-[var(--accent-primary)] uppercase tracking-[0.3em] leading-none mb-1.5 opacity-80">
                     System Architecture
                   </div>
-                  <div className="text-xs sm:text-[15px] font-black text-white uppercase tracking-[-0.02em] leading-none">
+                  <div className="text-xs sm:text-[15px] font-black text-[var(--text-primary)] uppercase tracking-[-0.02em] leading-none">
                     {getDashboardTitleFromPath(location.pathname, user?.role || user?.department)}
                   </div>
                 </div>
@@ -147,9 +142,9 @@ export default function DashboardLayout() {
           <div className="flex items-center gap-4">
             {/* Page Context Pill */}
             {currentDashboard && (
-              <div className="hidden lg:flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10">
+              <div className="hidden lg:flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-primary)]">
                 <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent-primary)] animate-pulse" />
-                <span className="text-[10px] font-black text-white/70 uppercase tracking-widest">
+                <span className="text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-widest">
                   {currentPage?.name || 'Overview'}
                 </span>
               </div>
@@ -158,7 +153,7 @@ export default function DashboardLayout() {
             {/* Theme Toggle - High Visibility */}
             <button
               onClick={toggleTheme}
-              className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 transition-all duration-300 group border border-white/10 hover:border-white/20 shadow-lg text-white"
+              className="p-2.5 rounded-xl bg-[var(--bg-tertiary)] hover:bg-[var(--border-primary)] transition-all duration-300 group border border-[var(--border-primary)] shadow-sm text-[var(--text-primary)]"
               title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
             >
               {theme === 'dark' ? (
@@ -173,26 +168,26 @@ export default function DashboardLayout() {
             </button>
 
             {/* User Profile - Streamlined & Minimalist */}
-            <div className="flex items-center gap-4 border-l border-white/15 pl-6 ml-2">
+            <div className="flex items-center gap-4 border-l border-[var(--border-primary)] pl-6 ml-2">
               <div className="flex flex-col items-end">
-                <div className="text-[11px] sm:text-[13px] font-black text-white uppercase tracking-tight leading-none truncate max-w-[80px] sm:max-w-[150px]">
+                <div className="text-[11px] sm:text-[13px] font-black text-[var(--text-primary)] uppercase tracking-tight leading-none truncate max-w-[80px] sm:max-w-[150px]">
                   {user?.name || 'User'}
                 </div>
-                <div className="text-[7px] sm:text-[8px] font-bold text-white/30 uppercase tracking-[0.1em] mt-1">
+                <div className="text-[7px] sm:text-[8px] font-bold text-[var(--text-tertiary)] uppercase tracking-[0.1em] mt-1">
                   Active Session
                 </div>
               </div>
 
               <div className="relative group/user cursor-pointer">
                 <div
-                  className="w-10 h-10 rounded-2xl flex items-center justify-center text-white font-black text-lg shadow-xl shadow-[var(--accent-primary)]/10 transition-all group-hover/user:scale-105 group-hover/user:rotate-2 border-2 border-white/10 ring-4 ring-transparent group-hover/user:ring-white/5"
+                  className="w-10 h-10 rounded-2xl flex items-center justify-center text-white font-black text-lg shadow-xl shadow-[var(--accent-primary)]/10 transition-all group-hover/user:scale-105 group-hover/user:rotate-2 border-2 border-[var(--border-primary)] ring-4 ring-transparent group-hover/user:ring-[var(--border-primary)]"
                   style={{
                     background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
                   }}
                 >
                   {user?.name?.[0]?.toUpperCase() || 'U'}
                 </div>
-                <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 border-2 border-[#0F2A3F] rounded-full shadow-lg" />
+                <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 border-2 border-[var(--bg-secondary)] rounded-full shadow-lg" />
               </div>
 
               {/* Logout Button */}

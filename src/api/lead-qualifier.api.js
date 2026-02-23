@@ -2,15 +2,20 @@ import axiosInstance from './axiosInstance';
 import tokenManager from '../utils/tokenManager';
 
 export const lqAPI = {
-    // Get leads assigned to the current Lead Qualifier
-    getMyLeads: async (limit = 20, skip = 0) => {
+    // Get leads assigned to the current Lead Qualifier with filters
+    getMyLeads: async (limit = 20, skip = 0, filters = {}) => {
         const token = tokenManager.getToken();
+        const params = { limit, skip, ...filters };
+
+        console.log('Making API call with params:', params);
+
         const response = await axiosInstance.get('/api/lq/leads', {
-            params: { limit, skip },
+            params,
             headers: {
                 Authorization: `Bearer ${token}`
             }
         });
+        console.log('Raw API response:', response.data);
         return response.data;
     },
 
@@ -48,6 +53,18 @@ export const lqAPI = {
                 }
             }
         );
+        return response.data;
+    },
+
+    // Get stats for the current Lead Qualifier
+    getStats: async (filters = {}) => {
+        const token = tokenManager.getToken();
+        const response = await axiosInstance.get('/api/lq/leads/stats', {
+            params: filters,
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
         return response.data;
     }
 };

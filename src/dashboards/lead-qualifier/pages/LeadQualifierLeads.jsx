@@ -11,16 +11,11 @@ import LeadTimelineModal from '../components/LeadTimelineModal';
 import AssignManagerModal from '../components/AssignManagerModal';
 
 export default function LeadQualifierLeads() {
-    const {
-        leads,
-        loading,
-        error,
-        updateLeadStatus,
-        addLeadComment,
-        assignLeadManager,
-        refreshLeads
-    } = useLeadManager();
+    // Pagination state
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 20;
 
+    // Filter states
     const {
         searchTerm,
         setSearchTerm,
@@ -28,11 +23,29 @@ export default function LeadQualifierLeads() {
         setActiveTab,
         dateFilter,
         setDateFilter,
-        customDate,
-        setCustomDate,
-        counts,
-        filteredLeads
-    } = useLeadFilters(leads);
+        customFromDate,
+        setCustomFromDate,
+        customToDate,
+        setCustomToDate,
+        showToDatePicker,
+        setShowToDatePicker,
+        searchReady,
+        setSearchReady,
+        apiFilters
+    } = useLeadFilters();
+
+    // Lead management with filters and pagination
+    const {
+        leads,
+        loading,
+        error,
+        total,
+        filtersApplied,
+        updateLeadStatus,
+        addLeadComment,
+        assignLeadManager,
+        refreshLeads
+    } = useLeadManager(apiFilters, currentPage, itemsPerPage);
 
     // Modal states
     const [selectedLead, setSelectedLead] = useState(null);
@@ -41,29 +54,38 @@ export default function LeadQualifierLeads() {
     const [isContactModalOpen, setIsContactModalOpen] = useState(false);
     const [copiedId, setCopiedId] = useState(null);
 
-    // Pagination state
-    const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 20;
-
     const handleCopy = (text, id) => {
         navigator.clipboard.writeText(text);
         setCopiedId(id);
         setTimeout(() => setCopiedId(null), 2000);
     };
 
-    // Client-side pagination
-    const paginatedLeads = useMemo(() => {
-        const start = (currentPage - 1) * itemsPerPage;
-        return filteredLeads.slice(start, start + itemsPerPage);
-    }, [filteredLeads, currentPage]);
+    // Client-side search filtering (since backend doesn't support search)
+    const filteredLeads = useMemo(() => {
+        if (!searchTerm) return leads;
 
-    const totalPages = Math.ceil(filteredLeads.length / itemsPerPage);
+        return leads.filter(lead => {
+            const matchesSearch = (lead.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                (lead.emails?.some(e => (e.value || '').toLowerCase().includes(searchTerm.toLowerCase()))) ||
+                (lead.phones?.some(p => (p || '').toLowerCase().includes(searchTerm.toLowerCase())));
+
+            return matchesSearch;
+        });
+    }, [leads, searchTerm]);
+
+    // Reset to page 1 when filters change
+    const handleFilterChange = (callback) => {
+        setCurrentPage(1);
+        callback();
+    };
 
     // Sync selected lead with fresh data from leads array
     const activeLead = useMemo(() => {
         if (!selectedLead) return null;
         return leads.find(l => l._id === selectedLead._id) || selectedLead;
     }, [leads, selectedLead]);
+
+    const totalPages = Math.ceil(total / itemsPerPage);
 
     if (loading && leads.length === 0) return <SharedLoader />;
 
@@ -89,19 +111,19 @@ export default function LeadQualifierLeads() {
                                 </svg>
                             </div>
                             <div>
-                                <h1 className="text-2xl font-black text-[var(--text-primary)] tracking-tight">Lead Pipeline</h1>
-                                <p className="text-[10px] font-black uppercase tracking-widest text-[var(--text-tertiary)] opacity-60">Personal Acquisition Queue</p>
+                                <h1 className="text-2xl font-black text-[var(--text-primary)] tracking-tight">Lead Qualifier Pipeline</h1>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-[var(--text-tertiary)] opacity-60">Assigned Lead Qualification Queue</p>
                             </div>
                         </div>
 
                         <div className="hidden sm:flex items-center gap-6 border-l border-[var(--border-primary)]/30 pl-6">
                             <div className="flex flex-col">
                                 <span className="text-[8px] font-black uppercase tracking-widest text-[var(--text-tertiary)] opacity-60">Total Leads</span>
-                                <span className="text-xl font-black text-[var(--text-primary)]">{leads.length}</span>
+                                <span className="text-xl font-black text-[var(--text-primary)]">{total}</span>
                             </div>
                             <div className="flex flex-col">
-                                <span className="text-[8px] font-black uppercase tracking-widest text-[var(--text-tertiary)] opacity-60">Qualified</span>
-                                <span className="text-xl font-black text-emerald-500">{counts.QUALIFIED}</span>
+                                <span className="text-[8px] font-black uppercase tracking-widest text-[var(--text-tertiary)] opacity-60">Page</span>
+                                <span className="text-xl font-black text-[var(--accent-primary)]">{currentPage} of {totalPages || 1}</span>
                             </div>
                         </div>
                     </div>
@@ -111,12 +133,17 @@ export default function LeadQualifierLeads() {
                             searchTerm={searchTerm}
                             setSearchTerm={setSearchTerm}
                             dateFilter={dateFilter}
-                            setDateFilter={setDateFilter}
+                            setDateFilter={(value) => handleFilterChange(() => setDateFilter(value))}
                             activeTab={activeTab}
-                            setActiveTab={setActiveTab}
-                            counts={counts}
-                            customDate={customDate}
-                            setCustomDate={setCustomDate}
+                            setActiveTab={(value) => handleFilterChange(() => setActiveTab(value))}
+                            customFromDate={customFromDate}
+                            setCustomFromDate={setCustomFromDate}
+                            customToDate={customToDate}
+                            setCustomToDate={setCustomToDate}
+                            showToPicker={showToDatePicker}
+                            setShowToPicker={setShowToDatePicker}
+                            searchReady={searchReady}
+                            setSearchReady={setSearchReady}
                         />
 
                         <button
@@ -145,7 +172,7 @@ export default function LeadQualifierLeads() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-[var(--border-primary)]/30">
-                            {paginatedLeads.map((lead) => (
+                            {filteredLeads.map((lead) => (
                                 <LeadTableRow
                                     key={lead._id}
                                     lead={lead}
@@ -174,7 +201,7 @@ export default function LeadQualifierLeads() {
                 {/* Pagination */}
                 <div className="px-6 py-4 bg-[var(--bg-tertiary)]/20 border-t border-[var(--border-primary)] flex items-center justify-between">
                     <div className="text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em]">
-                        Displaying <span className="text-[var(--text-primary)]">{paginatedLeads.length}</span> of <span className="text-[var(--text-primary)]">{filteredLeads.length}</span> Records
+                        Displaying <span className="text-[var(--text-primary)]">{filteredLeads.length}</span> of <span className="text-[var(--text-primary)]">{total}</span> Records
                     </div>
 
                     <div className="flex items-center gap-2">

@@ -7,9 +7,14 @@ const LeadFilters = memo(({
     setDateFilter,
     activeTab,
     setActiveTab,
-    counts,
-    customDate,
-    setCustomDate
+    customFromDate,
+    setCustomFromDate,
+    customToDate,
+    setCustomToDate,
+    showToPicker,
+    setShowToPicker,
+    searchReady,
+    setSearchReady
 }) => {
     return (
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
@@ -29,7 +34,7 @@ const LeadFilters = memo(({
                 </div>
 
                 <div className="flex bg-[var(--bg-secondary)]/50 rounded-xl p-1 border border-[var(--border-primary)] overflow-x-auto w-full sm:w-auto">
-                    {['ALL', 'PENDING', 'IN_CONVERSATION', 'QUALIFIED', 'DEAD'].map(tab => (
+                    {['ALL', 'PENDING', 'REACHED', 'QUALIFIED', 'DEAD'].map(tab => (
                         <button
                             key={tab}
                             onClick={() => setActiveTab(tab)}
@@ -44,49 +49,83 @@ const LeadFilters = memo(({
                 </div>
             </div>
 
-            {/* Date Filters Row - Compact */}
+            {/* Date Filters Row - Smart From/To */}
             <div className="flex flex-wrap items-center gap-3 w-full md:w-auto bg-[var(--bg-secondary)]/30 p-1.5 rounded-2xl border border-[var(--border-primary)]/50">
                 <div className="hidden lg:block px-2 text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em]">Filter By:</div>
 
-                <div className="flex items-center bg-[var(--bg-tertiary)]/20 rounded-xl p-0.5">
-                    {[
-                        { id: 'ALL', label: 'All' },
-                        { id: 'TODAY', label: 'Today' },
-                        { id: 'THIS_WEEK', label: 'Week' },
-                        { id: 'THIS_MONTH', label: 'Month' }
-                    ].map(preset => (
+                <div className="flex items-center gap-2">
+                    {/* From Date Picker */}
+                    <div className="relative group">
+                        <input
+                            type="date"
+                            value={customFromDate}
+                            onChange={(e) => {
+                                setCustomFromDate(e.target.value);
+                                setShowToPicker(true); // Show To picker when From is selected
+                                setSearchReady(false); // Reset search ready state
+                            }}
+                            className="bg-[var(--bg-tertiary)]/30 border border-[var(--border-primary)] text-[var(--text-primary)] text-[9px] font-bold uppercase rounded-xl px-3 py-1.5 focus:outline-none focus:border-[var(--accent-primary)] transition-all cursor-pointer w-32"
+                            placeholder="From date"
+                        />
+                        {customFromDate && (
+                            <button
+                                onClick={() => {
+                                    setCustomFromDate('');
+                                    setShowToPicker(false);
+                                    setSearchReady(false);
+                                }}
+                                className="absolute right-7 top-1/2 -translate-y-1/2 text-[var(--accent-error)]"
+                            >
+                                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Show To Date Picker or Add To Button */}
+                    {showToPicker ? (
+                        <>
+                            <div className="text-[9px] text-[var(--text-tertiary)] font-black">TO</div>
+                            <div className="relative group">
+                                <input
+                                    type="date"
+                                    value={customToDate}
+                                    onChange={(e) => {
+                                        setCustomToDate(e.target.value);
+                                        setSearchReady(false); // Reset search ready state
+                                    }}
+                                    className="bg-[var(--bg-tertiary)]/30 border border-[var(--border-primary)] text-[var(--text-primary)] text-[9px] font-bold uppercase rounded-xl px-3 py-1.5 focus:outline-none focus:border-[var(--accent-primary)] transition-all cursor-pointer w-32"
+                                    placeholder="To date"
+                                />
+                                {customToDate && (
+                                    <button
+                                        onClick={() => {
+                                            setCustomToDate('');
+                                            setShowToPicker(false);
+                                            setSearchReady(false);
+                                        }}
+                                        className="absolute right-7 top-1/2 -translate-y-1/2 text-[var(--accent-error)]"
+                                    >
+                                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
+                                    </button>
+                                )}
+                            </div>
+                        </>
+                    ) : (
                         <button
-                            key={preset.id}
-                            disabled={!!customDate}
-                            onClick={() => setDateFilter(preset.id)}
-                            className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${dateFilter === preset.id && !customDate
-                                ? 'bg-[var(--bg-secondary)] text-[var(--accent-primary)] shadow-sm'
-                                : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)] disabled:opacity-30'
-                                }`}
+                            onClick={() => setShowToPicker(true)}
+                            className="px-3 py-1.5 bg-[var(--accent-primary)]/10 border border-[var(--border-primary)] text-[var(--accent-primary)] text-[9px] font-bold uppercase rounded-xl transition-all hover:bg-[var(--accent-primary)]/20"
                         >
-                            {preset.label}
+                            Add To Date
                         </button>
-                    ))}
-                </div>
+                    )}
 
-                <div className="h-4 w-[1px] bg-[var(--border-primary)] mx-1" />
-
-                <div className="relative group">
-                    <input
-                        type="date"
-                        value={customDate}
-                        onChange={(e) => {
-                            setCustomDate(e.target.value);
-                            if (e.target.value) setDateFilter('ALL');
-                        }}
-                        className="bg-[var(--bg-tertiary)]/30 border border-[var(--border-primary)] text-[var(--text-primary)] text-[9px] font-bold uppercase rounded-xl px-3 py-1.5 focus:outline-none focus:border-[var(--accent-primary)] transition-all cursor-pointer w-32"
-                    />
-                    {customDate && (
+                    {/* Search Button */}
+                    {customFromDate && (
                         <button
-                            onClick={() => setCustomDate('')}
-                            className="absolute right-7 top-1/2 -translate-y-1/2 text-[var(--accent-error)]"
+                            onClick={() => setSearchReady(true)}
+                            className="px-3 py-1.5 bg-[var(--accent-primary)] text-white text-[9px] font-bold uppercase rounded-xl transition-all hover:bg-[var(--accent-primary)]/90 shadow-md"
                         >
-                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
+                            Search
                         </button>
                     )}
                 </div>

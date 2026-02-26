@@ -8,14 +8,11 @@ export default function LeadQualifierDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [stats, setStats] = useState({
-    total: 0,
-    qualified: 0,
+    totalReceived: 0,
     pending: 0,
+    reached: 0,
     dead: 0,
-    inConversation: 0,
-    submittedToManager: 0,
-    qualifiedOverall: 0,
-    lastLead: null
+    qualified: 0
   });
 
   const [dateFilter, setDateFilter] = useState('all');
@@ -40,14 +37,11 @@ export default function LeadQualifierDashboard() {
       if (statsRes.success) {
         const s = statsRes.stats;
         setStats({
-          total: s.totalLeadsInLQ || 0,
-          qualified: s.qualifiedInLQ || 0,
-          pending: s.pendingInLQ || 0,
-          dead: s.deadInLQ || 0,
-          inConversation: s.reachedInLQ || 0,
-          submittedToManager: s.submittedToManager || 0,
-          qualifiedOverall: s.qualifiedOverall || 0,
-          lastLead: null
+          totalReceived: s.totalReceived || 0,
+          pending: s.pending || 0,
+          reached: s.reached || 0,
+          dead: s.dead || 0,
+          qualified: s.qualified || 0
         });
       } else {
         setError(statsRes.message || "Failed to fetch dashboard data");
@@ -66,7 +60,7 @@ export default function LeadQualifierDashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  if (loading && !stats.lastLead && stats.total === 0) return <SharedLoader />;
+  if (loading && stats.totalReceived === 0) return <SharedLoader />;
 
   return (
     <div className="space-y-8 animate-fadeIn">
@@ -79,7 +73,7 @@ export default function LeadQualifierDashboard() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-3xl font-black text-[var(--test-primary)] tracking-tight">Lead Qualifier Dashboard</h1>
-          <p className="text-[var(--text-secondary)] text-sm font-medium">Track all lead stages: Pending, Reached, Qualified, Dead, and Submitted</p>
+          <p className="text-[var(--text-secondary)] text-sm font-medium">Track your performance: Incoming, Progress, and Transfers</p>
         </div>
         <div className="flex flex-wrap items-center gap-3 bg-[var(--bg-secondary)] p-2 rounded-2xl border border-[var(--border-primary)] shadow-sm">
           <select
@@ -137,14 +131,12 @@ export default function LeadQualifierDashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard title="Active Queue" value={stats.total} subtitle="Leads Assigned" color="bg-teal-500/10 text-teal-500" icon={<svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>} />
-        <StatCard title="Pending" value={stats.pending} subtitle="Not Yet Contacted" color="bg-amber-500/10 text-amber-500" icon={<svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>} />
-        <StatCard title="Qualified" value={stats.qualified} subtitle={`${((stats.qualified / (stats.total || 1)) * 100).toFixed(0)}% Conv`} color="bg-emerald-500/10 text-emerald-500" icon={<svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138z" /></svg>} />
-        <StatCard title="Reached" value={stats.inConversation} subtitle="Wait Reply" color="bg-indigo-500/10 text-indigo-500" icon={<svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>} />
-        <StatCard title="Dead" value={stats.dead} subtitle="Closed Lost" color="bg-rose-500/10 text-rose-500" icon={<svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636" /></svg>} />
-        <StatCard title="Submitted" value={stats.submittedToManager} subtitle="Sent to Manager" color="bg-blue-500/10 text-blue-500" icon={<svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>} />
-        <StatCard title="Qualified (Overall)" value={stats.qualifiedOverall} subtitle="All Time" color="bg-fuchsia-500/10 text-fuchsia-500" icon={<svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>} />
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        <StatCard title="Total Received" value={stats.totalReceived} subtitle="Assigned to You" color="bg-blue-500/10 text-blue-500" icon={<svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>} />
+        <StatCard title="Pending" value={stats.pending} subtitle="Need Action" color="bg-amber-500/10 text-amber-500" icon={<svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>} />
+        <StatCard title="Reached" value={stats.reached} subtitle="In Discussion" color="bg-indigo-500/10 text-indigo-500" icon={<svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>} />
+        <StatCard title="Dead" value={stats.dead} subtitle="No Potential" color="bg-rose-500/10 text-rose-500" icon={<svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636" /></svg>} />
+        <StatCard title="Qualified" value={stats.qualified} subtitle="Sent to Manager" color="bg-emerald-500/10 text-emerald-500" icon={<svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138z" /></svg>} />
       </div>
 
     </div>

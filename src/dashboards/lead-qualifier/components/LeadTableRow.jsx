@@ -88,7 +88,7 @@ const LeadTableRow = memo(({
                         </div>
                     )}
                     <div className="text-[12px] md:text-[12px]  text-[var(--text-white)]   tracking-widest pl-1">
-                        {new Date(lead.submittedDate || lead.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                        {new Date(lead.assignedAt || lead.assignedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                     </div>
                 </div>
             </td>

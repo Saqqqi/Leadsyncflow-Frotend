@@ -32,7 +32,7 @@ const LeadIdentity = ({ lead, size = 'md', className = '' }) => {
                 {lead.name?.[0]?.toUpperCase() || '?'}
             </div>
             <div className="space-y-1">
-                <div className={`${s.name} font-black text-[var(--text-primary)] leading-none tracking-tight`}>
+                <div className={`${s.name}  text-[var(--text-primary)] leading-none tracking-tight`}>
                     {lead.name}
                 </div>
                 <div className={`flex items-center gap-1 text-[var(--text-tertiary)] opacity-60 uppercase tracking-widest`}>

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useLeadManager } from '../hooks/useLeadManager';
 import { useLeadFilters } from '../hooks/useLeadFilters';
 import SharedLoader from '../../../components/SharedLoader';
@@ -87,6 +87,42 @@ export default function LeadQualifierLeads() {
 
     const totalPages = Math.ceil(total / itemsPerPage);
 
+    // Global notification function
+    useEffect(() => {
+        window.showCustomNotification = ({ type, title, message, duration = 3000 }) => {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-24 right-4 z-50 p-4 rounded-lg shadow-lg max-w-sm transform transition-all duration-300 ${type === 'warning' ? 'bg-rose-500 border border-rose-600' : 'bg-blue-500 border border-blue-600'} text-white`;
+            notification.style.transform = 'translateX(100%)';
+            notification.innerHTML = `
+                <div class="flex items-start gap-3">
+                    <div class="flex-shrink-0">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M9 16h.01"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-medium text-white">${title}</h4>
+                        <p class="text-sm text-white/90 mt-1">${message}</p>
+                    </div>
+                    <button onclick="this.parentElement.parentElement.remove()" class="ml-4 text-sm text-white/80 hover:text-white">✕</button>
+                </div>
+            `;
+            document.body.appendChild(notification);
+            
+            // Animate in
+            setTimeout(() => {
+                notification.style.transform = 'translateX(0)';
+            }, 10);
+            
+            // Auto-remove
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, duration);
+        };
+    }, []);
+
     if (loading && leads.length === 0) return <SharedLoader />;
 
     return (
@@ -99,36 +135,44 @@ export default function LeadQualifierLeads() {
             )}
 
             {/* Header Section */}
-            <div className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-[32px] p-6 shadow-xl relative overflow-hidden">
+            <div className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-[32px] p-4 md:p-6 shadow-xl relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--accent-primary)] opacity-5 rounded-full blur-[100px] -mr-32 -mt-32" />
 
-                <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 relative z-10">
-                    <div className="flex items-center gap-6">
+                <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 xl:gap-6 relative z-10">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 w-full xl:w-auto">
                         <div className="flex items-center gap-4">
                             <div className="p-2.5 bg-[var(--accent-primary)]/10 rounded-2xl text-[var(--accent-primary)] shadow-inner">
                                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 11H5m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2" />
                                 </svg>
                             </div>
-                            <div>
-                                <h1 className="text-2xl font-black text-[var(--text-primary)] tracking-tight">Lead Qualifier Pipeline</h1>
-                                <p className="text-[10px] font-black uppercase tracking-widest text-[var(--text-tertiary)] opacity-60">Assigned Lead Qualification Queue</p>
-                            </div>
-                        </div>
-
-                        <div className="hidden sm:flex items-center gap-6 border-l border-[var(--border-primary)]/30 pl-6">
-                            <div className="flex flex-col">
-                                <span className="text-[8px] font-black uppercase tracking-widest text-[var(--text-tertiary)] opacity-60">Total Leads</span>
-                                <span className="text-xl font-black text-[var(--text-primary)]">{total}</span>
-                            </div>
-                            <div className="flex flex-col">
-                                <span className="text-[8px] font-black uppercase tracking-widest text-[var(--text-tertiary)] opacity-60">Page</span>
-                                <span className="text-xl font-black text-[var(--accent-primary)]">{currentPage} of {totalPages || 1}</span>
+                            <div className="flex items-center gap-3">
+                                <div>
+                                    <h1 className="text-xl md:text-2xl font-black text-[var(--text-primary)] tracking-tight">Lead Qualifier Pipeline</h1>
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-[var(--text-tertiary)] opacity-60">Assigned Lead Qualification Queue</p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        refreshLeads();
+                                    }}
+                                    className="flex items-center gap-2 px-3 py-2.5 bg-[var(--bg-tertiary)]/40 border border-[var(--border-primary)] rounded-xl text-[var(--accent-primary)] hover:bg-emerald-500 hover:text-white hover:border-emerald-500 transition-all shadow-sm group cursor-pointer relative z-10"
+                                    title="Refresh leads"
+                                >
+                                    <svg className="w-5 h-5 text-[var(--accent-primary)] group-hover:text-white transition-colors pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                    </svg>
+                                    <span className="text-[10px] font-black uppercase tracking-wider text-[var(--accent-primary)] group-hover:text-white transition-all pointer-events-none select-none">
+                                        Refresh
+                                    </span>
+                                </button>
                             </div>
                         </div>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-3">
+                    <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
                         <LeadFilters
                             searchTerm={searchTerm}
                             setSearchTerm={setSearchTerm}
@@ -145,15 +189,6 @@ export default function LeadQualifierLeads() {
                             searchReady={searchReady}
                             setSearchReady={setSearchReady}
                         />
-
-                        <button
-                            onClick={refreshLeads}
-                            className="p-2.5 bg-[var(--bg-tertiary)]/40 border border-[var(--border-primary)] rounded-xl text-[var(--accent-primary)] hover:bg-[var(--accent-primary)] hover:text-white transition-all shadow-sm"
-                        >
-                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                            </svg>
-                        </button>
                     </div>
                 </div>
             </div>
@@ -161,14 +196,14 @@ export default function LeadQualifierLeads() {
             {/* Table Section */}
             <div className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-[32px] shadow-xl overflow-hidden relative animate-slideUp">
                 <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse min-w-[1000px]">
+                    <table className="w-full text-left border-collapse min-w-[700px] lg:min-w-[900px]">
                         <thead>
                             <tr className="bg-[var(--bg-tertiary)] border-b border-[var(--border-primary)]">
-                                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">Lead / Prospect</th>
-                                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">Contact Details</th>
-                                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">LQ Status</th>
-                                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">Origin / Created</th>
-                                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] text-right">Pipeline Actions</th>
+                                <th className="px-4 md:px-6 py-3 md:py-4 text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">Lead / Prospect</th>
+                                <th className="px-4 md:px-6 py-3 md:py-4 text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">Contact Details</th>
+                                <th className="px-4 md:px-6 py-3 md:py-4 text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">LQ Status</th>
+                                <th className="px-4 md:px-6 py-3 md:py-4 text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">Origin / Created</th>
+                                <th className="px-4 md:px-6 py-3 md:py-4 text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] text-right">Pipeline Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-[var(--border-primary)]/30">
@@ -199,8 +234,8 @@ export default function LeadQualifierLeads() {
                 )}
 
                 {/* Pagination */}
-                <div className="px-6 py-4 bg-[var(--bg-tertiary)]/20 border-t border-[var(--border-primary)] flex items-center justify-between">
-                    <div className="text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em]">
+                <div className="px-4 md:px-6 py-3 md:py-4 bg-[var(--bg-tertiary)]/20 border-t border-[var(--border-primary)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div className="text-[9px] md:text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-[0.2em]">
                         Displaying <span className="text-[var(--text-primary)]">{filteredLeads.length}</span> of <span className="text-[var(--text-primary)]">{total}</span> Records
                     </div>
 
@@ -208,7 +243,7 @@ export default function LeadQualifierLeads() {
                         <button
                             onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                             disabled={currentPage === 1}
-                            className="p-2.5 rounded-xl border border-[var(--border-primary)] bg-[var(--bg-secondary)] text-[var(--text-secondary)] disabled:opacity-30 hover:bg-[var(--bg-tertiary)] transition-all"
+                            className="p-2 md:p-2.5 rounded-xl border border-[var(--border-primary)] bg-[var(--bg-secondary)] text-[var(--text-secondary)] disabled:opacity-30 hover:bg-[var(--bg-tertiary)] transition-all"
                         >
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 19l-7-7 7-7" /></svg>
                         </button>
@@ -218,7 +253,7 @@ export default function LeadQualifierLeads() {
                                 <button
                                     key={i}
                                     onClick={() => setCurrentPage(i + 1)}
-                                    className={`w-9 h-9 rounded-xl text-[10px] font-black transition-all ${currentPage === i + 1 ? 'bg-[var(--accent-primary)] text-white shadow-lg shadow-[var(--accent-primary)]/20' : 'text-[var(--text-tertiary)] hover:bg-[var(--bg-tertiary)]'}`}
+                                    className={`w-8 h-8 md:w-9 md:h-9 rounded-xl text-[9px] md:text-[10px] font-black transition-all ${currentPage === i + 1 ? 'bg-[var(--accent-primary)] text-white shadow-lg shadow-[var(--accent-primary)]/20' : 'text-[var(--text-tertiary)] hover:bg-[var(--bg-tertiary)]'}`}
                                 >
                                     {i + 1}
                                 </button>
@@ -228,7 +263,7 @@ export default function LeadQualifierLeads() {
                         <button
                             onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                             disabled={currentPage === totalPages || totalPages === 0}
-                            className="p-2.5 rounded-xl border border-[var(--border-primary)] bg-[var(--bg-secondary)] text-[var(--text-secondary)] disabled:opacity-30 hover:bg-[var(--bg-tertiary)] transition-all"
+                            className="p-2 md:p-2.5 rounded-xl border border-[var(--border-primary)] bg-[var(--bg-secondary)] text-[var(--text-secondary)] disabled:opacity-30 hover:bg-[var(--bg-tertiary)] transition-all"
                         >
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" /></svg>
                         </button>

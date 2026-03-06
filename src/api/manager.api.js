@@ -12,7 +12,27 @@ export const managerAPI = {
         return response.data;
     },
 
-    // Accept or Reject a lead
+    // Get leads that were approved for rejection (REJECTED stage)
+    getApprovedRejections: async (params = {}) => {
+        const token = tokenManager.getToken();
+        const response = await axiosInstance.get('/api/manager/rejections-approved', {
+            params,
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        console.log(response.data);
+        return response.data;
+    },
+
+    // Request lead rejection (Sent to Super Admin)
+    requestRejection: async (leadId, comment) => {
+        const token = tokenManager.getToken();
+        const response = await axiosInstance.post(`/api/manager/leads/${leadId}/reqRejection`, { comment }, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        return response.data;
+    },
+
+    // Accept or Reject a lead (If needed for other purposes)
     submitDecision: async (leadId, decision, comment) => {
         const token = tokenManager.getToken();
         const response = await axiosInstance.post(`/api/manager/leads/${leadId}/decision`, { decision, comment }, {
@@ -31,9 +51,9 @@ export const managerAPI = {
     },
 
     // Mark lead as PAID
-    markAsPaid: async (leadId) => {
+    markAsPaid: async (leadId, amount, comment) => {
         const token = tokenManager.getToken();
-        const response = await axiosInstance.post(`/api/manager/leads/${leadId}/payment-status`, { status: 'PAID' }, {
+        const response = await axiosInstance.post(`/api/manager/leads/${leadId}/payment-status`, { amount, comment }, {
             headers: { Authorization: `Bearer ${token}` }
         });
         return response.data;

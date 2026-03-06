@@ -108,12 +108,12 @@ export default function LeadQualifierLeads() {
                 </div>
             `;
             document.body.appendChild(notification);
-            
+
             // Animate in
             setTimeout(() => {
                 notification.style.transform = 'translateX(0)';
             }, 10);
-            
+
             // Auto-remove
             setTimeout(() => {
                 if (notification.parentNode) {

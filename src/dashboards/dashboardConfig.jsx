@@ -44,6 +44,12 @@ const CombinedIcon = () => (
   </svg>
 );
 
+const RejectedIcon = () => (
+  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+  </svg>
+);
+
 // Lazy Loaded Components
 const LeadQualifierDashboard = lazy(() => import("../dashboards/lead-qualifier/pages/LeadQualifierDashboard"));
 const DataMinorDashboard = lazy(() => import("../dashboards/data-minor/pages/DataMinorDashboard"));
@@ -62,6 +68,7 @@ const AdminManagerLeads = lazy(() => import("../dashboards/admin/pages/ManagerLe
 const AdminCombinedLeads = lazy(() => import("../dashboards/admin/pages/CombinedLeads"));
 const AdminPendingRequests = lazy(() => import("../dashboards/admin/pages/PendingRequests"));
 const AdminUsersManagement = lazy(() => import("../dashboards/admin/pages/UsersManagement"));
+const AdminRejectedLeads = lazy(() => import("../dashboards/admin/pages/rejectedleads"));
 const SuperAdminPortal = lazy(() => import("../dashboards/admin/pages/SuperAdminPortal"));
 
 // Centralized Configuration
@@ -77,6 +84,7 @@ export const dashboardConfig = [
       { name: 'Combined Leads', path: 'combined-leads', component: AdminCombinedLeads, icon: <CombinedIcon />, showInSidebar: true },
       { name: 'Managers', path: 'manager-leads', component: AdminManagerLeads, icon: <LeadsIcon />, showInSidebar: true },
       { name: 'Pending Requests', path: 'pending-requests', component: AdminPendingRequests, icon: <UsersIcon />, showInSidebar: true },
+      { name: 'Rejected Leads', path: 'rejection-requests', component: AdminRejectedLeads, icon: <RejectedIcon />, showInSidebar: true },
       { name: 'Users Management', path: 'users', component: AdminUsersManagement, icon: <UsersIcon />, showInSidebar: false },
       { name: 'LQ Assign', path: 'super-admin', component: SuperAdminPortal, icon: <SettingsIcon />, showInSidebar: true, allowedRoles: ['Super Admin'] },
     ],

@@ -41,6 +41,17 @@ export const superAdminAPI = {
     unassignLqs: async (lqIds) => {
         const response = await axiosInstance.patch('/api/superadmin/lead-qualifiers/unassign', { lqIds });
         return response.data;
+    },
+
+    // Rejection Request Management
+    getRejectionRequests: async () => {
+        const response = await axiosInstance.get('/api/superadmin/rejection-requests');
+        return response.data;
+    },
+
+    decideRejectionRequest: async (leadId, decision, comment) => {
+        const response = await axiosInstance.patch(`/api/superadmin/rejection-requests/${leadId}/decision`, { decision, comment });
+        return response.data;
     }
 };
 

@@ -1,7 +1,7 @@
 import React from 'react';
 
 const SearchHeader = ({
-    title = "Manager Inbox",
+    title = "New Leads",
     subtitle = "Review and manage leads",
     searchTerm,
     onSearchChange,

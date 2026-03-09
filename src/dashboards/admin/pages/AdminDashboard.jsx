@@ -127,12 +127,9 @@ export default function AdminDashboard() {
                                 </svg>
                             </div>
                             <h1 className="text-3xl font-black tracking-tight text-[var(--text-primary)]">
-                                Admin <span className="text-[var(--accent-primary)]">Hub</span>
+                                Admin <span className="text-[var(--accent-primary)]">Dashboard</span>
                             </h1>
                         </div>
-                        <p className="text-[13px] font-bold text-[var(--text-secondary)] opacity-70">
-                            Global performance overview and intelligence sync
-                        </p>
                     </div>
 
                     <div className="flex flex-wrap items-center gap-4">

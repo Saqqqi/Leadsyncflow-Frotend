@@ -24,6 +24,7 @@ export default function DashboardLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(
     currentDashboard?.hideSidebar ? false : window.innerWidth >= 1024
   );
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [user, setUser] = useState(null);
 
   const currentPage = currentDashboard?.pages.find(page => {
@@ -65,7 +66,8 @@ export default function DashboardLayout() {
     }
 
     const handleResize = () => {
-      setIsSidebarOpen(window.innerWidth >= 1024);
+      const isMobile = window.innerWidth < 1024;
+      setIsSidebarOpen(!isMobile);
     };
 
     window.addEventListener('resize', handleResize);
@@ -94,13 +96,17 @@ export default function DashboardLayout() {
 
       <DynamicSidebar
         isOpen={isSidebarOpen}
+        isCollapsed={isSidebarCollapsed}
         onClose={() => setIsSidebarOpen(false)}
         onToggle={() => setIsSidebarOpen(prev => !prev)}
+        onToggleCollapse={() => setIsSidebarCollapsed(prev => !prev)}
         user={user}
       />
 
       <div
-        className={`flex-1 flex flex-col transition-all duration-300 ${isSidebarOpen ? 'lg:ml-64' : 'lg:ml-0'
+        className={`flex-1 flex flex-col transition-all duration-300 ${isSidebarOpen
+          ? (isSidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64')
+          : 'lg:ml-0'
           }`}
       >
         {/* Header */}
@@ -128,9 +134,7 @@ export default function DashboardLayout() {
               )}
               {currentDashboard && (
                 <div className="flex flex-col">
-                  <div className="text-[7px] font-black text-[var(--accent-primary)] uppercase tracking-[0.3em] leading-none mb-1.5 opacity-80">
-                    System Architecture
-                  </div>
+
                   <div className="text-xs sm:text-[15px] font-black text-[var(--text-primary)] uppercase tracking-[-0.02em] leading-none">
                     {getDashboardTitleFromPath(location.pathname, user?.role || user?.department)}
                   </div>
@@ -167,33 +171,40 @@ export default function DashboardLayout() {
               )}
             </button>
 
-            {/* User Profile - Streamlined & Minimalist */}
-            <div className="flex items-center gap-4 border-l border-[var(--border-primary)] pl-6 ml-2">
-              <div className="flex flex-col items-end">
-                <div className="text-[11px] sm:text-[13px] font-black text-[var(--text-primary)] uppercase tracking-tight leading-none truncate max-w-[80px] sm:max-w-[150px]">
+            {/* User Profile - Premium & Fully Visible */}
+            <div className="flex items-center gap-5 border-l border-[var(--border-primary)] pl-6 ml-2">
+              <div className="hidden sm:flex flex-col items-end">
+                <div className="text-[12px] font-black text-[var(--text-primary)] uppercase tracking-tight leading-none">
                   {user?.name || 'User'}
                 </div>
-                <div className="text-[7px] sm:text-[8px] font-bold text-[var(--text-tertiary)] uppercase tracking-[0.1em] mt-1">
-                  Active Session
+                <div className="text-[7.5px] font-black text-[#00BE9B] uppercase tracking-[0.2em] mt-1.5 opacity-80">
+                  Authentication Verified
                 </div>
               </div>
 
               <div className="relative group/user cursor-pointer">
                 <div
-                  className="w-10 h-10 rounded-2xl flex items-center justify-center text-white font-black text-lg shadow-xl shadow-[var(--accent-primary)]/10 transition-all group-hover/user:scale-105 group-hover/user:rotate-2 border-2 border-[var(--border-primary)] ring-4 ring-transparent group-hover/user:ring-[var(--border-primary)]"
+                  className="w-11 h-11 rounded-2xl flex items-center justify-center text-white font-black text-lg shadow-xl shadow-[#00BE9B]/10 transition-all group-hover/user:scale-105 group-hover/user:rotate-2 border-2 border-[var(--border-primary)] ring-4 ring-transparent group-hover/user:ring-[#00BE9B]/5"
                   style={{
-                    background: 'linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))',
+                    background: 'linear-gradient(135deg, #00BE9B, #00a082)',
                   }}
                 >
-                  {user?.name?.[0]?.toUpperCase() || 'U'}
+                  {user?.name?.split(' ').map(n => n[0]).join('') || 'U'}
                 </div>
                 <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 border-2 border-[var(--bg-secondary)] rounded-full shadow-lg" />
+
+                {/* Profile Tooltip on Hover */}
+                <div className="absolute top-[calc(100%+15px)] right-0 w-48 p-4 bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-2xl shadow-2xl opacity-0 translate-y-2 group-hover/user:opacity-100 group-hover/user:translate-y-0 transition-all pointer-events-none z-[100]">
+                  <p className="text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-widest mb-1.5">User Info</p>
+                  <p className="text-sm font-bold text-[var(--text-primary)] leading-tight">{user?.name}</p>
+                  <p className="text-[9px] font-medium text-[var(--text-tertiary)] mt-1 truncate">{user?.email}</p>
+                </div>
               </div>
 
               {/* Logout Button */}
               <button
                 onClick={() => setShowLogoutConfirm(true)}
-                className="p-2.5 rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all duration-300 border border-red-500/20 shadow-lg shadow-red-500/5 hover:scale-110 group/logout active:scale-95"
+                className="p-2.5 rounded-xl bg-red-500/5 text-red-500 hover:bg-red-500 hover:text-white transition-all duration-300 border border-red-500/10 shadow-lg shadow-red-500/5 hover:scale-110 group/logout active:scale-95"
                 title="Secure Logout"
               >
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

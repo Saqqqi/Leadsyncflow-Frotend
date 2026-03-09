@@ -73,7 +73,7 @@ export default function LeadQualifierDashboard() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-3xl font-black text-[var(--test-primary)] tracking-tight">Lead Qualifier Dashboard</h1>
-          <p className="text-[var(--text-secondary)] text-sm font-medium">Track your performance: Incoming, Progress, and Transfers</p>
+          <p className="text-[var(--text-secondary)] text-sm font-medium">Track your performance: Pending, Reached, Dead, Qualified</p>
         </div>
         <div className="flex flex-wrap items-center gap-3 bg-[var(--bg-secondary)] p-2 rounded-2xl border border-[var(--border-primary)] shadow-sm">
           <select

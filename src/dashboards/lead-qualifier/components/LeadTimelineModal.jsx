@@ -23,7 +23,7 @@ export default function LeadTimelineModal({
             <div className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-[24px] w-full max-w-md overflow-hidden shadow-[0_8px_16px_rgba(0,0,0,0.6)]">
                 <div className="p-5 border-b border-[var(--border-primary)] flex justify-between items-center bg-[var(--bg-tertiary)]/30">
                     <div>
-                        <h3 className="text-lg font-black text-[var(--text-primary)]">Lead Timeline</h3>
+                        <h3 className="text-lg font-black text-[var(--text-primary)]">Lead Comments</h3>
                     </div>
                     <button onClick={onClose} className="w-8 h-8 rounded-xl bg-[var(--bg-tertiary)]/50 hover:bg-[var(--accent-error)] hover:text-white flex items-center justify-center transition-all">
                         <svg className="h-4 w-4 group-hover:rotate-90 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
@@ -32,7 +32,7 @@ export default function LeadTimelineModal({
                 <div className="p-5 space-y-4">
                     <div className="max-h-80 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
                         {(selectedLead?.comments || []).length === 0 ? (
-                            <div className="text-center py-8 opacity-30 italic text-sm font-medium">No timeline events recorded.</div>
+                            <div className="text-center py-8 opacity-30 italic text-sm font-medium">No Comments.</div>
                         ) : (
                             selectedLead.comments.map((c, i) => (
                                 <div key={i} className="p-4 rounded-xl bg-[var(--bg-tertiary)]/20 border border-[var(--border-primary)]/50 hover:border-[var(--accent-primary)]/20 transition-colors">

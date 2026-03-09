@@ -278,8 +278,8 @@ const InputFiles = () => {
                     borderColor: 'var(--border-primary)'
                 }}
             >
-                <div className="absolute -right-24 -top-24 w-80 h-80 bg-gradient-to-br from-blue-500/10 to-indigo-600/10 rounded-full blur-3xl"></div>
-                <div className="absolute -left-24 -bottom-24 w-80 h-80 bg-gradient-to-br from-purple-500/10 to-pink-600/10 rounded-full blur-3xl"></div>
+                <div className="absolute -right-24 -top-24 w-80 h-80 bg-gradient-to-br from-[#00BE9B]/10 to-[#00a082]/10 rounded-full blur-3xl"></div>
+                <div className="absolute -left-24 -bottom-24 w-80 h-80 bg-gradient-to-br from-teal-500/10 to-[#00BE9B]/10 rounded-full blur-3xl"></div>
 
                 <form onSubmit={handleSubmit} className="relative z-10 p-6 sm:p-10 space-y-10">
                     {message.text && (
@@ -288,21 +288,20 @@ const InputFiles = () => {
                         </div>
                     )}
                     <div className="flex items-center gap-5 mb-8">
-                        <div className="p-3 rounded-[1rem] bg-gradient-to-br from-blue-600 to-indigo-700 text-white shadow-xl shadow-blue-500/20">
+                        <div className="p-3 rounded-[1rem] bg-gradient-to-br from-[#00BE9B] to-[#00a082] text-white shadow-xl shadow-[#00BE9B]/20">
                             <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                             </svg>
                         </div>
                         <div>
-                            <h2 className="text-2xl font-black tracking-tight" style={{ color: 'var(--text-primary)' }}>Profile Metadata</h2>
-                            <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-50" style={{ color: 'var(--text-secondary)' }}>Configure system identity</p>
+                            <h2 className="text-2xl font-black tracking-tight" style={{ color: 'var(--text-primary)' }}>Leads Data Input Form</h2>
                         </div>
                     </div>
                     <div className="grid grid-cols-2 gap-x-6 sm:gap-x-10 gap-y-6 mb-10">
                         {baseFields.map((field, idx) => (
                             <div key={`base-${idx}`} className={`group/field space-y-2 ${field.disabled ? 'opacity-60' : ''}`}>
                                 <div className="flex justify-between items-center pr-2">
-                                    <label className="text-[10px] font-black uppercase tracking-[0.25em] ml-1 block transition-colors group-focus-within/field:text-blue-500" style={{ color: 'var(--text-tertiary)' }}>
+                                    <label className="text-[10px] font-black uppercase tracking-[0.25em] ml-1 block transition-colors group-focus-within/field:text-[#00BE9B]" style={{ color: 'var(--text-tertiary)' }}>
                                         {field.label} {field.disabled && "(Locked)"}
                                     </label>
                                 </div>
@@ -313,7 +312,7 @@ const InputFiles = () => {
                                         disabled={field.disabled}
                                         value={field.disabled ? "" : formData[field.name]}
                                         onChange={(e) => setFormData(prev => ({ ...prev, [field.name]: e.target.value }))}
-                                        className={`w-full px-5 py-3 rounded-xl border outline-none font-bold transition-all duration-300 ${field.disabled ? 'cursor-not-allowed bg-transparent' : 'focus:ring-4 focus:ring-blue-500/10 bg-white/5'}`}
+                                        className={`w-full px-5 py-3 rounded-xl border outline-none font-bold transition-all duration-300 ${field.disabled ? 'cursor-not-allowed bg-transparent' : 'focus:ring-4 focus:ring-[#00BE9B]/10 bg-white/5'}`}
                                         placeholder={field.placeholder}
                                         style={{
                                             borderColor: 'var(--border-primary)',
@@ -322,7 +321,7 @@ const InputFiles = () => {
                                         }}
                                     />
                                     {!field.disabled && (
-                                        <div className="absolute bottom-0 left-6 right-6 h-0.5 bg-gradient-to-r from-blue-500 to-indigo-600 scale-x-0 group-focus-within/field:scale-x-100 transition-transform duration-500 rounded-full"></div>
+                                        <div className="absolute bottom-0 left-6 right-6 h-0.5 bg-gradient-to-r from-[#00BE9B] to-[#00a082] scale-x-0 group-focus-within/field:scale-x-100 transition-transform duration-500 rounded-full"></div>
                                     )}
                                 </div>
                             </div>
@@ -332,7 +331,7 @@ const InputFiles = () => {
                     <div className="space-y-6">
                         <div className="pb-3 border-b" style={{ borderColor: 'var(--border-primary)' }}>
                             <h3 className="text-base font-black opacity-80" style={{ color: 'var(--text-primary)' }}>
-                                Contact Configuration
+                                Contact Information
                             </h3>
                         </div>
 
@@ -344,12 +343,12 @@ const InputFiles = () => {
                                     <div className="grid grid-cols-2 gap-3">
                                         <div className="group/field space-y-1 col-span-2">
                                             <div className="flex justify-between items-center pr-2">
-                                                <span className="text-[12px] font-black text-blue-500/80 uppercase tracking-widest ml-1">Primary Number</span>
+                                                <span className="text-[12px] font-black text-[#00BE9B]/80 uppercase tracking-widest ml-1">Primary Number</span>
                                                 {phoneFields.length < 9 && (
                                                     <button
                                                         type="button"
                                                         onClick={() => addField('phone')}
-                                                        className="px-3 py-1.5 rounded-lg bg-blue-500/10 text-blue-500 flex items-center gap-2 hover:bg-blue-500 hover:text-white transition-all transform active:scale-95 border border-blue-500/20"
+                                                        className="px-3 py-1.5 rounded-lg bg-[#00BE9B]/10 text-[#00BE9B] flex items-center gap-2 hover:bg-[#00BE9B] hover:text-white transition-all transform active:scale-95 border border-[#00BE9B]/20"
                                                         title="Add more Phone Numbers"
                                                     >
                                                         <svg className="w-3.5 h-3.5 transition-transform group-hover:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -364,7 +363,7 @@ const InputFiles = () => {
                                                     type="tel"
                                                     value={formData.primaryPhone}
                                                     onChange={(e) => setFormData(prev => ({ ...prev, primaryPhone: e.target.value.replace(/\D/g, '').slice(0, 10) }))}
-                                                    className={`w-full px-4 py-2.5 rounded-lg border outline-none font-bold text-sm transition-all duration-300 focus:ring-4 focus:ring-blue-500/10 bg-white/5 ${duplicateStatuses['primaryPhone']?.isDuplicate ? 'border-rose-500/50' : duplicateStatuses['primaryPhone']?.checked ? 'border-emerald-500/50' : 'var(--border-primary)'}`}
+                                                    className={`w-full px-4 py-2.5 rounded-lg border outline-none font-bold text-sm transition-all duration-300 focus:ring-4 focus:ring-[#00BE9B]/10 bg-white/5 ${duplicateStatuses['primaryPhone']?.isDuplicate ? 'border-rose-500/50' : duplicateStatuses['primaryPhone']?.checked ? 'border-emerald-500/50' : 'var(--border-primary)'}`}
                                                     placeholder="Primary number (digits only)"
                                                     style={{
                                                         borderColor: duplicateStatuses['primaryPhone']?.isDuplicate
@@ -378,10 +377,10 @@ const InputFiles = () => {
                                                 />
                                                 {loadingField['primaryPhone'] && (
                                                     <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                                                        <div className="w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                                                        <div className="w-3 h-3 border-2 border-[#00BE9B] border-t-transparent rounded-full animate-spin"></div>
                                                     </div>
                                                 )}
-                                                <div className="absolute bottom-0 left-4 right-4 h-0.5 bg-gradient-to-r from-blue-500 to-indigo-600 scale-x-0 group-focus-within/field:scale-x-100 transition-transform duration-500 rounded-full"></div>
+                                                <div className="absolute bottom-0 left-4 right-4 h-0.5 bg-gradient-to-r from-[#00BE9B] to-[#00a082] scale-x-0 group-focus-within/field:scale-x-100 transition-transform duration-500 rounded-full"></div>
                                             </div>
                                             {duplicateStatuses['primaryPhone']?.checked && (
                                                 <div className={`mt-2 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider animate-in fade-in slide-in-from-top-2 duration-300 flex items-center gap-2 ${duplicateStatuses['primaryPhone'].isDuplicate ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'}`}>
@@ -426,7 +425,7 @@ const InputFiles = () => {
                                                         type="tel"
                                                         value={field.value}
                                                         onChange={(e) => handleAdditionalFieldChange(field.id, 'phone', e.target.value)}
-                                                        className={`w-full px-4 py-2.5 rounded-lg border border-dashed outline-none font-bold text-sm bg-white/5 transition-all focus:ring-4 focus:ring-blue-500/10 ${duplicateStatuses[field.id]?.isDuplicate ? 'border-rose-500/50' : duplicateStatuses[field.id]?.checked ? 'border-emerald-500/50' : ''}`}
+                                                        className={`w-full px-4 py-2.5 rounded-lg border border-dashed outline-none font-bold text-sm bg-white/5 transition-all focus:ring-4 focus:ring-[#00BE9B]/10 ${duplicateStatuses[field.id]?.isDuplicate ? 'border-rose-500/50' : duplicateStatuses[field.id]?.checked ? 'border-emerald-500/50' : ''}`}
                                                         placeholder={field.placeholder}
                                                         style={{
                                                             borderColor: duplicateStatuses[field.id]?.isDuplicate
@@ -440,7 +439,7 @@ const InputFiles = () => {
                                                     />
                                                     {loadingField[field.id] && (
                                                         <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                                                            <div className="w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                                                            <div className="w-3 h-3 border-2 border-[#00BE9B] border-t-transparent rounded-full animate-spin"></div>
                                                         </div>
                                                     )}
                                                     <div className="absolute bottom-0 left-4 right-4 h-0.5 bg-gradient-to-r from-emerald-500 to-teal-500 scale-x-0 group-focus-within/field:scale-x-100 transition-transform duration-500 rounded-full"></div>
@@ -476,12 +475,12 @@ const InputFiles = () => {
                                     <div className="grid grid-cols-2 gap-3">
                                         <div className="group/field space-y-1 col-span-2">
                                             <div className="flex justify-between items-center pr-2">
-                                                <span className="text-[12px] font-black text-blue-500/80 uppercase tracking-widest ml-1">Primary Email</span>
+                                                <span className="text-[12px] font-black text-[#00BE9B]/80 uppercase tracking-widest ml-1">Primary Email</span>
                                                 {emailFields.length < 9 && (
                                                     <button
                                                         type="button"
                                                         onClick={() => addField('email')}
-                                                        className="px-3 py-1.5 rounded-lg bg-blue-500/10 text-blue-500 flex items-center gap-2 hover:bg-blue-500 hover:text-white transition-all transform active:scale-95 border border-blue-500/20"
+                                                        className="px-3 py-1.5 rounded-lg bg-[#00BE9B]/10 text-[#00BE9B] flex items-center gap-2 hover:bg-[#00BE9B] hover:text-white transition-all transform active:scale-95 border border-[#00BE9B]/20"
                                                         title="Add more Email Addresses"
                                                     >
                                                         <svg className="w-3.5 h-3.5 transition-transform group-hover:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -496,7 +495,7 @@ const InputFiles = () => {
                                                     type="email"
                                                     value={formData.primaryEmail}
                                                     onChange={(e) => setFormData(prev => ({ ...prev, primaryEmail: e.target.value }))}
-                                                    className={`w-full px-4 py-2.5 rounded-lg border outline-none font-bold text-sm transition-all duration-300 focus:ring-4 focus:ring-blue-500/10 bg-white/5 ${duplicateStatuses['primaryEmail']?.isDuplicate ? 'border-rose-500/50' : duplicateStatuses['primaryEmail']?.checked ? 'border-emerald-500/50' : 'var(--border-primary)'}`}
+                                                    className={`w-full px-4 py-2.5 rounded-lg border outline-none font-bold text-sm transition-all duration-300 focus:ring-4 focus:ring-[#00BE9B]/10 bg-white/5 ${duplicateStatuses['primaryEmail']?.isDuplicate ? 'border-rose-500/50' : duplicateStatuses['primaryEmail']?.checked ? 'border-emerald-500/50' : 'var(--border-primary)'}`}
                                                     placeholder="john@leadsync.com"
                                                     style={{
                                                         borderColor: duplicateStatuses['primaryEmail']?.isDuplicate
@@ -510,10 +509,10 @@ const InputFiles = () => {
                                                 />
                                                 {loadingField['primaryEmail'] && (
                                                     <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                                                        <div className="w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                                                        <div className="w-3 h-3 border-2 border-[#00BE9B] border-t-transparent rounded-full animate-spin"></div>
                                                     </div>
                                                 )}
-                                                <div className="absolute bottom-0 left-4 right-4 h-0.5 bg-gradient-to-r from-blue-500 to-indigo-600 scale-x-0 group-focus-within/field:scale-x-100 transition-transform duration-500 rounded-full"></div>
+                                                <div className="absolute bottom-0 left-4 right-4 h-0.5 bg-gradient-to-r from-[#00BE9B] to-[#00a082] scale-x-0 group-focus-within/field:scale-x-100 transition-transform duration-500 rounded-full"></div>
                                             </div>
                                             {duplicateStatuses['primaryEmail']?.checked && (
                                                 <div className={`mt-2 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider animate-in fade-in slide-in-from-top-2 duration-300 flex items-center gap-2 ${duplicateStatuses['primaryEmail'].isDuplicate ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'}`}>
@@ -558,7 +557,7 @@ const InputFiles = () => {
                                                         type="email"
                                                         value={field.value}
                                                         onChange={(e) => handleAdditionalFieldChange(field.id, 'email', e.target.value)}
-                                                        className={`w-full px-4 py-2.5 rounded-lg border border-dashed outline-none font-bold text-sm bg-white/5 transition-all focus:ring-4 focus:ring-blue-500/10 ${duplicateStatuses[field.id]?.isDuplicate ? 'border-rose-500/50' : duplicateStatuses[field.id]?.checked ? 'border-emerald-500/50' : ''}`}
+                                                        className={`w-full px-4 py-2.5 rounded-lg border border-dashed outline-none font-bold text-sm bg-white/5 transition-all focus:ring-4 focus:ring-[#00BE9B]/10 ${duplicateStatuses[field.id]?.isDuplicate ? 'border-rose-500/50' : duplicateStatuses[field.id]?.checked ? 'border-emerald-500/50' : ''}`}
                                                         placeholder={field.placeholder}
                                                         style={{
                                                             borderColor: duplicateStatuses[field.id]?.isDuplicate
@@ -572,7 +571,7 @@ const InputFiles = () => {
                                                     />
                                                     {loadingField[field.id] && (
                                                         <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                                                            <div className="w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                                                            <div className="w-3 h-3 border-2 border-[#00BE9B] border-t-transparent rounded-full animate-spin"></div>
                                                         </div>
                                                     )}
                                                     <div className="absolute bottom-0 left-4 right-4 h-0.5 bg-gradient-to-r from-emerald-500 to-teal-500 scale-x-0 group-focus-within/field:scale-x-100 transition-transform duration-500 rounded-full"></div>
@@ -612,7 +611,7 @@ const InputFiles = () => {
                                 </svg>
                             </div>
                             <div>
-                                <h2 className="text-2xl font-black tracking-tight" style={{ color: 'var(--text-primary)' }}>Lead Acquisition Source</h2>
+                                <h2 className="text-2xl font-black tracking-tight" style={{ color: 'var(--text-primary)' }}>Lead  Source LInk </h2>
                             </div>
                         </div>
 
@@ -625,7 +624,7 @@ const InputFiles = () => {
                                     <select
                                         value={formData.leadSource}
                                         onChange={(e) => setFormData(prev => ({ ...prev, leadSource: e.target.value }))}
-                                        className="w-full px-5 py-3 rounded-xl border outline-none font-bold transition-all duration-300 focus:ring-4 focus:ring-blue-500/10 bg-white/5 appearance-none cursor-pointer"
+                                        className="w-full px-5 py-3 rounded-xl border outline-none font-bold transition-all duration-300 focus:ring-4 focus:ring-[#00BE9B]/10 bg-white/5 appearance-none cursor-pointer"
                                         style={{
                                             borderColor: 'var(--border-primary)',
                                             color: 'var(--text-primary)',
@@ -658,7 +657,7 @@ const InputFiles = () => {
                                             type="url"
                                             value={formData.sourceUrl}
                                             onChange={(e) => setFormData(prev => ({ ...prev, sourceUrl: e.target.value }))}
-                                            className="w-full px-5 py-3 rounded-xl border outline-none font-bold transition-all duration-300 focus:ring-4 focus:ring-blue-500/10 bg-white/5"
+                                            className="w-full px-5 py-3 rounded-xl border outline-none font-bold transition-all duration-300 focus:ring-4 focus:ring-[#00BE9B]/10 bg-white/5"
                                             placeholder={`https://www.${formData.leadSource.toLowerCase()}.com/username`}
                                             style={{
                                                 borderColor: 'var(--border-primary)',
@@ -682,7 +681,7 @@ const InputFiles = () => {
                                                 type="text"
                                                 value={formData.customSourceName}
                                                 onChange={(e) => setFormData(prev => ({ ...prev, customSourceName: e.target.value }))}
-                                                className="w-full px-5 py-3 rounded-xl border outline-none font-bold transition-all duration-300 focus:ring-4 focus:ring-blue-500/10 bg-white/5"
+                                                className="w-full px-5 py-3 rounded-xl border outline-none font-bold transition-all duration-300 focus:ring-4 focus:ring-[#00BE9B]/10 bg-white/5"
                                                 placeholder="e.g. LinkedIn, TikTok, etc."
                                                 style={{
                                                     borderColor: 'var(--border-primary)',
@@ -702,7 +701,7 @@ const InputFiles = () => {
                                                 type="url"
                                                 value={formData.sourceUrl}
                                                 onChange={(e) => setFormData(prev => ({ ...prev, sourceUrl: e.target.value }))}
-                                                className="w-full px-5 py-3 rounded-xl border outline-none font-bold transition-all duration-300 focus:ring-4 focus:ring-blue-500/10 bg-white/5"
+                                                className="w-full px-5 py-3 rounded-xl border outline-none font-bold transition-all duration-300 focus:ring-4 focus:ring-[#00BE9B]/10 bg-white/5"
                                                 placeholder="https://..."
                                                 style={{
                                                     borderColor: 'var(--border-primary)',
@@ -722,7 +721,7 @@ const InputFiles = () => {
                         <button
                             type="submit"
                             disabled={submitting}
-                            className={`w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white font-black rounded-xl shadow-2xl shadow-blue-500/30 transition-all duration-300 transform hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-3 ${submitting ? 'opacity-70 cursor-not-allowed translate-y-0' : ''}`}
+                            className={`w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-[#00BE9B] to-[#00a082] hover:from-[#00a688] hover:to-[#008c72] text-white font-black rounded-xl shadow-2xl shadow-[#00BE9B]/30 transition-all duration-300 transform hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-3 ${submitting ? 'opacity-70 cursor-not-allowed translate-y-0' : ''}`}
                         >
                             {submitting ? (
                                 <>

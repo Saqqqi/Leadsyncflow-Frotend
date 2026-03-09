@@ -52,7 +52,7 @@ const ContactDetailsModal = memo(({
                                     )}
                                 </div>
                                 <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">
-                                    {copiedId === 'modal-all-emails' ? 'Emails Copied!' : 'Established Emails'}
+                                    {copiedId === 'modal-all-emails' ? 'Emails Copied!' : 'Emails'}
                                 </span>
                             </button>
                             <span className="text-[8px] font-black text-blue-400 opacity-60">{selectedLead.emails?.length || 0} TOTAL</span>
@@ -90,7 +90,7 @@ const ContactDetailsModal = memo(({
                                     )}
                                 </div>
                                 <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">
-                                    {copiedId === 'modal-all-phones' ? 'Phones Copied!' : 'Voice Channels'}
+                                    {copiedId === 'modal-all-phones' ? 'Phones Copied!' : 'Numbers'}
                                 </span>
                             </button>
                             <span className="text-[8px] font-black text-emerald-400 opacity-60">{selectedLead.phones?.length || 0} TOTAL</span>
@@ -112,7 +112,6 @@ const ContactDetailsModal = memo(({
                 </div>
 
                 <div className="p-4 bg-[var(--bg-tertiary)]/20 border-t border-white/5 flex items-center justify-between flex-shrink-0">
-                    <span className="text-[8px] font-black text-[var(--text-tertiary)] uppercase tracking-widest">Profile Snapshot v1.0</span>
                     <button
                         onClick={onClose}
                         className="px-6 py-2.5 rounded-xl bg-[var(--accent-primary)] text-white font-black text-[10px] uppercase tracking-widest hover:brightness-110 active:scale-95 transition-all shadow-lg shadow-[var(--accent-primary)]/20"

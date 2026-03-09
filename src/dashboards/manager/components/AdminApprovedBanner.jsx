@@ -81,9 +81,8 @@ const AdminApprovedBanner = ({ leads = [] }) => {
                     <div className="w-1.5 h-8 bg-emerald-500 rounded-full shadow-[0_0_15px_rgba(16,185,129,0.5)]"></div>
                     <div>
                         <div className="flex items-center gap-3">
-                            <h2 className="text-md font-black tracking-tight text-white">Admin Approved Pipeline</h2>
+                            <h2 className="text-md font-black tracking-tight text-white">Admin Rejected Leads</h2>
                         </div>
-                        <p className="text-[10px] font-medium text-slate-500 mt-0.5">Verified leads returned to your active queue</p>
                     </div>
                 </div>
 

@@ -59,25 +59,47 @@ const AuthHeader = ({ isLandingPage = false }) => {
 
                 {isLandingPage ? (
                     isLoggedIn ? (
-                        <button onClick={handleGoToDashboard} className="px-6 py-2.5 rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 shadow-lg shadow-[var(--accent-primary)]/20"
-                            style={{ backgroundColor: 'var(--accent-primary)', color: 'white' }}>
-                            Dashboard
-                        </button>
+                        <div className="flex items-center gap-4">
+                            <div className="hidden sm:flex flex-col items-end">
+                                <span className="text-xs font-black uppercase tracking-widest text-[var(--accent-primary)]">Logged in as</span>
+                                <span className="text-sm font-bold text-[var(--text-primary)]">{user?.name || 'User'}</span>
+                            </div>
+                            <div className="group relative">
+                                <button
+                                    onClick={handleGoToDashboard}
+                                    className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#00BE9B] to-[#00a082] flex items-center justify-center text-white font-black shadow-lg shadow-[#00BE9B]/20 transition-all hover:scale-105 active:scale-95 group-hover:rotate-3"
+                                >
+                                    {user?.name?.split(' ').map(n => n[0]).join('') || 'U'}
+                                </button>
+                                {/* Tooltip/Dropdown hint */}
+                                <div className="absolute top-full right-0 mt-3 p-3 bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-2xl shadow-2xl opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all pointer-events-none min-w-[180px]">
+                                    <p className="text-[10px] font-black uppercase tracking-tighter text-[var(--text-tertiary)] mb-1">Current Session</p>
+                                    <p className="text-sm font-bold text-[var(--text-primary)] truncate">{user?.name}</p>
+                                    <div className="mt-3 pt-3 border-t border-[var(--border-primary)]">
+                                        <button
+                                            onClick={handleGoToDashboard}
+                                            className="w-full text-left text-xs font-bold text-[#00BE9B] hover:translate-x-1 transition-transform pointer-events-auto"
+                                        >
+                                            Enter Dashboard →
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     ) : (
-                        <>
-                            <Link to="/login" className="text-sm font-bold opacity-70 hover:opacity-100 transition-opacity">Sign In</Link>
-                            <Link to="/signup" className="px-6 py-2.5 rounded-full border font-bold text-sm transition-all hover:bg-[var(--accent-primary)]/10"
-                                style={{ color: 'var(--accent-primary)', borderColor: 'var(--accent-primary)' }}>
+                        <div className="flex items-center gap-4">
+                            <Link to="/login" className="px-5 py-2.5 text-sm font-black uppercase tracking-widest text-[var(--text-secondary)] hover:text-[#00BE9B] transition-colors">Sign In</Link>
+                            <Link to="/signup" className="px-8 py-3 rounded-2xl bg-gradient-to-r from-[#00BE9B] to-[#00a082] text-white text-sm font-black uppercase tracking-widest shadow-xl shadow-[#00BE9B]/20 hover:scale-105 active:scale-95 transition-all">
                                 Start Flow
                             </Link>
-                        </>
+                        </div>
                     )
                 ) : (
-                    <Link to="/" className="flex items-center gap-2 text-sm font-bold opacity-70 hover:opacity-100 transition-opacity" style={{ color: 'var(--text-primary)' }}>
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    <Link to="/" className="flex items-center gap-3 px-5 py-2.5 rounded-2xl bg-[var(--bg-tertiary)] border border-[var(--border-primary)] text-sm font-black uppercase tracking-widest text-[var(--text-primary)] hover:bg-[var(--accent-primary)] hover:text-white hover:border-transparent transition-all group/back">
+                        <svg className="w-5 h-5 transition-transform group-hover/back:-translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                         </svg>
-                        Back to Home
+                        Back
                     </Link>
                 )}
             </div>

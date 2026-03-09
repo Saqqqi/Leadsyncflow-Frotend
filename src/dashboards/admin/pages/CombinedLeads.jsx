@@ -161,11 +161,9 @@ const CombinedLeads = () => {
               </div>
               <div className="flex flex-col">
                 <h1 className="text-3xl font-black tracking-tight text-[var(--text-primary)] whitespace-nowrap leading-tight">
-                  Combined <span className="text-[var(--accent-success)]">Leads</span>
+                  All <span className="text-[var(--accent-success)]">Leads</span>
                 </h1>
-                <p className="text-[13px] font-bold text-[var(--text-secondary)] opacity-70 italic tracking-tight hidden sm:block">
-                  Unified visualization of global lead acquisition pipelines
-                </p>
+
               </div>
             </div>
 

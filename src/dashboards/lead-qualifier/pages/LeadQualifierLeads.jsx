@@ -60,16 +60,25 @@ export default function LeadQualifierLeads() {
         setTimeout(() => setCopiedId(null), 2000);
     };
 
-    // Client-side search filtering (since backend doesn't support search)
+    // Client-side search and sorting by Assign Date (newest first)
     const filteredLeads = useMemo(() => {
-        if (!searchTerm) return leads;
+        let result = [...leads];
 
-        return leads.filter(lead => {
-            const matchesSearch = (lead.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-                (lead.emails?.some(e => (e.value || '').toLowerCase().includes(searchTerm.toLowerCase()))) ||
-                (lead.phones?.some(p => (p || '').toLowerCase().includes(searchTerm.toLowerCase())));
+        if (searchTerm) {
+            result = result.filter(lead => {
+                const matchesSearch = (lead.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    (lead.emails?.some(e => (e.value || '').toLowerCase().includes(searchTerm.toLowerCase()))) ||
+                    (lead.phones?.some(p => (p || '').toLowerCase().includes(searchTerm.toLowerCase())));
 
-            return matchesSearch;
+                return matchesSearch;
+            });
+        }
+
+        // Sort by assignedAt descending (newest leads on top)
+        return result.sort((a, b) => {
+            const dateA = a.assignedAt ? new Date(a.assignedAt) : 0;
+            const dateB = b.assignedAt ? new Date(b.assignedAt) : 0;
+            return dateB - dateA;
         });
     }, [leads, searchTerm]);
 
@@ -149,7 +158,6 @@ export default function LeadQualifierLeads() {
                             <div className="flex items-center gap-3">
                                 <div>
                                     <h1 className="text-xl md:text-2xl font-black text-[var(--text-primary)] tracking-tight">Lead Qualifier Pipeline</h1>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-[var(--text-tertiary)] opacity-60">Assigned Lead Qualification Queue</p>
                                 </div>
                                 <button
                                     type="button"
@@ -202,8 +210,8 @@ export default function LeadQualifierLeads() {
                                 <th className="px-4 md:px-6 py-3 md:py-4 text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">Lead / Prospect</th>
                                 <th className="px-4 md:px-6 py-3 md:py-4 text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">Contact Details</th>
                                 <th className="px-4 md:px-6 py-3 md:py-4 text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">LQ Status</th>
-                                <th className="px-4 md:px-6 py-3 md:py-4 text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">Origin / Created</th>
-                                <th className="px-4 md:px-6 py-3 md:py-4 text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] text-right">Pipeline Actions</th>
+                                <th className="px-4 md:px-6 py-3 md:py-4 text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">Assign Date</th>
+                                <th className="px-4 md:px-6 py-3 md:py-4 text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] text-right">Comments / Action</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-[var(--border-primary)]/30">

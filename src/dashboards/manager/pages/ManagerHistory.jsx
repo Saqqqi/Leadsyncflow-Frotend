@@ -138,7 +138,7 @@ export default function ManagerHistory() {
     return (
         <div className="space-y-6 max-w-[1600px] mx-auto px-4 md:px-6 lg:px-8 py-6 min-h-screen bg-[var(--bg-primary)] font-sans">
             <SearchHeader
-                title="Payment Records"
+                title="Lead History and Payment Records"
                 subtitle="Track and manage all upsold leads"
                 searchTerm={searchTerm}
                 onSearchChange={setSearchTerm}

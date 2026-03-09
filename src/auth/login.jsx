@@ -125,10 +125,6 @@ export default function LoginPage() {
 
             {/* Main Container */}
             <div className="w-full max-w-lg">
-                {/* Logo Header */}
-                <div className="text-center mb-10">
-                    <img src="/Logo - Lead Sync.(Dark Mode).svg" alt="LeadSync Logo" className="h-14 w-auto mx-auto mb-6" />
-                </div>
 
                 {/* Login Card */}
                 <div className="rounded-[2.5rem] p-8 md:p-10 border shadow-2xl animate-fadeIn"

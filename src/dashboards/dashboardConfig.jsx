@@ -109,7 +109,7 @@ export const dashboardConfig = [
     icon: <LeadsIcon />,
     pages: [
       { name: 'Dashboard', path: '', component: DataMinorDashboard, icon: <DashboardIcon />, showInSidebar: true },
-      { name: 'Input Files', path: 'input-files', component: InputFiles, icon: <FilesIcon />, showInSidebar: true },
+      { name: 'lead Form', path: 'lead-form', component: InputFiles, icon: <FilesIcon />, showInSidebar: true },
       // { name: 'Employees', path: 'employees', component: Employees, icon: <UsersIcon />, showInSidebar: true },
       // { name: 'Leads', path: 'leads', component: VerifierLeads, icon: <LeadsIcon />, showInSidebar: true, allowedRoles: ['Verifier'] },
     ],

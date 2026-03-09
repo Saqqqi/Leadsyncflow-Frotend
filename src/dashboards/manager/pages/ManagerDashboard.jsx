@@ -163,17 +163,16 @@ export default function ManagerDashboard() {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div className="space-y-2">
                     <div className="flex items-center gap-3">
-                        <h1 className="text-4xl font-black text-[var(--text-primary)] tracking-tight">Manager Command Center</h1>
+                        <h1 className="text-4xl font-black text-[var(--text-primary)] tracking-tight">Manager Dashboard</h1>
                         <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--accent-primary)]/10 text-[var(--accent-primary)] text-[10px] font-black uppercase tracking-widest border border-[var(--accent-primary)]/20">
                             <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-primary)] animate-pulse" />
                             LIVE
                         </span>
                     </div>
-                    <p className="text-[var(--text-tertiary)] text-sm font-medium opacity-60">Real-time performance metrics and lead intelligence</p>
                 </div>
                 <div className="flex gap-3">
                     <Link to="/gds/manager/new-leads" className="px-8 py-4 rounded-2xl bg-[var(--accent-primary)] text-white text-xs font-black uppercase tracking-widest shadow-xl shadow-[var(--accent-primary)]/20 hover:scale-[1.02] active:scale-95 transition-all">
-                        Take Decisions
+                        View New Leads
                     </Link>
                 </div>
             </div>

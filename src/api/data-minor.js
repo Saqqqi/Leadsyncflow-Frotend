@@ -3,9 +3,10 @@ import tokenManager from '../utils/tokenManager';
 
 export const dataMinorAPI = {
     // Get stats for the logged-in Data Minor
-    getMyStats: async () => {
+    getMyStats: async (params = {}) => {
         const token = tokenManager.getToken();
         const response = await axiosInstance.get('/api/dm/stats', {
+            params,
             headers: {
                 Authorization: `Bearer ${token}`
             },

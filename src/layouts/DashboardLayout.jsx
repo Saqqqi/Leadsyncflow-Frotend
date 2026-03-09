@@ -87,7 +87,7 @@ export default function DashboardLayout() {
 
   const confirmLogout = () => {
     tokenManager.clearAuthData();
-    navigate('/login');
+    window.location.href = '/login';
   };
 
   return (

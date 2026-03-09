@@ -4,6 +4,8 @@ import DashboardLayout from '../layouts/DashboardLayout';
 import { dashboardConfig } from '../dashboards/dashboardConfig';
 import SharedLoader from '../components/SharedLoader';
 
+import ProtectedRoute from '../components/ProtectedRoute';
+
 // Premium loading component for lazy loaded pages
 const PageLoader = () => (
   <div className="flex items-center justify-center min-h-[60vh] w-full">
@@ -15,24 +17,32 @@ export default function DynamicRoutes() {
   return (
     <Routes>
       <Route element={<DashboardLayout />}>
-        {/* Dynamic Dashboard Routes */}
+        {/* Dynamic Dashboard Routes with Role Protection */}
         {dashboardConfig.map((dashboard) => (
-          <Route key={dashboard.id} path={dashboard.basePath}>
-            {dashboard.pages.map((page) => {
-              const PageComponent = page.component;
-              return (
-                <Route
-                  key={page.path || 'index'}
-                  path={page.path || ''}
-                  element={
-                    <Suspense fallback={<PageLoader />}>
-                      <PageComponent />
-                    </Suspense>
-                  }
-                />
-              );
-            })}
-          </Route>
+          <Route
+            key={dashboard.id}
+            path={dashboard.basePath + '/*'}
+            element={
+              <ProtectedRoute allowedRoles={[dashboard.role]}>
+                <Routes>
+                  {dashboard.pages.map((page) => {
+                    const PageComponent = page.component;
+                    return (
+                      <Route
+                        key={page.path || 'index'}
+                        path={page.path || ''}
+                        element={
+                          <Suspense fallback={<PageLoader />}>
+                            <PageComponent />
+                          </Suspense>
+                        }
+                      />
+                    );
+                  })}
+                </Routes>
+              </ProtectedRoute>
+            }
+          />
         ))}
 
         {/* Fallback route inside DashboardLayout */}

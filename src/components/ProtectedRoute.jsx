@@ -3,18 +3,16 @@ import { useNavigate } from 'react-router-dom';
 import tokenManager from '../utils/tokenManager';
 import SharedLoader from './SharedLoader';
 
-const ProtectedRoute = ({ children }) => {
+const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check authentication status and token expiry using tokenManager
     const token = tokenManager.getToken();
 
     if (token) {
-      // Use tokenManager to check if token is valid
       if (!tokenManager.isCurrentTokenValid()) {
         console.log('Expired or invalid token detected in ProtectedRoute, redirecting...');
         tokenManager.clearAuthData();
@@ -22,16 +20,37 @@ const ProtectedRoute = ({ children }) => {
         return;
       }
 
-      setIsAuthenticated(true);
-      // Get user data from token payload if needed
       const userData = tokenManager.getUser();
+
+      // Role Authorization Check
+      if (allowedRoles.length > 0) {
+        const userRole = userData.role || userData.department;
+        const normalizedAllowedRoles = allowedRoles.map(r => r.toLowerCase());
+        const normalizedUserRole = userRole?.toLowerCase();
+
+        if (!normalizedUserRole || !normalizedAllowedRoles.includes(normalizedUserRole)) {
+          console.log('Unauthorized access attempt:', { userRole, allowedRoles });
+
+          // Redirect to their own dashboard based on their actual role
+          if (normalizedUserRole === 'admin') window.location.href = '/gds/admin';
+          else if (normalizedUserRole === 'manager') window.location.href = '/gds/manager';
+          else if (normalizedUserRole === 'data minors') window.location.href = '/gds/data-minor';
+          else if (normalizedUserRole === 'lead qualifiers') window.location.href = '/gds/lead-qualifier';
+          else if (normalizedUserRole === 'verifier') window.location.href = '/gds/verifier';
+          else window.location.href = '/';
+
+          return;
+        }
+      }
+
+      setIsAuthenticated(true);
       setUser(userData);
     } else {
       window.location.href = '/login';
     }
 
     setLoading(false);
-  }, [navigate]);
+  }, [allowedRoles]);
 
   // Show loading while checking authentication
   if (loading) {

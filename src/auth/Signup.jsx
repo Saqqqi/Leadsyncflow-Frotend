@@ -115,11 +115,9 @@ export default function SignupPage() {
                     {/* Header */}
                     <div className="text-center mb-10">
                         <h2 className="text-3xl font-black mb-2 uppercase tracking-tight" style={{ color: 'var(--text-primary)' }}>
-                            Join the Flow
+                            Create Your Account
                         </h2>
-                        <p className="text-sm font-bold opacity-60" style={{ color: 'var(--text-secondary)' }}>
-                            Create your enterprise account to get started
-                        </p>
+
                     </div>
 
                     {/* Messages */}

@@ -60,25 +60,16 @@ export default function LeadQualifierLeads() {
         setTimeout(() => setCopiedId(null), 2000);
     };
 
-    // Client-side search and sorting by Assign Date (newest first)
+    // Client-side search filtering (respecting API order)
     const filteredLeads = useMemo(() => {
-        let result = [...leads];
+        if (!searchTerm) return leads;
 
-        if (searchTerm) {
-            result = result.filter(lead => {
-                const matchesSearch = (lead.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    (lead.emails?.some(e => (e.value || '').toLowerCase().includes(searchTerm.toLowerCase()))) ||
-                    (lead.phones?.some(p => (p || '').toLowerCase().includes(searchTerm.toLowerCase())));
+        return leads.filter(lead => {
+            const matchesSearch = (lead.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                (lead.emails?.some(e => (e.value || '').toLowerCase().includes(searchTerm.toLowerCase()))) ||
+                (lead.phones?.some(p => (p || '').toLowerCase().includes(searchTerm.toLowerCase())));
 
-                return matchesSearch;
-            });
-        }
-
-        // Sort by assignedAt descending (newest leads on top)
-        return result.sort((a, b) => {
-            const dateA = a.assignedAt ? new Date(a.assignedAt) : 0;
-            const dateB = b.assignedAt ? new Date(b.assignedAt) : 0;
-            return dateB - dateA;
+            return matchesSearch;
         });
     }, [leads, searchTerm]);
 

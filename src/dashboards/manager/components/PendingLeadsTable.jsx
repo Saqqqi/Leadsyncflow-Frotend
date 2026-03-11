@@ -7,6 +7,7 @@ const PendingLeadsTable = ({
     leads,
     onReject,
     onUpsell,
+    onDetail,
     copiedId,
     onCopy,
     currentPage,
@@ -20,50 +21,70 @@ const PendingLeadsTable = ({
     }
 
     return (
-        <div className="bg-[var(--bg-secondary)] border border-white/5 rounded-xl overflow-hidden">
-            <div className="overflow-x-auto">
-                <table className="w-full min-w-[900px] table-fixed">
-                    <thead>
-                        <tr className="bg-[var(--bg-tertiary)]/30 border-b border-white/5">
-                            <th className="w-[20%] px-4 py-3 text-left">
-                                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Lead</span>
-                            </th>
-                            <th className="w-[25%] px-4 py-3 text-left">
-                                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Contact</span>
-                            </th>
-                            <th className="w-[20%] px-4 py-3 text-left">
-                                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Details</span>
-                            </th>
-                            <th className="w-[15%] px-4 py-3 text-center">
-                                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Status</span>
-                            </th>
-                            <th className="w-[20%] px-4 py-3 text-center">
-                                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Actions</span>
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-white/5">
-                        {leads.map((lead) => (
-                            <LeadRow
-                                key={lead._id}
-                                lead={lead}
-                                onReject={onReject}
-                                onUpsell={onUpsell}
-                                copiedId={copiedId}
-                                onCopy={onCopy}
-                            />
-                        ))}
-                    </tbody>
-                </table>
+        <div className="space-y-4 animate-fadeIn">
+            {/* Header Section */}
+            <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-3">
+                    <div className="w-1.5 h-6 bg-emerald-500 rounded-full shadow-[0_0_15px_rgba(16,185,129,0.5)]"></div>
+                    <h2 className="text-sm font-black text-white uppercase tracking-[0.2em] italic">Pending Review</h2>
+                </div>
+                <div className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 shadow-lg shadow-emerald-900/5">
+                    <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">
+                        {leads.length} Active {leads.length === 1 ? 'Lead' : 'Leads'}
+                    </span>
+                </div>
             </div>
 
-            <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                total={total}
-                itemsPerPage={itemsPerPage}
-                onPageChange={onPageChange}
-            />
+            <div className="bg-[var(--bg-secondary)] border-2 border-white/5 rounded-3xl overflow-hidden shadow-2xl relative">
+                {/* Background Glow */}
+                <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none" />
+
+                <div className="overflow-x-auto custom-scrollbar">
+                    <table className="w-full">
+                        <thead>
+                            <tr className="bg-white/[0.02] border-b border-white/5">
+                                <th className="w-[18%] px-4 py-3 text-left">
+                                    <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">Lead Entity</span>
+                                </th>
+                                <th className="w-[20%] px-4 py-3 text-left">
+                                    <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">Contact</span>
+                                </th>
+                                <th className="w-[15%] px-4 py-3 text-center">
+                                    <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">LQ Comment</span>
+                                </th>
+                                <th className="w-[15%] px-4 py-3 text-left">
+                                    <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">Assigned</span>
+                                </th>
+                                <th className="w-[32%] px-4 py-3 text-right">
+                                    <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">Operational</span>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-white/[0.03]">
+                            {leads.map((lead, index) => (
+                                <LeadRow
+                                    key={lead._id}
+                                    lead={lead}
+                                    count={index + 1 + (currentPage - 1) * itemsPerPage}
+                                    onReject={onReject}
+                                    onUpsell={onUpsell}
+                                    onDetail={onDetail}
+                                    copiedId={copiedId}
+                                    onCopy={onCopy}
+                                />
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+
+                <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    total={total}
+                    itemsPerPage={itemsPerPage}
+                    onPageChange={onPageChange}
+                />
+            </div>
         </div>
     );
 };

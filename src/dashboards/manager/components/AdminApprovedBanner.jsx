@@ -1,7 +1,7 @@
 import React from 'react';
 import { managerAPI } from '../../../api/manager.api';
 
-const ApprovedLeadCard = ({ lead }) => {
+const ApprovedLeadCard = ({ lead, onUpsell }) => {
     const [expanded, setExpanded] = React.useState(false);
     const [copiedField, setCopiedField] = React.useState(null);
 
@@ -126,9 +126,20 @@ const ApprovedLeadCard = ({ lead }) => {
                                     </div>
                                     <span className="text-[8px] font-black text-slate-500 uppercase">Verified by <span className="text-emerald-500">{lead.rejectionRejectedBy?.name || 'Admin'}</span></span>
                                 </div>
-                                <span className="text-[8px] font-black text-rose-500 bg-rose-500/10 px-2 py-0.5 rounded-md border border-rose-500/20">
-                                    {new Date(lead.superAdminReturnPriorityUntil).toLocaleDateString([], { month: 'short', day: 'numeric' })}
-                                </span>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-[8px] font-black text-rose-500 bg-rose-500/10 px-2 py-0.5 rounded-md border border-rose-500/20">
+                                        {new Date(lead.superAdminReturnPriorityUntil).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                                    </span>
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); onUpsell(lead); }}
+                                        className="px-3 py-1 bg-emerald-500/10 hover:bg-emerald-500 text-emerald-500 hover:text-white border border-emerald-500/20 rounded-md text-[9px] font-black uppercase tracking-widest transition-all shadow-md flex items-center gap-1"
+                                    >
+                                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 4v16m8-8H4" />
+                                        </svg>
+                                        Upsell
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     )}
@@ -147,9 +158,9 @@ const ApprovedLeadCard = ({ lead }) => {
     );
 };
 
-const AdminApprovedBanner = ({ leads = [] }) => {
+const AdminApprovedBanner = ({ leads = [], onUpsell }) => {
     const displayLeads = React.useMemo(() =>
-        leads.filter(l => Boolean(l.superAdminReturnPriorityUntil)),
+        leads.filter(l => Boolean(l.superAdminReturnPriorityUntil) && l.status !== 'PAID'),
         [leads]
     );
 
@@ -180,7 +191,7 @@ const AdminApprovedBanner = ({ leads = [] }) => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 relative z-10">
                 {displayLeads.map((lead) => (
-                    <ApprovedLeadCard key={lead._id} lead={lead} />
+                    <ApprovedLeadCard key={lead._id} lead={lead} onUpsell={onUpsell} />
                 ))}
             </div>
 

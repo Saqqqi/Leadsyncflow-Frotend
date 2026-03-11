@@ -5,7 +5,7 @@ import UpsellModal from '../components/UpsellModal';
 import Pagination from '../components/Pagination';
 import SharedLoader from '../../../components/SharedLoader';
 
-const ITEMS_PER_PAGE = 20;
+const ITEMS_PER_PAGE = 12; // Slightly reduced for better spacing
 
 export default function ManagerHistory() {
     const [leads, setLeads] = useState([]);
@@ -13,11 +13,10 @@ export default function ManagerHistory() {
     const [total, setTotal] = useState(0);
     const [currentPage, setCurrentPage] = useState(1);
     const [searchTerm, setSearchTerm] = useState('');
-    const [expandedRows, setExpandedRows] = useState(new Set());
-    const [expandingId, setExpandingId] = useState(null);
-    const hasFetched = useRef(false);
+    const [expandedId, setExpandedId] = useState(null);
+    const [copiedId, setCopiedId] = useState(null);
 
-    // Modal states for adding more
+    // Modal states
     const [selectedLead, setSelectedLead] = useState(null);
     const [showUpsellModal, setShowUpsellModal] = useState(false);
     const [upsellData, setUpsellData] = useState({
@@ -26,23 +25,10 @@ export default function ManagerHistory() {
         comment: ''
     });
 
-    useEffect(() => {
-        if (!hasFetched.current) {
-            fetchLeads();
-            hasFetched.current = true;
-        }
-    }, [currentPage]);
-
-    // Reset fetch guard on page change
-    useEffect(() => {
-        hasFetched.current = false;
-    }, [currentPage]);
-
     const fetchLeads = async () => {
         try {
             setLoading(true);
             const skip = (currentPage - 1) * ITEMS_PER_PAGE;
-            // Fetching with status 'paid' to ensure we get leads that belong in history
             const response = await managerAPI.getMyLeads({
                 limit: ITEMS_PER_PAGE,
                 skip,
@@ -50,7 +36,6 @@ export default function ManagerHistory() {
             });
 
             if (response.success) {
-                // Only show leads that have at least one upsell entry
                 const leadsWithUpsells = (response.leads || []).filter(l =>
                     l.upsales && l.upsales.length > 0
                 );
@@ -64,13 +49,14 @@ export default function ManagerHistory() {
         }
     };
 
-    const handleCopy = async (text) => {
-        try {
-            await navigator.clipboard.writeText(text);
-            // You could add a toast notification here
-        } catch (err) {
-            console.error('Failed to copy:', err);
-        }
+    useEffect(() => {
+        fetchLeads();
+    }, [currentPage]);
+
+    const handleCopy = (text, id) => {
+        navigator.clipboard.writeText(text);
+        setCopiedId(id);
+        setTimeout(() => setCopiedId(null), 2000);
     };
 
     const handleAddMoreClick = (lead, e) => {
@@ -97,6 +83,7 @@ export default function ManagerHistory() {
             setShowUpsellModal(false);
             setUpsellData({ type: 'paid', price: '', comment: '' });
             await fetchLeads();
+            setExpandedId(null);
         } catch (err) {
             console.error("Failed to record payment", err);
             alert("Failed to record payment: " + (err.response?.data?.message || err.message));
@@ -104,19 +91,7 @@ export default function ManagerHistory() {
     };
 
     const handleRowClick = (leadId) => {
-        setExpandingId(leadId);
-        setTimeout(() => {
-            setExpandedRows(prev => {
-                const next = new Set(prev);
-                if (next.has(leadId)) {
-                    next.delete(leadId);
-                } else {
-                    next.add(leadId);
-                }
-                return next;
-            });
-            setExpandingId(null);
-        }, 150);
+        setExpandedId(prevId => prevId === leadId ? null : leadId);
     };
 
     const filteredLeads = leads.filter(l => {
@@ -128,236 +103,223 @@ export default function ManagerHistory() {
     });
 
     const totalPages = Math.ceil(total / ITEMS_PER_PAGE);
-
-    const totalRevenue = (leads || []).reduce((sum, lead) =>
+    const totalRevenue = leads.reduce((sum, lead) =>
         sum + (lead.upsales || []).reduce((s, u) => s + (u.amount || 0), 0), 0
     );
 
-    if (loading) return <SharedLoader />;
+    if (loading && leads.length === 0) return <SharedLoader />;
 
     return (
-        <div className="space-y-6 max-w-[1600px] mx-auto px-4 md:px-6 lg:px-8 py-6 min-h-screen bg-[var(--bg-primary)] font-sans">
+        <div className="space-y-5 max-w-[1400px] mx-auto px-4 py-5 min-h-screen bg-[var(--bg-primary)]">
             <SearchHeader
-                title="Lead History and Payment Records"
-                subtitle="Track and manage all upsold leads"
-                searchTerm={searchTerm}
-                onSearchChange={setSearchTerm}
+                title="Payment History"
+                subtitle="Track all upsell transactions"
                 onRefresh={fetchLeads}
                 loading={loading}
                 icon={(
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <svg className="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                 )}
             />
 
-            {/* Total Revenue Overview Card */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-[24px] p-6 shadow-xl relative overflow-hidden group hover:border-emerald-500/40 transition-all">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl -mr-16 -mt-16" />
-                    <div className="relative z-10 flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500">
-                            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2" />
-                            </svg>
-                        </div>
-                        <div>
-                            <p className="text-[10px] font-black uppercase tracking-widest text-[var(--text-tertiary)] opacity-60">Total Revenue</p>
-                            <h2 className="text-2xl font-black text-[var(--text-primary)] tracking-tight">${totalRevenue.toFixed(2)}</h2>
-                        </div>
-                    </div>
-                </div>
-                <div className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-[24px] p-6 shadow-xl relative overflow-hidden group hover:border-emerald-500/40 transition-all">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl -mr-16 -mt-16 opacity-50" />
-                    <div className="relative z-10 flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500">
-                            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                        </div>
-                        <div>
-                            <p className="text-[10px] font-black uppercase tracking-widest text-[var(--text-tertiary)] opacity-60">Active Upsells</p>
-                            <h2 className="text-2xl font-black text-[var(--text-primary)] tracking-tight">
-                                {leads.reduce((sum, lead) => sum + (lead.upsales?.length || 0), 0)}
-                            </h2>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Table Section */}
-            <div className="bg-[var(--bg-secondary)] rounded-xl border border-[var(--border-primary)] overflow-hidden">
+            {/* Enhanced Table with Better Row Height */}
+            <div className="bg-[var(--bg-secondary)] rounded-xl border border-[var(--border-primary)] overflow-hidden shadow-sm">
                 <div className="overflow-x-auto">
-                    <table className="w-full text-left table-fixed min-w-[900px]">
+                    <table className="w-full text-sm">
                         <thead>
-                            <tr className="bg-[var(--bg-tertiary)]/30 border-b border-[var(--border-primary)]">
-                                <th className="px-6 py-3 text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Lead</th>
-                                <th className="px-6 py-3 text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Total</th>
-                                <th className="px-6 py-3 text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Entries</th>
-                                <th className="px-6 py-3 text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Assigned</th>
-                                <th className="px-6 py-3 text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider text-right">Actions</th>
+                            <tr className="bg-gradient-to-r from-[var(--bg-tertiary)]/80 to-[var(--bg-tertiary)]/60 border-b border-[var(--border-primary)]">
+                                <th className="px-4 py-3 text-left">
+                                    <span className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Lead</span>
+                                </th>
+                                <th className="px-4 py-3 text-left">
+                                    <span className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Total</span>
+                                </th>
+                                <th className="px-4 py-3 text-left">
+                                    <span className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Upsells</span>
+                                </th>
+                                <th className="px-4 py-3 text-left">
+                                    <span className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Date</span>
+                                </th>
+                                <th className="px-4 py-3 text-right">
+                                    <span className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Actions</span>
+                                </th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-[var(--border-primary)]">
                             {filteredLeads.length === 0 ? (
                                 <tr>
-                                    <td colSpan="5" className="px-6 py-16 text-center">
+                                    <td colSpan="5" className="px-4 py-12 text-center">
                                         <div className="flex flex-col items-center">
-                                            <div className="w-16 h-16 bg-[var(--bg-tertiary)] rounded-xl flex items-center justify-center mb-4">
+                                            <div className="w-16 h-16 bg-[var(--bg-tertiary)] rounded-xl flex items-center justify-center mb-3">
                                                 <svg className="w-8 h-8 text-[var(--text-tertiary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                 </svg>
                                             </div>
-                                            <h3 className="text-base font-semibold text-[var(--text-primary)] mb-1">No paid leads found</h3>
-                                            <p className="text-sm text-[var(--text-tertiary)]">Leads marked as paid will appear here</p>
+                                            <p className="text-sm font-medium text-[var(--text-secondary)]">No payment records found</p>
+                                            <p className="text-xs text-[var(--text-tertiary)] mt-1">Leads with upsells will appear here</p>
                                         </div>
                                     </td>
                                 </tr>
                             ) : (
                                 filteredLeads.map(lead => {
                                     const totalUpsellPrice = (lead.upsales || []).reduce((sum, item) => sum + (item.amount || 0), 0);
-                                    const isExpanded = expandedRows.has(lead._id);
-                                    const isExpanding = expandingId === lead._id;
+                                    const isExpanded = expandedId === lead._id;
 
                                     return (
                                         <React.Fragment key={lead._id}>
+                                            {/* Main Row - Increased height with better padding */}
                                             <tr
-                                                className={`group cursor-pointer transition-all duration-300 hover:bg-[var(--bg-tertiary)]/50 ${isExpanded ? 'bg-[var(--bg-tertiary)]/30' : ''}`}
+                                                className={`group cursor-pointer transition-all duration-200 hover:bg-[var(--bg-tertiary)]/30 ${isExpanded ? 'bg-[var(--bg-tertiary)]/20 border-b-0' : ''}`}
                                                 onClick={() => handleRowClick(lead._id)}
                                             >
-                                                <td className="px-6 py-4">
+                                                <td className="px-4 py-4">
                                                     <div className="flex items-center gap-3">
-                                                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-white font-semibold text-sm shadow-sm">
-                                                            {lead.name?.[0]?.toUpperCase() || '?'}
+                                                        <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[var(--bg-tertiary)] to-[var(--bg-secondary)] border border-[var(--border-primary)] flex items-center justify-center text-[10px] text-[var(--text-secondary)] font-bold shadow-sm">
+                                                            {filteredLeads.indexOf(lead) + 1 + (currentPage - 1) * ITEMS_PER_PAGE}
                                                         </div>
                                                         <div>
-                                                            <div className="font-medium text-[var(--text-primary)]">{lead.name}</div>
-                                                            <div className="text-xs text-[var(--text-tertiary)] mt-0.5">
-                                                                {lead.emails?.[0]?.value || 'No email'}
-                                                            </div>
+                                                            <span className="text-sm font-semibold text-[var(--text-primary)]">{lead.name}</span>
+                                                            {lead.upsales && (
+                                                                <span className="ml-2 text-[9px] font-bold text-emerald-500/70 bg-emerald-500/5 px-1.5 py-0.5 rounded-full">
+                                                                    {lead.upsales.length} {lead.upsales.length === 1 ? 'payment' : 'payments'}
+                                                                </span>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 </td>
-                                                <td className="px-6 py-4">
-                                                    <span className="text-lg font-bold text-emerald-500">
-                                                        ${totalUpsellPrice.toFixed(2)}
-                                                    </span>
+                                                <td className="px-4 py-4">
+                                                    <span className="text-base font-bold text-emerald-500">${totalUpsellPrice.toFixed(2)}</span>
                                                 </td>
-                                                <td className="px-6 py-4">
-                                                    <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
-                                                        {lead.upsales?.length || 0} {lead.upsales?.length === 1 ? 'entry' : 'entries'}
-                                                    </span>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <div className="text-sm text-[var(--text-primary)] font-medium">
-                                                        {new Date(lead.assignedAt || lead.createdAt).toLocaleDateString('en-US', {
-                                                            month: 'short',
-                                                            day: 'numeric',
-                                                            year: 'numeric'
-                                                        })}
-                                                    </div>
-                                                    <div className="text-xs text-[var(--text-tertiary)] mt-0.5">
-                                                        {new Date(lead.assignedAt || lead.createdAt).toLocaleTimeString('en-US', {
-                                                            hour: '2-digit',
-                                                            minute: '2-digit'
-                                                        })}
+                                                <td className="px-4 py-4">
+                                                    <div className="flex items-center gap-1">
+                                                        <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-500/10 text-emerald-500 text-xs font-bold border border-emerald-500/20">
+                                                            {lead.upsales?.length || 0}
+                                                        </span>
+                                                        <span className="text-[10px] text-[var(--text-tertiary)]">transactions</span>
                                                     </div>
                                                 </td>
-                                                <td className="px-6 py-4 text-right">
+                                                <td className="px-4 py-4">
+                                                    <div className="flex items-center gap-2.5">
+                                                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500/50 shadow-[0_0_8px_rgba(16,185,129,0.3)]"></div>
+                                                        <div className="flex flex-col gap-0.5">
+                                                            <span className="text-[11px] font-bold text-[var(--text-primary)] uppercase tracking-tight">
+                                                                {new Date(lead.assignedAt || lead.createdAt).toLocaleDateString('en-US', {
+                                                                    month: 'short',
+                                                                    day: 'numeric',
+                                                                    year: 'numeric'
+                                                                })}
+                                                            </span>
+                                                            <span className="text-[9px] font-medium text-[var(--text-tertiary)] opacity-80">
+                                                                {new Date(lead.assignedAt || lead.createdAt).toLocaleTimeString('en-US', {
+                                                                    hour: '2-digit',
+                                                                    minute: '2-digit'
+                                                                })}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td className="px-4 py-4 text-right">
                                                     <div className="flex items-center justify-end gap-2">
                                                         <button
                                                             onClick={(e) => handleAddMoreClick(lead, e)}
-                                                            className="px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500 hover:text-white text-xs font-medium transition-all flex items-center gap-1.5 border border-emerald-500/20"
+                                                            className="p-2 rounded-lg bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-emerald-500/20"
+                                                            title="Add payment"
                                                         >
-                                                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
                                                             </svg>
-                                                            Add
                                                         </button>
-                                                        <div className={`transform transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>
-                                                            <svg className="w-5 h-5 text-[var(--text-tertiary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <button
+                                                            className={`p-2 rounded-lg transition-all duration-200 ${isExpanded ? 'bg-[var(--bg-tertiary)] rotate-180' : 'hover:bg-[var(--bg-tertiary)]/50'}`}
+                                                        >
+                                                            <svg className="w-4 h-4 text-[var(--text-secondary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                                                             </svg>
-                                                        </div>
+                                                        </button>
                                                     </div>
                                                 </td>
                                             </tr>
 
-                                            {/* Expandable Details Row */}
+                                            {/* Enhanced Expanded Details Row */}
                                             {isExpanded && (
-                                                <tr className={`transition-opacity duration-300 ${isExpanding ? 'opacity-50' : 'opacity-100'} bg-[var(--bg-tertiary)]/10`}>
-                                                    <td colSpan="5" className="px-6 py-6 border-t border-[var(--border-primary)]">
-                                                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                                            {/* Contact Info */}
-                                                            <div className="space-y-4">
-                                                                <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider flex items-center gap-2">
-                                                                    <span className="w-1 h-4 bg-[var(--text-secondary)] rounded-full" />
-                                                                    Contact Information
-                                                                </h4>
+                                                <tr className="bg-[var(--bg-tertiary)]/5">
+                                                    <td colSpan="5" className="px-4 py-4 border-t border-[var(--border-primary)]">
+                                                        <div className="grid grid-cols-12 gap-6">
+                                                            {/* Contact Info with better styling */}
+                                                            <div className="col-span-5">
+                                                                <div className="flex items-center gap-2 mb-3">
+                                                                    <div className="w-1 h-4 bg-emerald-500 rounded-full"></div>
+                                                                    <span className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-wider">Contact Information</span>
+                                                                </div>
                                                                 <div className="space-y-2">
                                                                     {lead.emails?.map((email, idx) => (
-                                                                        <div key={`email-${idx}`}
-                                                                            className="flex items-center justify-between p-3 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-primary)] hover:border-emerald-500/30 transition-all group/item">
-                                                                            <span className="text-sm text-[var(--text-primary)] font-medium">{email.value}</span>
-                                                                            <button
-                                                                                onClick={() => handleCopy(email.value)}
-                                                                                className="p-1.5 rounded-lg opacity-0 group-hover/item:opacity-100 hover:bg-emerald-500/10 text-emerald-600 transition-all"
-                                                                            >
-                                                                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                                                                        <div
+                                                                            key={`email-${idx}`}
+                                                                            onClick={() => handleCopy(email.value, `e-${lead._id}-${idx}`)}
+                                                                            className="flex items-center gap-3 px-3 py-2 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-primary)] hover:border-emerald-500/40 hover:shadow-sm transition-all cursor-pointer group/contact text-xs relative"
+                                                                        >
+                                                                            <div className="w-6 h-6 rounded-md bg-gradient-to-br from-blue-500/20 to-blue-600/10 flex items-center justify-center">
+                                                                                <svg className="w-3 h-3 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                                                                                 </svg>
-                                                                            </button>
+                                                                            </div>
+                                                                            <span className="text-[var(--text-secondary)] flex-1">{email.value}</span>
+                                                                            {copiedId === `e-${lead._id}-${idx}` && (
+                                                                                <span className="absolute right-3 text-[9px] font-bold text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded">Copied!</span>
+                                                                            )}
                                                                         </div>
                                                                     ))}
                                                                     {lead.phones?.map((phone, idx) => (
-                                                                        <div key={`phone-${idx}`}
-                                                                            className="flex items-center justify-between p-3 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-primary)] hover:border-emerald-500/30 transition-all group/item">
-                                                                            <span className="text-sm text-[var(--text-primary)] font-medium">{phone}</span>
-                                                                            <button
-                                                                                onClick={() => handleCopy(phone)}
-                                                                                className="p-1.5 rounded-lg opacity-0 group-hover/item:opacity-100 hover:bg-emerald-500/10 text-emerald-600 transition-all"
-                                                                            >
-                                                                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                                                                        <div
+                                                                            key={`phone-${idx}`}
+                                                                            onClick={() => handleCopy(phone, `p-${lead._id}-${idx}`)}
+                                                                            className="flex items-center gap-3 px-3 py-2 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-primary)] hover:border-emerald-500/40 hover:shadow-sm transition-all cursor-pointer group/contact text-xs relative"
+                                                                        >
+                                                                            <div className="w-6 h-6 rounded-md bg-gradient-to-br from-orange-500/20 to-orange-600/10 flex items-center justify-center">
+                                                                                <svg className="w-3 h-3 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                                                                                 </svg>
-                                                                            </button>
+                                                                            </div>
+                                                                            <span className="text-[var(--text-secondary)]">{phone}</span>
+                                                                            {copiedId === `p-${lead._id}-${idx}` && (
+                                                                                <span className="absolute right-3 text-[9px] font-bold text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded">Copied!</span>
+                                                                            )}
                                                                         </div>
                                                                     ))}
                                                                 </div>
                                                             </div>
 
-                                                            {/* Upsell History */}
-                                                            <div className="space-y-4">
-                                                                <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider flex items-center gap-2">
-                                                                    <span className="w-1 h-4 bg-[var(--text-secondary)] rounded-full" />
-                                                                    Payment History
-                                                                </h4>
-                                                                <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                                                            {/* Enhanced Payment History */}
+                                                            <div className="col-span-7">
+                                                                <div className="flex items-center gap-2 mb-3">
+                                                                    <div className="w-1 h-4 bg-emerald-500 rounded-full"></div>
+                                                                    <span className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-wider">Payment History</span>
+                                                                    <span className="ml-auto text-[9px] text-[var(--text-tertiary)]">Total: ${totalUpsellPrice.toFixed(2)}</span>
+                                                                </div>
+                                                                <div className="grid grid-cols-2 gap-3 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
                                                                     {lead.upsales && lead.upsales.length > 0 ? (
                                                                         lead.upsales.map((upsell, idx) => (
-                                                                            <div key={idx}
-                                                                                className="p-4 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-primary)] space-y-2">
-                                                                                <div className="flex items-center justify-between">
-                                                                                    <span className="text-lg font-bold text-emerald-500 bg-emerald-500/10 px-2 rounded-md">
-                                                                                        ${upsell.amount}
-                                                                                    </span>
-                                                                                    <span className="text-xs font-medium text-[var(--text-tertiary)]">
-                                                                                        {new Date(upsell.addedAt).toLocaleDateString('en-US', {
-                                                                                            month: 'short',
-                                                                                            day: 'numeric',
-                                                                                            hour: '2-digit',
-                                                                                            minute: '2-digit'
-                                                                                        })}
+                                                                            <div key={idx} className="p-3 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-primary)] hover:border-emerald-500/30 transition-all group/payment">
+                                                                                <div className="flex items-center justify-between mb-2">
+                                                                                    <span className="text-sm font-bold text-emerald-500">${upsell.amount}</span>
+                                                                                    <span className="text-[8px] font-semibold text-[var(--text-tertiary)] bg-[var(--bg-primary)] px-1.5 py-0.5 rounded-full">
+                                                                                        {new Date(upsell.addedAt).toLocaleDateString([], { month: 'short', day: 'numeric' })}
                                                                                     </span>
                                                                                 </div>
-                                                                                <p className="text-sm font-medium text-[var(--text-primary)] bg-[var(--bg-secondary)] p-3 rounded-lg border border-[var(--border-primary)]">
+                                                                                <p className="text-[10px] text-[var(--text-secondary)] italic leading-relaxed line-clamp-2 group-hover/payment:text-[var(--text-primary)] transition-colors">
                                                                                     "{upsell.comment}"
                                                                                 </p>
                                                                             </div>
                                                                         ))
                                                                     ) : (
-                                                                        <div className="text-center py-8 text-[var(--text-tertiary)] text-sm">
-                                                                            No payment history available
+                                                                        <div className="col-span-2 py-6 text-center">
+                                                                            <div className="inline-flex flex-col items-center">
+                                                                                <svg className="w-8 h-8 text-[var(--text-tertiary)] mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                                                </svg>
+                                                                                <p className="text-[10px] text-[var(--text-tertiary)]">No payment records</p>
+                                                                            </div>
                                                                         </div>
                                                                     )}
                                                                 </div>
@@ -375,15 +337,64 @@ export default function ManagerHistory() {
                 </div>
             </div>
 
-            <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                total={total}
-                itemsPerPage={ITEMS_PER_PAGE}
-                onPageChange={setCurrentPage}
-            />
+            {/* Enhanced Pagination */}
+            {totalPages > 1 && (
+                <div className="flex items-center justify-between bg-[var(--bg-secondary)] px-4 py-3 rounded-lg border border-[var(--border-primary)]">
+                    <div className="text-xs text-[var(--text-tertiary)]">
+                        Showing <span className="font-semibold text-[var(--text-secondary)]">{((currentPage - 1) * ITEMS_PER_PAGE) + 1}</span> to{' '}
+                        <span className="font-semibold text-[var(--text-secondary)]">{Math.min(currentPage * ITEMS_PER_PAGE, total)}</span> of{' '}
+                        <span className="font-semibold text-[var(--text-secondary)]">{total}</span> results
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                            disabled={currentPage === 1}
+                            className="p-2 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-primary)] disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[var(--bg-tertiary)] transition-colors"
+                        >
+                            <svg className="w-4 h-4 text-[var(--text-secondary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                            </svg>
+                        </button>
 
-            {/* Upsell Modal */}
+                        {/* Page Numbers */}
+                        <div className="flex items-center gap-1">
+                            {[...Array(Math.min(5, totalPages))].map((_, i) => {
+                                let pageNum = i + 1;
+                                if (totalPages > 5 && currentPage > 3) {
+                                    pageNum = currentPage - 3 + i;
+                                }
+                                if (pageNum <= totalPages) {
+                                    return (
+                                        <button
+                                            key={pageNum}
+                                            onClick={() => setCurrentPage(pageNum)}
+                                            className={`min-w-[32px] h-8 rounded-lg text-xs font-medium transition-colors ${currentPage === pageNum
+                                                ? 'bg-emerald-500 text-white shadow-sm shadow-emerald-500/20'
+                                                : 'bg-[var(--bg-primary)] border border-[var(--border-primary)] text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)]'
+                                                }`}
+                                        >
+                                            {pageNum}
+                                        </button>
+                                    );
+                                }
+                                return null;
+                            })}
+                        </div>
+
+                        <button
+                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                            disabled={currentPage === totalPages}
+                            className="p-2 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-primary)] disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[var(--bg-tertiary)] transition-colors"
+                        >
+                            <svg className="w-4 h-4 text-[var(--text-secondary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal */}
             <UpsellModal
                 isOpen={showUpsellModal}
                 lead={selectedLead}

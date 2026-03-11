@@ -61,6 +61,7 @@ const VerifierLeads = lazy(() => import("../dashboards/Verifier/pages/VerifierLe
 const ManagerDashboard = lazy(() => import("../dashboards/manager/pages/ManagerDashboard"));
 const ManagerNewLeads = lazy(() => import("../dashboards/manager/pages/ManagerNewLeads"));
 const ManagerHistory = lazy(() => import("../dashboards/manager/pages/ManagerHistory"));
+const ManagerRejectedLeads = lazy(() => import("../dashboards/manager/pages/ManagerRejectedLeads"));
 
 // Admin Pages
 const AdminDashboard = lazy(() => import("../dashboards/admin/pages/AdminDashboard"));
@@ -76,7 +77,7 @@ export const dashboardConfig = [
   {
     id: 'admin',
     name: 'Admin',
-    role: 'Admin',
+    role: ['Admin', 'Super Admin'],
     basePath: '/gds/admin',
     icon: <DashboardIcon />,
     pages: [
@@ -135,6 +136,7 @@ export const dashboardConfig = [
       { name: 'Dashboard', path: '', component: ManagerDashboard, icon: <DashboardIcon />, showInSidebar: true },
       { name: 'New Leads', path: 'new-leads', component: ManagerNewLeads, icon: <LeadsIcon />, showInSidebar: true },
       { name: 'History', path: 'history', component: ManagerHistory, icon: <FilesIcon />, showInSidebar: true },
+      { name: 'Rejected Leads', path: 'rejected-leads', component: ManagerRejectedLeads, icon: <RejectedIcon />, showInSidebar: true },
     ],
   },
 ];

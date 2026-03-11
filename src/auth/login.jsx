@@ -36,57 +36,61 @@ export default function LoginPage() {
         setFormData(prev => ({ ...prev, [name]: value }));
     }, []);
 
-    const handleSubmit = useCallback(
-        async e => {
-            e.preventDefault();
-            console.log('--- LOGIN SUBMIT ATTEMPTED ---');
-            console.log('Current Loading State:', loading);
-            console.log('Form Data:', { email: formData.email, password: '***' });
+    const handleSubmit = useCallback(async (e) => {
+        e.preventDefault();
 
-            if (loading) {
-                console.warn('Submit blocked: Already loading');
-                return;
+        if (loading) return;
+
+        setError(null);
+        setLoading(true);
+
+        console.log("Login clicked");
+        console.log("API URL:", import.meta.env.VITE_API_BASE_URL);
+
+        try {
+            const response = await authAPI.login(formData);
+
+            console.log("Login API success:", response);
+
+            const { token, user, expiresIn } = response;
+
+            if (!token || !user) {
+                throw new Error("Invalid server response");
             }
 
-            setError(null);
-            setLoading(true);
+            tokenManager.saveAuthData(token, user, expiresIn);
 
-            try {
-                console.log('Calling authAPI.login...');
-                const response = await authAPI.login(formData);
-                console.log('Login API success:', response);
+            window.dispatchEvent(
+                new CustomEvent("loginSuccess", {
+                    detail: { message: "Login successful", user },
+                })
+            );
 
-                const { token, user, expiresIn } = response;
+            const redirectPath = getRoleBasedRedirect(user.role || user.department);
 
-                if (token && user) {
-                    tokenManager.saveAuthData(token, user, expiresIn);
-                    console.log('Auth data saved successfully');
+            navigate(redirectPath, { replace: true });
 
-                    window.dispatchEvent(new CustomEvent('loginSuccess', {
-                        detail: { message: 'Login successful', user }
-                    }));
+        } catch (err) {
+            console.error("Login API Error:", err);
 
-                    const redirectPath = getRoleBasedRedirect(user.role || user.department);
-                    console.log('Navigating to:', redirectPath);
-                    navigate(redirectPath, { replace: true });
-                } else {
-                    console.error('Invalid response structure:', response);
-                    setError("Invalid response from server");
-                }
-            } catch (err) {
-                console.error('Login API Error:', err);
+            let message =
+                err?.response?.data?.message ||
+                err?.response?.data?.error ||
+                err?.message ||
+                "Login failed";
 
-                // Keep existing error handling logic
-                let msg = err?.response?.data?.message || err?.response?.data?.error || err?.message || "Login failed";
-                if (err.code === 'ECONNABORTED') msg = 'Connection Timeout';
-                setError(msg);
-            } finally {
-                console.log('Login attempt finished, resetting loading state');
-                setLoading(false);
+            if (err.code === "ECONNABORTED") {
+                message = "Server took too long to respond";
             }
-        },
-        [formData, loading, navigate]
-    );
+
+            setError(message);
+        } finally {
+            setLoading(false);
+        }
+    }, [formData, navigate]);
+
+
+
 
 
     return (

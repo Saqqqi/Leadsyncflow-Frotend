@@ -62,7 +62,8 @@ export const managerAPI = {
     // Get manager stats
     getStats: async (params = {}) => {
         const token = tokenManager.getToken();
-        const managerId = params.managerId || 'me';
+        const user = tokenManager.getUser();
+        const managerId = params.managerId || user?._id || user?.id;
         const response = await axiosInstance.get(`/api/manager/leads/stats/${managerId}`, {
             params,
             headers: { Authorization: `Bearer ${token}` }

@@ -1,108 +1,131 @@
 import React from 'react';
 
-const LeadRow = ({ lead, onReject, onUpsell, copiedId, onCopy }) => {
+const LeadRow = ({ lead, count, onReject, onUpsell, onDetail, copiedId, onCopy }) => {
     return (
-        <tr className="hover:bg-[var(--bg-tertiary)]/5 transition-colors">
+        <tr className="hover:bg-[var(--bg-tertiary)]/5 transition-colors group">
             {/* Lead Info */}
-            <td className="px-4 py-3">
-                <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-md bg-gradient-to-br from-blue-500/20 to-indigo-600/20 border border-white/10 flex items-center justify-center text-blue-400 font-bold text-sm shrink-0">
-                        {lead.name?.[0]?.toUpperCase()}
+            <td className="px-4 py-3 w-[18%]">
+                <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 font-black text-[10px] shrink-0 shadow-inner group-hover:border-emerald-500/30 transition-all">
+                        {count}
                     </div>
-                    <div>
-                        <div className="text-sm font-medium text-white">{lead.name}</div>
-                        <div className="text-[10px] text-slate-500">ID: {lead._id.slice(-6).toUpperCase()}</div>
+                    <div className="min-w-0">
+                        <div className="text-sm font-bold text-white tracking-tight truncate uppercase">{lead.name}</div>
                     </div>
                 </div>
             </td>
 
-            {/* Contact Info */}
-            <td className="px-4 py-3">
+            {/* Contact Info - Using responseSource */}
+            <td className="px-4 py-3 w-[20%]">
                 <div className="space-y-1.5">
-                    {lead.emails?.slice(0, 1).map((email, idx) => (
-                        <div key={`email-${idx}`} className="flex items-center gap-1.5">
-                            <svg className="w-3 h-3 text-blue-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                            </svg>
-                            <span className="text-xs text-slate-300 truncate">{email.value}</span>
-                            <button onClick={() => onCopy(email.value, `e-${lead._id}`)}>
-                                <svg className={`w-3 h-3 ${copiedId === `e-${lead._id}` ? 'text-emerald-500' : 'text-slate-500 hover:text-blue-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6a2 2 0 002-2V7a2 2 0 00-2-2h-6a2 2 0 00-2 2z" />
+                    {lead.responseSource?.email?.value && (
+                        <div
+                            onClick={() => onCopy(lead.responseSource.email.value, `e-${lead._id}`)}
+                            className="flex items-center gap-2 cursor-pointer group/copy relative w-fit"
+                        >
+                            <div className="w-5 h-5 rounded-md bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0 transition-all group-hover/copy:bg-blue-500 group-hover/copy:text-white group-hover/copy:border-blue-500">
+                                <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                                 </svg>
-                            </button>
+                            </div>
+                            <span className="text-[11px] font-bold text-slate-400 group-hover/copy:text-white transition-colors truncate max-w-[130px] tracking-tight">{lead.responseSource.email.value}</span>
+
+                            {copiedId === `e-${lead._id}` && (
+                                <div className="absolute -right-12 px-1.5 py-0.5 rounded-md bg-emerald-500 text-white text-[8px] font-black uppercase tracking-widest animate-in fade-in slide-in-from-left-2 shadow-lg shadow-emerald-500/20">Copied</div>
+                            )}
                         </div>
-                    ))}
-                    {lead.phones?.slice(0, 1).map((phone, idx) => (
-                        <div key={`phone-${idx}`} className="flex items-center gap-1.5">
-                            <svg className="w-3 h-3 text-green-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                            </svg>
-                            <span className="text-xs text-slate-300">{phone}</span>
-                            <button onClick={() => onCopy(phone, `p-${lead._id}`)}>
-                                <svg className={`w-3 h-3 ${copiedId === `p-${lead._id}` ? 'text-emerald-500' : 'text-slate-500 hover:text-blue-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6a2 2 0 002-2V7a2 2 0 00-2-2h-6a2 2 0 00-2 2z" />
+                    )}
+                    {lead.responseSource?.phone?.value && (
+                        <div
+                            onClick={() => onCopy(lead.responseSource.phone.value, `p-${lead._id}`)}
+                            className="flex items-center gap-2 cursor-pointer group/copy relative w-fit"
+                        >
+                            <div className="w-5 h-5 rounded-md bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0 transition-all group-hover/copy:bg-emerald-500 group-hover/copy:text-white group-hover/copy:border-emerald-500">
+                                <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                                 </svg>
-                            </button>
+                            </div>
+                            <span className="text-[11px] font-bold text-slate-400 group-hover/copy:text-white transition-colors tracking-tight">{lead.responseSource.phone.value}</span>
+
+                            {copiedId === `p-${lead._id}` && (
+                                <div className="absolute -right-12 px-1.5 py-0.5 rounded-md bg-emerald-500 text-white text-[8px] font-black uppercase tracking-widest animate-in fade-in slide-in-from-left-2 shadow-lg shadow-emerald-500/20">Copied</div>
+                            )}
                         </div>
-                    ))}
+                    )}
                 </div>
             </td>
 
-            {/* Details */}
-            <td className="px-4 py-3">
-                <div className="space-y-1">
-                    <div className="text-xs text-white">{lead.industry || 'General'}</div>
-                    <div className="text-[10px] text-slate-500">Src: {lead.responseSource?.type || 'Manual'}</div>
+            <td className="px-4 py-3 w-[15%] text-center">
+                <button
+                    onClick={() => onDetail(lead)}
+                    className="inline-flex items-center gap-1.5 group/detail transition-all"
+                >
+                    <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-500 shadow-md group-hover/detail:bg-blue-500 group-hover/detail:text-white group-hover/detail:border-blue-500 transition-all shrink-0">
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <span className="text-[8px] font-black text-slate-500 group-hover/detail:text-blue-400 uppercase tracking-tighter transition-colors">Details</span>
+                </button>
+            </td>
+
+            {/* Assigned Date - Improved Style with Time */}
+            <td className="px-4 py-3 w-[15%]">
+                <div className="flex items-center gap-2.5">
+                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500/50 shadow-[0_0_8px_rgba(16,185,129,0.3)]" />
+                    <div className="flex flex-col gap-0.5">
+                        <span className="text-[11px] font-bold text-slate-300 uppercase tracking-tight">
+                            {new Date(lead.assignedAt || lead.createdAt).toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric'
+                            })}
+                        </span>
+                        <span className="text-[9px] font-medium text-slate-500">
+                            {new Date(lead.assignedAt || lead.createdAt).toLocaleTimeString('en-US', {
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            })}
+                        </span>
+                    </div>
                 </div>
             </td>
 
-            {/* Status */}
-            <td className="px-4 py-3 text-center">
-                {lead.rejectionRequested ? (
-                    <span className="inline-flex items-center gap-1.5 px-2 py-1 bg-red-500/10 border border-red-500/20 rounded-lg">
-                        <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>
-                        <span className="text-xs text-red-400">Rejection Req</span>
-                    </span>
-                ) : (
-                    <span className="inline-flex items-center gap-1.5 px-2 py-1 bg-amber-500/10 border border-amber-500/20 rounded-lg">
-                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
-                        <span className="text-xs text-amber-400">Pending</span>
-                    </span>
-                )}
-            </td>
 
             {/* Actions */}
-            <td className="px-4 py-3">
-                <div className="flex items-center justify-center gap-2">
+            <td className="px-4 py-3 w-[32%]">
+                <div className="flex items-center justify-end gap-2">
                     <button
                         onClick={() => onReject(lead)}
                         disabled={lead.rejectionRequested}
-                        className={`px-3 py-1.5 border rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 ${lead.rejectionRequested
+                        className={`px-3 h-8 rounded-lg border transition-all flex items-center gap-1.5 shadow-md ${lead.rejectionRequested
                             ? 'bg-slate-500/5 border-white/5 text-slate-500 cursor-not-allowed'
-                            : 'bg-rose-500/10 hover:bg-rose-500/20 border-rose-500/20 text-rose-400'
+                            : 'bg-rose-500/5 hover:bg-rose-500 border-rose-500/20 hover:border-rose-500 text-rose-400 hover:text-white active:scale-95'
                             }`}
+                        title="Request Rejection"
                     >
                         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
                         </svg>
-                        <span>Reject</span>
+                        <span className="text-[9px] font-black uppercase tracking-widest">Reject</span>
                     </button>
 
                     <button
                         onClick={() => onUpsell(lead)}
                         disabled={lead.rejectionRequested}
-                        className={`px-3 py-1.5 border rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 ${lead.rejectionRequested
+                        className={`px-4 h-8 border rounded-lg text-[9px] font-black uppercase tracking-widest transition-all flex items-center gap-1.5 shadow-md ${lead.rejectionRequested
                             ? 'bg-slate-500/5 border-white/5 text-slate-500 cursor-not-allowed'
-                            : 'bg-purple-500/10 hover:bg-purple-500/20 border-purple-500/20 text-purple-400'
+                            : 'bg-emerald-500/10 hover:bg-emerald-500 border-emerald-500/20 hover:border-emerald-500 text-emerald-400 hover:text-white active:scale-95'
                             }`}
                     >
                         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 4v16m8-8H4" />
                         </svg>
                         <span>Upsell</span>
                     </button>
                 </div>
             </td>
+
         </tr>
     );
 };

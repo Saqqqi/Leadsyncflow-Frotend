@@ -23,7 +23,7 @@ export default function DynamicRoutes() {
             key={dashboard.id}
             path={dashboard.basePath + '/*'}
             element={
-              <ProtectedRoute allowedRoles={[dashboard.role]}>
+              <ProtectedRoute allowedRoles={Array.isArray(dashboard.role) ? dashboard.role : [dashboard.role]}>
                 <Routes>
                   {dashboard.pages.map((page) => {
                     const PageComponent = page.component;

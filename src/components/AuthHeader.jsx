@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 import tokenManager from '../utils/tokenManager';
 import { getRoleBasedRedirect } from '../utils/roleRedirect';
@@ -7,6 +7,7 @@ import { getRoleBasedRedirect } from '../utils/roleRedirect';
 const AuthHeader = ({ isLandingPage = false }) => {
     const { theme, toggleTheme } = useTheme();
     const navigate = useNavigate();
+    const location = useLocation();
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [user, setUser] = useState(null);
 
@@ -19,7 +20,7 @@ const AuthHeader = ({ isLandingPage = false }) => {
             setIsLoggedIn(false);
             setUser(null);
         }
-    }, []);
+    }, [location.pathname]); // Update on navigation
 
     const handleGoToDashboard = () => {
         if (user) {

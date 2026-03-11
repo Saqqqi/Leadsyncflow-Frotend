@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import SignupPage from '../auth/Signup';
 import LoginPage from '../auth/login';
@@ -9,17 +9,20 @@ import tokenManager from '../utils/tokenManager';
 
 function AppRoutesWithTokenManagement() {
   const location = useLocation();
+  const normalizedPath = location.pathname.toLowerCase().replace(/\/$/, '') || '/';
   const isPublicRoute =
-    location.pathname === '/' ||
-    location.pathname === '/login' ||
-    location.pathname === '/signup';
+    normalizedPath === '/' ||
+    normalizedPath === '/login' ||
+    normalizedPath === '/signup';
+
+  const navigate = useNavigate();
 
   // Token validation & expiry handling (protected routes only)
   useEffect(() => {
-    const redirectToLogin = (message) => {
-      console.log('Redirecting to home:', message);
+    const handleExit = (message) => {
+      console.log('Session Guard:', message);
       tokenManager.clearAuthData();
-      window.location.href = '/';
+      navigate('/', { replace: true });
     };
 
     if (isPublicRoute) {
@@ -30,12 +33,12 @@ function AppRoutesWithTokenManagement() {
     const token = tokenManager.getToken();
 
     if (!token || !tokenManager.isCurrentTokenValid()) {
-      redirectToLogin('Token missing or expired');
+      handleExit('Token missing or expired');
       return;
     }
 
     const handleTokenExpired = (event) => {
-      redirectToLogin(event.detail?.message || 'Session expired');
+      handleExit(event.detail?.message || 'Session expired');
     };
 
     window.addEventListener('tokenExpired', handleTokenExpired);
@@ -44,7 +47,7 @@ function AppRoutesWithTokenManagement() {
     return () => {
       window.removeEventListener('tokenExpired', handleTokenExpired);
     };
-  }, [location.pathname, isPublicRoute]);
+  }, [location.pathname, isPublicRoute, navigate]);
 
   return (
     <>

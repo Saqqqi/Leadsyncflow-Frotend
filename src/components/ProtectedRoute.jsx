@@ -16,7 +16,7 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
       if (!tokenManager.isCurrentTokenValid()) {
         console.log('Expired or invalid token detected in ProtectedRoute, redirecting...');
         tokenManager.clearAuthData();
-        window.location.href = '/login';
+        navigate('/login', { replace: true });
         return;
       }
 
@@ -32,13 +32,23 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
           console.log('Unauthorized access attempt:', { userRole, allowedRoles });
 
           // Redirect to their own dashboard based on their actual role
-          if (normalizedUserRole === 'admin') window.location.href = '/gds/admin';
-          else if (normalizedUserRole === 'manager') window.location.href = '/gds/manager';
-          else if (normalizedUserRole === 'data minors') window.location.href = '/gds/data-minor';
-          else if (normalizedUserRole === 'lead qualifiers') window.location.href = '/gds/lead-qualifier';
-          else if (normalizedUserRole === 'verifier') window.location.href = '/gds/verifier';
-          else window.location.href = '/';
+          let path = '/';
+          if (normalizedUserRole === 'admin' || normalizedUserRole === 'super admin') {
+            path = '/gds/admin';
+          } else if (normalizedUserRole === 'manager') {
+            path = '/gds/manager';
+          } else if (normalizedUserRole === 'data minors') {
+            path = '/gds/data-minor';
+          } else if (normalizedUserRole === 'lead qualifiers') {
+            path = '/gds/lead-qualifier';
+          } else if (normalizedUserRole === 'verifier') {
+            path = '/gds/verifier';
+          } else {
+            console.log('No matching role found, clearing auth and redirecting to home');
+            tokenManager.clearAuthData();
+          }
 
+          navigate(path, { replace: true });
           return;
         }
       }
@@ -46,7 +56,7 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
       setIsAuthenticated(true);
       setUser(userData);
     } else {
-      window.location.href = '/login';
+      navigate('/login', { replace: true });
     }
 
     setLoading(false);

@@ -39,75 +39,49 @@ export default function LoginPage() {
     const handleSubmit = useCallback(
         async e => {
             e.preventDefault();
+            console.log('--- LOGIN SUBMIT ATTEMPTED ---');
+            console.log('Current Loading State:', loading);
+            console.log('Form Data:', { email: formData.email, password: '***' });
 
-            if (loading) return;
+            if (loading) {
+                console.warn('Submit blocked: Already loading');
+                return;
+            }
 
             setError(null);
             setLoading(true);
 
             try {
+                console.log('Calling authAPI.login...');
                 const response = await authAPI.login(formData);
-                console.log('Login response:', response); // Debug log
+                console.log('Login API success:', response);
 
                 const { token, user, expiresIn } = response;
-                console.log('Token:', token); // Debug log
-                console.log('User data:', user); // Debug log
-                console.log('Token expires in:', expiresIn); // Debug log
 
                 if (token && user) {
-                    // Store token, user data and expiry in localStorage
                     tokenManager.saveAuthData(token, user, expiresIn);
+                    console.log('Auth data saved successfully');
 
-                    // Dispatch login success event to hide any notifications
                     window.dispatchEvent(new CustomEvent('loginSuccess', {
                         detail: { message: 'Login successful', user }
                     }));
 
-                    console.log('Token saved successfully');
-
-                    // Get role-based redirect path
                     const redirectPath = getRoleBasedRedirect(user.role || user.department);
-                    console.log('Redirecting to:', redirectPath, 'for role:', user.role || user.department);
-
+                    console.log('Navigating to:', redirectPath);
                     navigate(redirectPath, { replace: true });
                 } else {
-                    console.error('Missing token or user in response');
+                    console.error('Invalid response structure:', response);
                     setError("Invalid response from server");
                 }
             } catch (err) {
-                // Detailed Console Logging for Debugging
-                console.group('🚨 LOGIN FAILURE DIAGNOSTICS');
-                console.error('Error Object:', err);
-                console.error('Error Message:', err.message);
-                console.error('Error Code:', err.code);
+                console.error('Login API Error:', err);
 
-                if (err.response) {
-                    console.error('❌ Server Handled Error:', err.response.status);
-                    console.error('Response Data:', err.response.data);
-                } else if (err.request) {
-                    console.error('🚫 No Response Received (Network/Timeout):', err.request);
-                } else {
-                    console.error('⚠️ Request Setup Error:', err.message);
-                }
-                console.groupEnd();
-
-                // detailed error message for Frontend
+                // Keep existing error handling logic
                 let msg = err?.response?.data?.message || err?.response?.data?.error || err?.message || "Login failed";
-
-                if (err.code === 'ECONNABORTED' || msg.includes('timeout')) {
-                    msg = `Connection Timeout: Server took too long to respond. (Limit: ${err.config?.timeout || 'default'}ms)`;
-                } else if (!err.response && !err.request) {
-                    // Request setup error
-                    msg = `Internal Error: Could not set up request. (${err.message})`;
-                } else if (!err.response) {
-                    // Network error (server down, cors, DNS, etc)
-                    msg = `Network Error: Unable to reach server. Please check your connection. (${err.message})`;
-                } else if (err.response?.status === 500) {
-                    msg = `Server Error (500): Something went wrong on the backend.`;
-                }
-
+                if (err.code === 'ECONNABORTED') msg = 'Connection Timeout';
                 setError(msg);
             } finally {
+                console.log('Login attempt finished, resetting loading state');
                 setLoading(false);
             }
         },

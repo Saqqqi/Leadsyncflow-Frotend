@@ -63,7 +63,15 @@ export const managerAPI = {
     getStats: async (params = {}) => {
         const token = tokenManager.getToken();
         const user = tokenManager.getUser();
-        const managerId = params.managerId || user?._id || user?.id;
+        
+        // Backend route is /api/manager/leads/stats/:managerId
+        const managerId = params.managerId || user?.id || user?._id;
+        
+        if (!managerId) {
+            console.error("No managerId found for stats request");
+            throw new Error("Manager ID is required");
+        }
+
         const response = await axiosInstance.get(`/api/manager/leads/stats/${managerId}`, {
             params,
             headers: { Authorization: `Bearer ${token}` }

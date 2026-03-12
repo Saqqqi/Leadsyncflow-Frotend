@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { managerAPI } from '../../../api/manager.api';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import SharedLoader from '../../../components/SharedLoader';
 
 const StatCard = ({ title, value, subValue, icon, trend, colorClass, onClick }) => (
@@ -32,16 +32,19 @@ export default function ManagerDashboard() {
     const [statsData, setStatsData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [dateRange, setDateRange] = useState({ from: '', to: '' });
+    const navigate = useNavigate();
 
     useEffect(() => {
-        fetchData();
+        // Initial fetch for today's stats as requested
+        fetchData(true);
     }, []);
 
-    const fetchData = async () => {
+    const fetchData = async (isInitial = false) => {
         try {
             setLoading(true);
             const params = {
-                today: false,
+                // Return stats for today by default on initial load
+                today: isInitial && !dateRange.from && !dateRange.to,
                 from: dateRange.from || undefined,
                 to: dateRange.to || undefined
             };
@@ -60,26 +63,26 @@ export default function ManagerDashboard() {
         {
             title: "REVENUE GENERATED",
             value: `$${(statsData?.totalRevenue || 0).toLocaleString()}`,
-            subValue: "Total Earnings",
+            subValue: "Selected Period Earnings",
             icon: <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
             colorClass: "bg-emerald-500/10 text-emerald-500",
-            onClick: () => window.location.href = '/gds/manager/analytics'
+            onClick: () => navigate('/gds/manager/analytics')
         },
         {
             title: "UNPAID LEADS",
             value: statsData?.unpaidLeads || 0,
-            subValue: "Awaiting Action",
+            subValue: "Action Required",
             icon: <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>,
             colorClass: "bg-amber-500/10 text-amber-500",
-            onClick: () => window.location.href = '/gds/manager/new-leads'
+            onClick: () => navigate('/gds/manager/new-leads')
         },
         {
             title: "PENDING REJECTIONS",
             value: statsData?.rejectionRequestsPending || 0,
-            subValue: "Requests Sent",
+            subValue: "Awaiting Admin",
             icon: <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
             colorClass: "bg-blue-500/10 text-blue-500",
-            onClick: () => window.location.href = '/gds/manager/new-leads'
+            onClick: () => navigate('/gds/manager/history')
         },
         {
             title: "APPROVED REJECTIONS",
@@ -87,7 +90,7 @@ export default function ManagerDashboard() {
             subValue: "Final Rejected",
             icon: <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
             colorClass: "bg-rose-500/10 text-rose-500",
-            onClick: () => window.location.href = '/gds/manager/rejected'
+            onClick: () => navigate('/gds/manager/rejected')
         }
     ];
 
@@ -137,7 +140,7 @@ export default function ManagerDashboard() {
                         </div>
 
                         <button
-                            onClick={fetchData}
+                            onClick={() => fetchData(false)}
                             disabled={loading}
                             className="bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-primary)]/80 hover:scale-[1.02] active:scale-[0.98] text-white px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] flex items-center gap-2.5 transition-all duration-300 shadow-lg shadow-[var(--accent-primary)]/25 disabled:opacity-50 disabled:scale-100 min-w-[110px] justify-center"
                         >
@@ -167,9 +170,6 @@ export default function ManagerDashboard() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {dashboardStats.map((stat, i) => <StatCard key={i} {...stat} />)}
             </div>
-
-            {/* Status Info Footer */}
-
         </div>
     );
-}
+}

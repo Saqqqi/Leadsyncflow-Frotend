@@ -97,8 +97,10 @@ export default function ManagerHistory() {
     const filteredLeads = leads.filter(l => {
         const searchLower = searchTerm.toLowerCase();
         return (l.name || '').toLowerCase().includes(searchLower) ||
-            (l.emails?.some(e => (e.value || '').toLowerCase().includes(searchLower))) ||
-            (l.phones?.some(p => (p || '').toLowerCase().includes(searchLower))) ||
+            (l.responseSource?.emails?.some(e => (e.value || '').toLowerCase().includes(searchLower))) ||
+            (l.responseSource?.email?.value || '').toLowerCase().includes(searchLower) ||
+            (l.responseSource?.phones?.some(p => (p.value || '').toLowerCase().includes(searchLower))) ||
+            (l.responseSource?.phone?.value || '').toLowerCase().includes(searchLower) ||
             (l.upsales?.some(u => (u.comment || '').toLowerCase().includes(searchLower)));
     });
 
@@ -139,7 +141,7 @@ export default function ManagerHistory() {
                                     <span className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Upsells</span>
                                 </th>
                                 <th className="px-4 py-3 text-left">
-                                    <span className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Date</span>
+                                    <span className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Upsell Date</span>
                                 </th>
                                 <th className="px-4 py-3 text-right">
                                     <span className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Actions</span>
@@ -204,17 +206,27 @@ export default function ManagerHistory() {
                                                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500/50 shadow-[0_0_8px_rgba(16,185,129,0.3)]"></div>
                                                         <div className="flex flex-col gap-0.5">
                                                             <span className="text-[11px] font-bold text-[var(--text-primary)] uppercase tracking-tight">
-                                                                {new Date(lead.assignedAt || lead.createdAt).toLocaleDateString('en-US', {
-                                                                    month: 'short',
-                                                                    day: 'numeric',
-                                                                    year: 'numeric'
-                                                                })}
+                                                                {(() => {
+                                                                    const lastUpsell = lead.upsales?.[lead.upsales.length - 1];
+                                                                    const date = lastUpsell ? new Date(lastUpsell.addedAt) : new Date(lead.assignedAt || lead.createdAt);
+                                                                    return date.toLocaleDateString('en-US', {
+                                                                        timeZone: 'Asia/Karachi',
+                                                                        month: 'short',
+                                                                        day: 'numeric',
+                                                                        year: 'numeric'
+                                                                    });
+                                                                })()}
                                                             </span>
                                                             <span className="text-[9px] font-medium text-[var(--text-tertiary)] opacity-80">
-                                                                {new Date(lead.assignedAt || lead.createdAt).toLocaleTimeString('en-US', {
-                                                                    hour: '2-digit',
-                                                                    minute: '2-digit'
-                                                                })}
+                                                                {(() => {
+                                                                    const lastUpsell = lead.upsales?.[lead.upsales.length - 1];
+                                                                    const date = lastUpsell ? new Date(lastUpsell.addedAt) : new Date(lead.assignedAt || lead.createdAt);
+                                                                    return date.toLocaleTimeString('en-US', {
+                                                                        timeZone: 'Asia/Karachi',
+                                                                        hour: '2-digit',
+                                                                        minute: '2-digit'
+                                                                    });
+                                                                })()}
                                                             </span>
                                                         </div>
                                                     </div>
@@ -246,17 +258,25 @@ export default function ManagerHistory() {
                                                 <tr className="bg-[var(--bg-tertiary)]/5">
                                                     <td colSpan="5" className="px-4 py-4 border-t border-[var(--border-primary)]">
                                                         <div className="grid grid-cols-12 gap-6">
-                                                            {/* Contact Info with better styling */}
-                                                            <div className="col-span-5">
+                                                            {/* Contact Info */}
+                                                            <div className="col-span-4">
                                                                 <div className="flex items-center gap-2 mb-3">
                                                                     <div className="w-1 h-4 bg-emerald-500 rounded-full"></div>
                                                                     <span className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-wider">Contact Information</span>
                                                                 </div>
+                                                                {lead.assignedAt && (
+                                                                    <div className="mb-3 flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/5 border border-emerald-500/10 w-fit">
+                                                                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                                                                        <span className="text-[9px] font-bold text-emerald-500/80 uppercase tracking-tight leading-none">
+                                                                            Received: {new Date(lead.assignedAt).toLocaleDateString('en-US', { timeZone: 'Asia/Karachi', month: 'short', day: 'numeric' })} • {new Date(lead.assignedAt).toLocaleTimeString('en-US', { timeZone: 'Asia/Karachi', hour: '2-digit', minute: '2-digit' })}
+                                                                        </span>
+                                                                    </div>
+                                                                )}
                                                                 <div className="space-y-2">
-                                                                    {lead.emails?.map((email, idx) => (
+                                                                    {(lead.responseSource?.emails || []).map((emailObj, idx) => (
                                                                         <div
-                                                                            key={`email-${idx}`}
-                                                                            onClick={() => handleCopy(email.value, `e-${lead._id}-${idx}`)}
+                                                                            key={`rs-email-${idx}`}
+                                                                            onClick={() => handleCopy(emailObj.value, `e-${lead._id}-${idx}`)}
                                                                             className="flex items-center gap-3 px-3 py-2 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-primary)] hover:border-emerald-500/40 hover:shadow-sm transition-all cursor-pointer group/contact text-xs relative"
                                                                         >
                                                                             <div className="w-6 h-6 rounded-md bg-gradient-to-br from-blue-500/20 to-blue-600/10 flex items-center justify-center">
@@ -264,16 +284,32 @@ export default function ManagerHistory() {
                                                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                                                                                 </svg>
                                                                             </div>
-                                                                            <span className="text-[var(--text-secondary)] flex-1">{email.value}</span>
+                                                                            <span className="text-[var(--text-secondary)] flex-1 truncate">{emailObj.value}</span>
                                                                             {copiedId === `e-${lead._id}-${idx}` && (
                                                                                 <span className="absolute right-3 text-[9px] font-bold text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded">Copied!</span>
                                                                             )}
                                                                         </div>
                                                                     ))}
-                                                                    {lead.phones?.map((phone, idx) => (
+                                                                    {(lead.responseSource?.emails || []).length === 0 && lead.responseSource?.email?.value && (
                                                                         <div
-                                                                            key={`phone-${idx}`}
-                                                                            onClick={() => handleCopy(phone, `p-${lead._id}-${idx}`)}
+                                                                            onClick={() => handleCopy(lead.responseSource.email.value, `e-${lead._id}-single`)}
+                                                                            className="flex items-center gap-3 px-3 py-2 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-primary)] hover:border-emerald-500/40 hover:shadow-sm transition-all cursor-pointer group/contact text-xs relative"
+                                                                        >
+                                                                            <div className="w-6 h-6 rounded-md bg-gradient-to-br from-blue-500/20 to-blue-600/10 flex items-center justify-center">
+                                                                                <svg className="w-3 h-3 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                                                                </svg>
+                                                                            </div>
+                                                                            <span className="text-[var(--text-secondary)] flex-1 truncate">{lead.responseSource.email.value}</span>
+                                                                            {copiedId === `e-${lead._id}-single` && (
+                                                                                <span className="absolute right-3 text-[9px] font-bold text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded">Copied!</span>
+                                                                            )}
+                                                                        </div>
+                                                                    )}
+                                                                    {(lead.responseSource?.phones || []).map((phoneObj, idx) => (
+                                                                        <div
+                                                                            key={`rs-phone-${idx}`}
+                                                                            onClick={() => handleCopy(phoneObj.value, `p-${lead._id}-${idx}`)}
                                                                             className="flex items-center gap-3 px-3 py-2 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-primary)] hover:border-emerald-500/40 hover:shadow-sm transition-all cursor-pointer group/contact text-xs relative"
                                                                         >
                                                                             <div className="w-6 h-6 rounded-md bg-gradient-to-br from-orange-500/20 to-orange-600/10 flex items-center justify-center">
@@ -281,45 +317,102 @@ export default function ManagerHistory() {
                                                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                                                                                 </svg>
                                                                             </div>
-                                                                            <span className="text-[var(--text-secondary)]">{phone}</span>
+                                                                            <span className="text-[var(--text-secondary)]">{phoneObj.value}</span>
                                                                             {copiedId === `p-${lead._id}-${idx}` && (
                                                                                 <span className="absolute right-3 text-[9px] font-bold text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded">Copied!</span>
                                                                             )}
                                                                         </div>
                                                                     ))}
+                                                                    {(lead.responseSource?.phones || []).length === 0 && lead.responseSource?.phone?.value && (
+                                                                        <div
+                                                                            onClick={() => handleCopy(lead.responseSource.phone.value, `p-${lead._id}-single`)}
+                                                                            className="flex items-center gap-3 px-3 py-2 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-primary)] hover:border-emerald-500/40 hover:shadow-sm transition-all cursor-pointer group/contact text-xs relative"
+                                                                        >
+                                                                            <div className="w-6 h-6 rounded-md bg-gradient-to-br from-orange-500/20 to-orange-600/10 flex items-center justify-center">
+                                                                                <svg className="w-3 h-3 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                                                                </svg>
+                                                                            </div>
+                                                                            <span className="text-[var(--text-secondary)]">{lead.responseSource.phone.value}</span>
+                                                                            {copiedId === `p-${lead._id}-single` && (
+                                                                                <span className="absolute right-3 text-[9px] font-bold text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded">Copied!</span>
+                                                                            )}
+                                                                        </div>
+                                                                    )}
                                                                 </div>
                                                             </div>
 
-                                                            {/* Enhanced Payment History */}
-                                                            <div className="col-span-7">
+                                                            {/* Payment History */}
+                                                            <div className="col-span-4">
                                                                 <div className="flex items-center gap-2 mb-3">
                                                                     <div className="w-1 h-4 bg-emerald-500 rounded-full"></div>
-                                                                    <span className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-wider">Payment History</span>
-                                                                    <span className="ml-auto text-[9px] text-[var(--text-tertiary)]">Total: ${totalUpsellPrice.toFixed(2)}</span>
+                                                                    <span className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-wider">Payments</span>
                                                                 </div>
-                                                                <div className="grid grid-cols-2 gap-3 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
+                                                                <div className="space-y-2 max-h-[180px] overflow-y-auto pr-1 flex flex-col gap-2 custom-scrollbar">
                                                                     {lead.upsales && lead.upsales.length > 0 ? (
-                                                                        lead.upsales.map((upsell, idx) => (
-                                                                            <div key={idx} className="p-3 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-primary)] hover:border-emerald-500/30 transition-all group/payment">
-                                                                                <div className="flex items-center justify-between mb-2">
-                                                                                    <span className="text-sm font-bold text-emerald-500">${upsell.amount}</span>
-                                                                                    <span className="text-[8px] font-semibold text-[var(--text-tertiary)] bg-[var(--bg-primary)] px-1.5 py-0.5 rounded-full">
-                                                                                        {new Date(upsell.addedAt).toLocaleDateString([], { month: 'short', day: 'numeric' })}
-                                                                                    </span>
+                                                                        lead.upsales.map((upsell, idx) => {
+                                                                            const addedDate = new Date(upsell.addedAt);
+                                                                            return (
+                                                                                <div key={idx} className="p-2.5 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-primary)] hover:border-emerald-500/30 transition-all group/payment">
+                                                                                    <div className="flex items-center justify-between mb-1.5">
+                                                                                        <span className="text-xs font-black text-emerald-500 tracking-tight">${upsell.amount}</span>
+                                                                                        <span className="text-[7px] font-bold text-[var(--text-tertiary)] bg-[var(--bg-primary)] px-1.5 py-0.5 rounded border border-[var(--border-primary)] shadow-sm">
+                                                                                            {addedDate.toLocaleDateString('en-US', { timeZone: 'Asia/Karachi', month: 'short', day: 'numeric' })} • {addedDate.toLocaleTimeString('en-US', { timeZone: 'Asia/Karachi', hour: '2-digit', minute: '2-digit' })}
+                                                                                        </span>
+                                                                                    </div>
+                                                                                    <p className="text-[9px] text-[var(--text-secondary)] italic leading-tight group-hover/payment:text-[var(--text-primary)] transition-colors line-clamp-2">
+                                                                                        "{upsell.comment || 'No comment'}"
+                                                                                    </p>
                                                                                 </div>
-                                                                                <p className="text-[10px] text-[var(--text-secondary)] italic leading-relaxed line-clamp-2 group-hover/payment:text-[var(--text-primary)] transition-colors">
-                                                                                    "{upsell.comment}"
-                                                                                </p>
-                                                                            </div>
-                                                                        ))
+                                                                            );
+                                                                        })
                                                                     ) : (
-                                                                        <div className="col-span-2 py-6 text-center">
-                                                                            <div className="inline-flex flex-col items-center">
-                                                                                <svg className="w-8 h-8 text-[var(--text-tertiary)] mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                                                </svg>
-                                                                                <p className="text-[10px] text-[var(--text-tertiary)]">No payment records</p>
-                                                                            </div>
+                                                                        <div className="py-6 text-center bg-[var(--bg-tertiary)]/30 rounded-xl border border-dashed border-[var(--border-primary)]">
+                                                                            <p className="text-[9px] text-[var(--text-tertiary)] font-bold uppercase tracking-widest">No Records</p>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Discussion History */}
+                                                            <div className="col-span-4">
+                                                                <div className="flex items-center gap-2 mb-3">
+                                                                    <div className="w-1 h-4 bg-blue-500 rounded-full"></div>
+                                                                    <span className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-wider">All Comments</span>
+                                                                </div>
+                                                                <div className="space-y-2 max-h-[180px] overflow-y-auto pr-1 flex flex-col gap-2 custom-scrollbar">
+                                                                    {lead.comments && lead.comments.length > 0 ? (
+                                                                        lead.comments
+                                                                            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                                                                            .map((comment, idx) => {
+                                                                                const roleColors = {
+                                                                                    'Manager': 'text-purple-500 bg-purple-500/10 border-purple-500/20',
+                                                                                    'Lead Qualifiers': 'text-blue-500 bg-blue-500/10 border-blue-500/20',
+                                                                                    'Admin': 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20',
+                                                                                    'Super Admin': 'text-rose-500 bg-rose-500/10 border-rose-500/20',
+                                                                                    'Data Minors': 'text-orange-500 bg-orange-500/10 border-orange-500/20',
+                                                                                };
+                                                                                const colorClass = roleColors[comment.createdByRole] || 'text-gray-500 bg-gray-500/10 border-gray-500/20';
+                                                                                const createdDate = new Date(comment.createdAt);
+                                                                                return (
+                                                                                    <div key={idx} className="p-2.5 rounded-xl bg-black/10 border border-[var(--border-primary)]/40 hover:border-emerald-500/20 transition-all">
+                                                                                        <div className="flex items-center justify-between mb-1">
+                                                                                            <span className={`text-[7px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded border ${colorClass}`}>
+                                                                                                {comment.createdByRole || 'Unknown'}
+                                                                                            </span>
+                                                                                            <span className="text-[7px] font-bold text-[var(--text-tertiary)] opacity-60">
+                                                                                                {createdDate.toLocaleDateString('en-US', { timeZone: 'Asia/Karachi', month: 'short', day: 'numeric' })} • {createdDate.toLocaleTimeString('en-US', { timeZone: 'Asia/Karachi', hour: '2-digit', minute: '2-digit' })}
+                                                                                            </span>
+                                                                                        </div>
+                                                                                        <p className="text-[10px] font-medium text-[var(--text-secondary)] italic leading-tight">
+                                                                                            "{comment.text}"
+                                                                                        </p>
+                                                                                    </div>
+                                                                                );
+                                                                            })
+                                                                    ) : (
+                                                                        <div className="py-6 text-center bg-[var(--bg-tertiary)]/30 rounded-xl border border-dashed border-[var(--border-primary)]">
+                                                                            <p className="text-[9px] text-[var(--text-tertiary)] font-bold uppercase tracking-widest">No Comments</p>
                                                                         </div>
                                                                     )}
                                                                 </div>

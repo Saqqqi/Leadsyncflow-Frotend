@@ -58,7 +58,7 @@ const RejectedLeadsTable = ({
                                                         {isFinal ? 'Finalized' : 'Pending Admin'}
                                                     </span>
                                                 </div>
-                                                <div className="text-[10px] text-slate-500">ID: {lead._id.slice(-6)}</div>
+
                                             </div>
                                         </div>
                                     </td>

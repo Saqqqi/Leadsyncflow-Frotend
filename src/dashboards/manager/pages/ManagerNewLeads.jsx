@@ -71,10 +71,13 @@ export default function ManagerNewLeads() {
         );
 
         if (!searchTerm) return baseLeads;
+        const term = searchTerm.toLowerCase();
         return baseLeads.filter(l =>
-            (l.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (l.emails?.some(e => (e.value || '').toLowerCase().includes(searchTerm.toLowerCase()))) ||
-            (l.phones?.some(p => (p || '').toLowerCase().includes(searchTerm.toLowerCase())))
+            (l.name || '').toLowerCase().includes(term) ||
+            (l.responseSource?.emails?.some(e => (e.value || '').toLowerCase().includes(term))) ||
+            (l.responseSource?.email?.value || '').toLowerCase().includes(term) ||
+            (l.responseSource?.phones?.some(p => (p.value || '').toLowerCase().includes(term))) ||
+            (l.responseSource?.phone?.value || '').toLowerCase().includes(term)
         );
     }, [leads, searchTerm]);
 
@@ -143,7 +146,7 @@ export default function ManagerNewLeads() {
             <div className="space-y-6">
                 <SearchHeader
                     title="New Leads"
-                    subtitle="Queue and process incoming lead communications"
+                    subtitle=""
                     onRefresh={fetchLeads}
                     loading={loading}
                     stats={`${total} leads`}

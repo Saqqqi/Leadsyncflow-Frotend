@@ -169,12 +169,7 @@ export default function ManagerDashboard() {
             </div>
 
             {/* Status Info Footer */}
-            <div className="flex justify-between items-center py-4 border-t border-[var(--border-primary)]/20">
-                <span className="text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-widest">
-                    Last Synced: {new Date().toLocaleTimeString()}
-                </span>
 
-            </div>
         </div>
     );
 }

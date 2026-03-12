@@ -21,7 +21,7 @@ const CommentsModal = ({ isOpen, onClose, comments, leadName }) => {
                             </svg>
                         </div>
                         <div>
-                            <h2 className="text-lg font-bold text-[var(--text-primary)]">Timeline History</h2>
+                            <h2 className="text-lg font-bold text-[var(--text-primary)]">All Comments </h2>
                             <p className="text-[11px] text-[var(--text-tertiary)] mt-0.5">Lead: {leadName}</p>
                         </div>
                     </div>
@@ -66,7 +66,7 @@ const CommentsModal = ({ isOpen, onClose, comments, leadName }) => {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                             </div>
-                            <p className="text-sm font-medium text-[var(--text-secondary)]">No timeline activities recorded</p>
+                            <p className="text-sm font-medium text-[var(--text-secondary)]">No comments</p>
                         </div>
                     )}
                 </div>
@@ -139,8 +139,10 @@ export default function ManagerRejectedLeads() {
     const filteredLeads = leads.filter(l => {
         const searchLower = searchTerm.toLowerCase();
         return (l.name || '').toLowerCase().includes(searchLower) ||
-            (l.emails?.some(e => (e.value || '').toLowerCase().includes(searchLower))) ||
-            (l.phones?.some(p => (p || '').toLowerCase().includes(searchLower)));
+            (l.responseSource?.emails?.some(e => (e.value || '').toLowerCase().includes(searchLower))) ||
+            (l.responseSource?.email?.value || '').toLowerCase().includes(searchLower) ||
+            (l.responseSource?.phones?.some(p => (p.value || '').toLowerCase().includes(searchLower))) ||
+            (l.responseSource?.phone?.value || '').toLowerCase().includes(searchLower);
     });
 
     const totalPages = Math.ceil(total / ITEMS_PER_PAGE);
@@ -171,7 +173,7 @@ export default function ManagerRejectedLeads() {
                                     <span className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Rejected Profile</span>
                                 </th>
                                 <th className="px-4 py-3 text-left">
-                                    <span className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Communications</span>
+                                    <span className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Email / Numbers</span>
                                 </th>
                                 <th className="px-4 py-3 text-center">
                                     <span className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Comments</span>
@@ -216,31 +218,47 @@ export default function ManagerRejectedLeads() {
                                                         </div>
                                                         <div>
                                                             <span className="text-sm font-semibold text-[var(--text-primary)]">{lead.name}</span>
-                                                            <span className="ml-2 text-[9px] font-bold text-[var(--text-tertiary)] bg-[var(--bg-tertiary)]/50 px-1.5 py-0.5 rounded-full">
-                                                                ID: {lead._id.slice(-6).toUpperCase()}
-                                                            </span>
+
                                                         </div>
                                                     </div>
                                                 </td>
                                                 <td className="px-4 py-4">
                                                     <div className="space-y-1">
-                                                        {lead.emails?.slice(0, 1).map((email, i) => (
-                                                            <div key={i} className="flex items-center gap-2">
-                                                                <div className="w-1.5 h-1.5 rounded-full bg-blue-500/50 shadow-[0_0_8px_rgba(59,130,246,0.3)]"></div>
-                                                                <span className="text-[10px] text-[var(--text-secondary)]">{email.value}</span>
-                                                            </div>
-                                                        ))}
-                                                        {lead.phones?.slice(0, 1).map((phone, i) => (
-                                                            <div key={i} className="flex items-center gap-2">
-                                                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500/50 shadow-[0_0_8px_rgba(16,185,129,0.3)]"></div>
-                                                                <span className="text-[10px] text-[var(--text-secondary)]">{phone}</span>
-                                                            </div>
-                                                        ))}
-                                                        {((lead.emails?.length || 0) + (lead.phones?.length || 0)) > 1 && (
-                                                            <span className="text-[8px] text-[var(--text-tertiary)] ml-2">
-                                                                +{((lead.emails?.length || 0) + (lead.phones?.length || 0)) - 1} more
-                                                            </span>
-                                                        )}
+                                                        {(() => {
+                                                            const emails = lead.responseSource?.emails?.length > 0 
+                                                                ? lead.responseSource.emails 
+                                                                : (lead.responseSource?.email?.value ? [{ value: lead.responseSource.email.value }] : []);
+                                                            
+                                                            const phones = lead.responseSource?.phones?.length > 0 
+                                                                ? lead.responseSource.phones 
+                                                                : (lead.responseSource?.phone?.value ? [{ value: lead.responseSource.phone.value }] : []);
+
+                                                            const allContacts = [
+                                                                ...emails.map(e => ({ ...e, type: 'email' })),
+                                                                ...phones.map(p => ({ ...p, type: 'phone' }))
+                                                            ];
+
+                                                            const visibleContacts = allContacts.slice(0, 2);
+                                                            const remainingCount = allContacts.length - 2;
+
+                                                            return (
+                                                                <>
+                                                                    {visibleContacts.map((contact, i) => (
+                                                                        <div key={`${contact.type}-${i}`} className="flex items-center gap-2">
+                                                                            <div className={`w-1.5 h-1.5 rounded-full ${contact.type === 'email' ? 'bg-blue-500/50 shadow-[0_0_8px_rgba(59,130,246,0.3)]' : 'bg-emerald-500/50 shadow-[0_0_8px_rgba(16,185,129,0.3)]'}`}></div>
+                                                                            <span className="text-[10px] text-[var(--text-secondary)] truncate max-w-[150px]">{contact.value}</span>
+                                                                        </div>
+                                                                    ))}
+                                                                    {remainingCount > 0 && (
+                                                                        <div className="flex items-center gap-2 mt-1">
+                                                                            <span className="text-[9px] font-black text-rose-500 bg-rose-500/10 px-1.5 py-0.5 rounded border border-rose-500/20 uppercase tracking-tighter">
+                                                                                +{remainingCount} more
+                                                                            </span>
+                                                                        </div>
+                                                                    )}
+                                                                </>
+                                                            );
+                                                        })()}
                                                     </div>
                                                 </td>
                                                 <td className="px-4 py-4 text-center">
@@ -288,10 +306,10 @@ export default function ManagerRejectedLeads() {
                                                                     <span className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-wider">Contact Information</span>
                                                                 </div>
                                                                 <div className="space-y-2">
-                                                                    {lead.emails?.map((email, idx) => (
+                                                                    {(lead.responseSource?.emails || []).map((emailObj, idx) => (
                                                                         <div
-                                                                            key={`email-${idx}`}
-                                                                            onClick={() => handleCopy(email.value, `e-${lead._id}-${idx}`)}
+                                                                            key={`rs-email-${idx}`}
+                                                                            onClick={() => handleCopy(emailObj.value, `e-${lead._id}-${idx}`)}
                                                                             className="flex items-center gap-3 px-3 py-2 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-primary)] hover:border-rose-500/40 hover:shadow-sm transition-all cursor-pointer group/contact text-xs relative"
                                                                         >
                                                                             <div className="w-6 h-6 rounded-md bg-gradient-to-br from-blue-500/20 to-blue-600/10 flex items-center justify-center">
@@ -299,16 +317,32 @@ export default function ManagerRejectedLeads() {
                                                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                                                                                 </svg>
                                                                             </div>
-                                                                            <span className="text-[var(--text-secondary)] flex-1">{email.value}</span>
+                                                                            <span className="text-[var(--text-secondary)] flex-1">{emailObj.value}</span>
                                                                             {copiedId === `e-${lead._id}-${idx}` && (
                                                                                 <span className="absolute right-3 text-[9px] font-bold text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded">Copied!</span>
                                                                             )}
                                                                         </div>
                                                                     ))}
-                                                                    {lead.phones?.map((phone, idx) => (
+                                                                    {(lead.responseSource?.emails || []).length === 0 && lead.responseSource?.email?.value && (
                                                                         <div
-                                                                            key={`phone-${idx}`}
-                                                                            onClick={() => handleCopy(phone, `p-${lead._id}-${idx}`)}
+                                                                            onClick={() => handleCopy(lead.responseSource.email.value, `e-${lead._id}-single`)}
+                                                                            className="flex items-center gap-3 px-3 py-2 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-primary)] hover:border-rose-500/40 hover:shadow-sm transition-all cursor-pointer group/contact text-xs relative"
+                                                                        >
+                                                                            <div className="w-6 h-6 rounded-md bg-gradient-to-br from-blue-500/20 to-blue-600/10 flex items-center justify-center">
+                                                                                <svg className="w-3 h-3 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                                                                </svg>
+                                                                            </div>
+                                                                            <span className="text-[var(--text-secondary)] flex-1">{lead.responseSource.email.value}</span>
+                                                                            {copiedId === `e-${lead._id}-single` && (
+                                                                                <span className="absolute right-3 text-[9px] font-bold text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded">Copied!</span>
+                                                                            )}
+                                                                        </div>
+                                                                    )}
+                                                                    {(lead.responseSource?.phones || []).map((phoneObj, idx) => (
+                                                                        <div
+                                                                            key={`rs-phone-${idx}`}
+                                                                            onClick={() => handleCopy(phoneObj.value, `p-${lead._id}-${idx}`)}
                                                                             className="flex items-center gap-3 px-3 py-2 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-primary)] hover:border-rose-500/40 hover:shadow-sm transition-all cursor-pointer group/contact text-xs relative"
                                                                         >
                                                                             <div className="w-6 h-6 rounded-md bg-gradient-to-br from-orange-500/20 to-orange-600/10 flex items-center justify-center">
@@ -316,12 +350,28 @@ export default function ManagerRejectedLeads() {
                                                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                                                                                 </svg>
                                                                             </div>
-                                                                            <span className="text-[var(--text-secondary)]">{phone}</span>
+                                                                            <span className="text-[var(--text-secondary)]">{phoneObj.value}</span>
                                                                             {copiedId === `p-${lead._id}-${idx}` && (
                                                                                 <span className="absolute right-3 text-[9px] font-bold text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded">Copied!</span>
                                                                             )}
                                                                         </div>
                                                                     ))}
+                                                                    {(lead.responseSource?.phones || []).length === 0 && lead.responseSource?.phone?.value && (
+                                                                        <div
+                                                                            onClick={() => handleCopy(lead.responseSource.phone.value, `p-${lead._id}-single`)}
+                                                                            className="flex items-center gap-3 px-3 py-2 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-primary)] hover:border-rose-500/40 hover:shadow-sm transition-all cursor-pointer group/contact text-xs relative"
+                                                                        >
+                                                                            <div className="w-6 h-6 rounded-md bg-gradient-to-br from-orange-500/20 to-orange-600/10 flex items-center justify-center">
+                                                                                <svg className="w-3 h-3 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                                                                </svg>
+                                                                            </div>
+                                                                            <span className="text-[var(--text-secondary)]">{lead.responseSource.phone.value}</span>
+                                                                            {copiedId === `p-${lead._id}-single` && (
+                                                                                <span className="absolute right-3 text-[9px] font-bold text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded">Copied!</span>
+                                                                            )}
+                                                                        </div>
+                                                                    )}
                                                                 </div>
                                                             </div>
 
@@ -329,9 +379,9 @@ export default function ManagerRejectedLeads() {
                                                             <div className="col-span-7">
                                                                 <div className="flex items-center gap-2 mb-3">
                                                                     <div className="w-1 h-4 bg-rose-500 rounded-full"></div>
-                                                                    <span className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-wider">Recent Timeline</span>
+                                                                    <span className="text-[10px] font-bold text-[var(--text-tertiary)] uppercase tracking-wider">Recent Comments</span>
                                                                     <span className="ml-auto text-[9px] text-[var(--text-tertiary)]">
-                                                                        Total: {lead.comments?.length || 0} activities
+                                                                        Total: {lead.comments?.length || 0} comments
                                                                     </span>
                                                                 </div>
                                                                 <div className="space-y-3 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
@@ -356,18 +406,18 @@ export default function ManagerRejectedLeads() {
                                                                         ))
                                                                     ) : (
                                                                         <div className="py-6 text-center">
-                                                                            <p className="text-[10px] text-[var(--text-tertiary)]">No timeline activities</p>
+                                                                            <p className="text-[10px] text-[var(--text-tertiary)]">No comments</p>
                                                                         </div>
                                                                     )}
                                                                     {(lead.comments?.length || 0) > 3 && (
                                                                         <button
                                                                             onClick={(e) => {
                                                                                 e.stopPropagation();
-                                                                                openComments({ target: { stopPropagation: () => { } } }, lead);
+                                                                                openComments(lead, e);
                                                                             }}
                                                                             className="w-full py-2 text-[9px] font-bold text-rose-500 bg-rose-500/5 border border-rose-500/20 rounded-lg hover:bg-rose-500/10 transition-colors"
                                                                         >
-                                                                            View all {lead.comments.length} activities
+                                                                            View all {lead.comments.length} comments
                                                                         </button>
                                                                     )}
                                                                 </div>

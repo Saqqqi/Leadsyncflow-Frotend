@@ -15,43 +15,63 @@ const LeadRow = ({ lead, count, onReject, onUpsell, onDetail, copiedId, onCopy }
                 </div>
             </td>
 
-            {/* Contact Info - Using responseSource */}
+            {/* Contact Info - Using responseSource only */}
             <td className="px-4 py-3 w-[20%]">
                 <div className="space-y-1.5">
-                    {lead.responseSource?.email?.value && (
-                        <div
-                            onClick={() => onCopy(lead.responseSource.email.value, `e-${lead._id}`)}
-                            className="flex items-center gap-2 cursor-pointer group/copy relative w-fit"
-                        >
-                            <div className="w-5 h-5 rounded-md bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0 transition-all group-hover/copy:bg-blue-500 group-hover/copy:text-white group-hover/copy:border-blue-500">
-                                <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                </svg>
-                            </div>
-                            <span className="text-[11px] font-bold text-slate-400 group-hover/copy:text-white transition-colors truncate max-w-[130px] tracking-tight">{lead.responseSource.email.value}</span>
+                    {(() => {
+                        const emails = lead.responseSource?.emails?.length > 0 
+                            ? lead.responseSource.emails 
+                            : (lead.responseSource?.email?.value ? [{ value: lead.responseSource.email.value }] : []);
+                        
+                        const phones = lead.responseSource?.phones?.length > 0 
+                            ? lead.responseSource.phones 
+                            : (lead.responseSource?.phone?.value ? [{ value: lead.responseSource.phone.value }] : []);
 
-                            {copiedId === `e-${lead._id}` && (
-                                <div className="absolute -right-12 px-1.5 py-0.5 rounded-md bg-emerald-500 text-white text-[8px] font-black uppercase tracking-widest animate-in fade-in slide-in-from-left-2 shadow-lg shadow-emerald-500/20">Copied</div>
-                            )}
-                        </div>
-                    )}
-                    {lead.responseSource?.phone?.value && (
-                        <div
-                            onClick={() => onCopy(lead.responseSource.phone.value, `p-${lead._id}`)}
-                            className="flex items-center gap-2 cursor-pointer group/copy relative w-fit"
-                        >
-                            <div className="w-5 h-5 rounded-md bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0 transition-all group-hover/copy:bg-emerald-500 group-hover/copy:text-white group-hover/copy:border-emerald-500">
-                                <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                                </svg>
-                            </div>
-                            <span className="text-[11px] font-bold text-slate-400 group-hover/copy:text-white transition-colors tracking-tight">{lead.responseSource.phone.value}</span>
+                        const allContacts = [
+                            ...emails.map(e => ({ ...e, type: 'email' })),
+                            ...phones.map(p => ({ ...p, type: 'phone' }))
+                        ];
 
-                            {copiedId === `p-${lead._id}` && (
-                                <div className="absolute -right-12 px-1.5 py-0.5 rounded-md bg-emerald-500 text-white text-[8px] font-black uppercase tracking-widest animate-in fade-in slide-in-from-left-2 shadow-lg shadow-emerald-500/20">Copied</div>
-                            )}
-                        </div>
-                    )}
+                        const visibleContacts = allContacts.slice(0, 2);
+                        const remainingCount = allContacts.length - 2;
+
+                        return (
+                            <>
+                                {visibleContacts.map((contact, i) => (
+                                    <div
+                                        key={`${contact.type}-${i}`}
+                                        onClick={() => onCopy(contact.value, `${contact.type}-${lead._id}-${i}`)}
+                                        className="flex items-center gap-2 cursor-pointer group/copy relative w-fit"
+                                    >
+                                        <div className={`w-5 h-5 rounded-md border flex items-center justify-center shrink-0 transition-all group-hover/copy:text-white ${
+                                            contact.type === 'email' 
+                                            ? 'bg-blue-500/10 border-blue-500/20 group-hover/copy:bg-blue-500 group-hover/copy:border-blue-500' 
+                                            : 'bg-emerald-500/10 border-emerald-500/20 group-hover/copy:bg-emerald-500 group-hover/copy:border-emerald-500'
+                                        }`}>
+                                            <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                {contact.type === 'email' ? (
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                                ) : (
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                                )}
+                                            </svg>
+                                        </div>
+                                        <span className="text-[11px] font-bold text-slate-400 group-hover/copy:text-white transition-colors tracking-tight truncate max-w-[120px]">{contact.value}</span>
+                                        {copiedId === `${contact.type}-${lead._id}-${i}` && (
+                                            <div className="absolute -right-12 px-1.5 py-0.5 rounded-md bg-emerald-500 text-white text-[8px] font-black uppercase tracking-widest animate-in fade-in slide-in-from-left-2 shadow-lg shadow-emerald-500/20">Copied</div>
+                                        )}
+                                    </div>
+                                ))}
+                                {remainingCount > 0 && (
+                                    <div className="pt-1">
+                                        <span className="text-[9px] font-black text-rose-500 bg-rose-500/10 px-1.5 py-0.5 rounded border border-rose-500/20 uppercase tracking-tighter shadow-sm">
+                                            +{remainingCount} more
+                                        </span>
+                                    </div>
+                                )}
+                            </>
+                        );
+                    })()}
                 </div>
             </td>
 

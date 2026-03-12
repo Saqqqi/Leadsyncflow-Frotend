@@ -1,8 +1,9 @@
 import axios from 'axios';
 import tokenManager from '../utils/tokenManager';
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ?? 'https://leadsyncflow-3.onrender.com';
+const API_BASE_URL = (
+  import.meta.env.VITE_API_BASE_URL ?? 'https://leadsyncflow-3.onrender.com'
+).replace(/\/$/, "");
 
 const axiosInstance = axios.create({
   baseURL: API_BASE_URL,

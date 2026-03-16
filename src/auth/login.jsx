@@ -94,7 +94,7 @@ export default function LoginPage() {
 
 
     return (
-        <div className="min-h-screen flex items-center justify-center p-6"
+        <div className="min-h-screen flex flex-col pt-24 pb-6 px-6"
             style={{
                 backgroundColor: 'var(--color-primary)',
                 backgroundImage: 'linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%)'
@@ -102,7 +102,7 @@ export default function LoginPage() {
             <AuthHeader />
 
             {/* Main Container */}
-            <div className="w-full max-w-lg">
+            <div className="w-full max-w-lg m-auto">
 
                 {/* Login Card */}
                 <div className="rounded-[2.5rem] p-8 md:p-10 border shadow-2xl animate-fadeIn"
@@ -224,10 +224,8 @@ export default function LoginPage() {
                             className="flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] transition-colors hover:text-[var(--accent-success)]"
                             style={{ color: 'var(--text-secondary)' }}
                         >
-                            <span>Need an account? Request access</span>
-                            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 4v16m8-8H4" />
-                            </svg>
+                            <span>Not have account? Sign Up</span>
+
                         </Link>
                     </div>
                 </div>

@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 import tokenManager from '../utils/tokenManager';
 import { getRoleBasedRedirect } from '../utils/roleRedirect';
+import Logo from './Logo';
 
 const AuthHeader = ({ isLandingPage = false }) => {
     const { theme, toggleTheme } = useTheme();
@@ -30,13 +31,16 @@ const AuthHeader = ({ isLandingPage = false }) => {
     };
 
     return (
-        <header className="fixed top-0 w-full z-50 py-6 px-8 flex items-center justify-between transition-all duration-300 backdrop-blur-md border-b"
+        <header className="fixed top-0 w-full z-50 py-4 px-12 flex items-center justify-between transition-all duration-300 backdrop-blur-md border-b"
             style={{
                 borderColor: 'var(--border-primary)',
-                backgroundColor: theme === 'dark' ? 'rgba(27, 60, 83, 0.7)' : 'rgba(255, 255, 255, 0.7)'
+                backgroundColor: theme === 'dark' ? 'rgba(27, 60, 83, 0.7)' : 'rgba(255, 255, 255, 0.7)',
+                height: '70px'
             }}>
-            <Link to="/" className="flex items-center gap-4 group pl-4"> {/* Added pl-4 for left padding */}
-                <img src="/Logo - Lead Sync.(Dark Mode).svg" alt="LeadSync Logo" className="h-16 w-auto transition-transform group-hover:scale-105" />
+            <Link to="/" className="flex items-center gap-4 group pl-4 relative h-full">
+                <div className="absolute top-1/2 left-8 -translate-y-1/2 w-20 transition-transform group-hover:scale-105">
+                    <Logo className="h-full w-full" />
+                </div>
             </Link>
 
             <div className="flex items-center gap-6 pr-8"> {/* Increased pr-4 to pr-8 */}
@@ -91,7 +95,7 @@ const AuthHeader = ({ isLandingPage = false }) => {
                         <div className="flex items-center gap-4">
                             <Link to="/login" className="px-5 py-2.5 text-sm font-black uppercase tracking-widest text-[var(--text-secondary)] hover:text-[#00BE9B] transition-colors">Sign In</Link>
                             <Link to="/signup" className="px-8 py-3 rounded-2xl bg-gradient-to-r from-[#00BE9B] to-[#00a082] text-white text-sm font-black uppercase tracking-widest shadow-xl shadow-[#00BE9B]/20 hover:scale-105 active:scale-95 transition-all">
-                                Start Flow
+                                Sign Up
                             </Link>
                         </div>
                     )

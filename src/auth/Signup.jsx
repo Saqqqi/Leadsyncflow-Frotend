@@ -92,18 +92,15 @@ export default function SignupPage() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center p-6"
+        <div className="min-h-screen flex flex-col pt-24 pb-6 px-6"
             style={{
                 backgroundColor: 'var(--color-primary)',
                 backgroundImage: 'linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%)'
             }}>
             <AuthHeader />
 
-            <div className="w-full max-w-4xl pt-16">
-                {/* Logo Header */}
-                <div className="text-center mb-8">
-                    <img src="/Logo - Lead Sync.(Dark Mode).svg" alt="LeadSync Logo" className="h-12 w-auto mx-auto mb-4" />
-                </div>
+            <div className="w-full max-w-4xl m-auto">
+
 
                 {/* Signup Card */}
                 <div className="rounded-[2.5rem] p-8 md:p-12 border shadow-2xl animate-fadeIn"
@@ -277,53 +274,46 @@ export default function SignupPage() {
                             </div>
                         </div>
 
-                        <div className="pt-8 space-y-6">
-                            <div className="flex justify-center md:justify-end">
-                                <button
-                                    type="submit"
-                                    disabled={loading}
-                                    className="w-full md:w-auto px-12 py-4 rounded-2xl text-xs font-black uppercase tracking-[0.2em] text-white transition-all duration-300 hover:shadow-2xl focus:outline-none transform hover:-translate-y-1 active:scale-95 disabled:opacity-50"
-                                    style={{
-                                        background: loading
-                                            ? "var(--text-tertiary)"
-                                            : "linear-gradient(135deg, var(--accent-success), #10b981)",
-                                        boxShadow: loading
-                                            ? "none"
-                                            : "0 15px 30px -10px rgba(52,211,153,0.4)",
-                                    }}
-                                >
-                                    <div className="flex items-center gap-2">
-                                        {loading ? (
-                                            <>
-                                                <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                                </svg>
-                                                <span>Creating Account...</span>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <span>Create Account</span>
-                                                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                                                </svg>
-                                            </>
-                                        )}
-                                    </div>
-                                </button>
-                            </div>
+                        <div className="pt-8 flex flex-row items-center justify-center gap-3">
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="flex-1 px-4 py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.1em] text-white transition-all duration-300 hover:shadow-2xl focus:outline-none transform hover:-translate-y-1 active:scale-95 disabled:opacity-50"
+                                style={{
+                                    background: loading
+                                        ? "var(--text-tertiary)"
+                                        : "linear-gradient(135deg, var(--accent-success), #10b981)",
+                                    boxShadow: loading
+                                        ? "none"
+                                        : "0 10px 20px -5px rgba(52,211,153,0.4)",
+                                }}
+                            >
+                                <div className="flex items-center justify-center gap-2">
+                                    {loading ? (
+                                        <svg className="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                    ) : (
+                                        <>
+                                            <span className="whitespace-nowrap">Create Account</span>
+                                            <svg className="h-3 w-3 hidden sm:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                            </svg>
+                                        </>
+                                    )}
+                                </div>
+                            </button>
 
-                            <div className="text-center">
-                                <Link to="/login"
-                                    className="inline-flex items-center justify-center w-full py-3.5 rounded-xl text-sm font-semibold transition-all duration-200 border hover:shadow-lg"
-                                    style={{
-                                        borderColor: 'var(--border-secondary)',
-                                        color: 'var(--text-primary)',
-                                        backgroundColor: 'rgba(69, 104, 130, 0.1)'
-                                    }}>
-                                    Already have an account? Sign In
-                                </Link>
-                            </div>
+                            <Link to="/login"
+                                className="flex-1 px-4 py-4 rounded-2xl text-[9px] font-black uppercase tracking-[0.1em] transition-all duration-300 border hover:shadow-lg text-center whitespace-nowrap"
+                                style={{
+                                    borderColor: 'var(--border-secondary)',
+                                    color: 'var(--text-primary)',
+                                    backgroundColor: 'rgba(69, 104, 130, 0.1)'
+                                }}>
+                                Already have account? Sign In
+                            </Link>
                         </div>
                     </form>
                 </div>

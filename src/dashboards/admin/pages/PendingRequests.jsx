@@ -53,11 +53,29 @@ export default function PendingRequests() {
 
   const handleReject = async (requestId) => {
     try {
+      const comment = prompt("Enter rejection comment:");
+
+      if (!comment) {
+        alert("Comment is required");
+        return;
+      }
+
       setActionLoading(requestId);
-      await adminAPI.rejectRequest(requestId);
+
+      await adminAPI.decideRejectionRequest(
+        requestId,
+        "REJECT",
+        comment
+      );
+
       setRequests(prev => prev.filter(req => req._id !== requestId));
+
       setError(null);
-      window.dispatchEvent(new CustomEvent('pendingRequestsUpdated', { detail: { change: -1 } }));
+
+      window.dispatchEvent(
+        new CustomEvent('pendingRequestsUpdated', { detail: { change: -1 } })
+      );
+
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to reject request');
       console.error('Error rejecting request:', err);

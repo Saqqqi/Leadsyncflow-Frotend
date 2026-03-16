@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { dashboardConfig } from '../dashboards/dashboardConfig';
+import Logo from './Logo';
 
 export default function DynamicSidebar({ isOpen, isCollapsed, onClose, onToggle, onToggleCollapse, user }) {
   const location = useLocation();
@@ -59,16 +60,7 @@ export default function DynamicSidebar({ isOpen, isCollapsed, onClose, onToggle,
 
               {/* Logo (Centered between buttons) */}
               <div className="flex-1 flex justify-center px-2 overflow-hidden">
-                <img
-                  src="/Logo - Lead Sync.(Lght Mode).svg"
-                  alt="Lead Sync Flow Logo"
-                  className="h-14 w-auto dark:hidden object-contain"
-                />
-                <img
-                  src="/Logo - Lead Sync.(Dark Mode).svg"
-                  alt="Lead Sync Flow Logo"
-                  className="h-14 w-auto hidden dark:block object-contain"
-                />
+                <Logo className="h-10 w-auto" />
               </div>
 
               {/* Collapse Button (<<) */}

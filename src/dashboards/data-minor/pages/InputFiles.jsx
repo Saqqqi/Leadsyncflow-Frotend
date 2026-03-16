@@ -611,7 +611,7 @@ const InputFiles = () => {
                                 </svg>
                             </div>
                             <div>
-                                <h2 className="text-2xl font-black tracking-tight" style={{ color: 'var(--text-primary)' }}>Lead  Source LInk </h2>
+                                <h2 className="text-2xl font-black tracking-tight" style={{ color: 'var(--text-primary)' }}>Lead Source Link </h2>
                             </div>
                         </div>
 

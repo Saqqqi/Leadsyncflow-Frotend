@@ -26,7 +26,7 @@ const PendingLeadsTable = ({
             <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-3">
                     <div className="w-1.5 h-6 bg-emerald-500 rounded-full shadow-[0_0_15px_rgba(16,185,129,0.5)]"></div>
-                    <h2 className="text-sm font-black text-white uppercase tracking-[0.2em] italic">Pending Review</h2>
+                    <h2 className="text-sm font-black uppercase tracking-[0.2em] italic" style={{ color: 'var(--text-primary)' }}>Pending Review</h2>
                 </div>
                 <div className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 shadow-lg shadow-emerald-900/5">
                     <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">
@@ -43,20 +43,20 @@ const PendingLeadsTable = ({
                     <table className="w-full">
                         <thead>
                             <tr className="bg-white/[0.02] border-b border-white/5">
-                                <th className="w-[18%] px-4 py-3 text-left">
-                                    <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">Lead Entity</span>
+                                <th className="w-[15%] px-4 py-3 text-left">
+                                    <span className="text-[9px] font-black uppercase tracking-[0.2em]" style={{ color: 'var(--text-tertiary)' }}>Lead Entity</span>
                                 </th>
-                                <th className="w-[20%] px-4 py-3 text-left">
-                                    <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">Contact</span>
+                                <th className="w-[25%] px-4 py-3 text-left">
+                                    <span className="text-[9px] font-black uppercase tracking-[0.2em]" style={{ color: 'var(--text-tertiary)' }}>Contact</span>
                                 </th>
                                 <th className="w-[15%] px-4 py-3 text-center">
-                                    <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">LQ Comment</span>
+                                    <span className="text-[9px] font-black uppercase tracking-[0.2em]" style={{ color: 'var(--text-tertiary)' }}>LQ Comment</span>
                                 </th>
                                 <th className="w-[15%] px-4 py-3 text-left">
-                                    <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">Assigned</span>
+                                    <span className="text-[9px] font-black uppercase tracking-[0.2em]" style={{ color: 'var(--text-tertiary)' }}>Assigned</span>
                                 </th>
-                                <th className="w-[32%] px-4 py-3 text-right">
-                                    <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">Operational</span>
+                                <th className="w-[30%] px-4 py-3 text-right">
+                                    <span className="text-[9px] font-black uppercase tracking-[0.2em]" style={{ color: 'var(--text-tertiary)' }}>Operational</span>
                                 </th>
                             </tr>
                         </thead>

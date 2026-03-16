@@ -159,10 +159,15 @@ export default function ManagerDashboard() {
                     </div>
                 </div>
 
-                <div className="flex gap-3">
-                    <Link to="/gds/manager/new-leads" className="px-8 py-4 rounded-2xl bg-[var(--accent-primary)] text-white text-xs font-black uppercase tracking-widest shadow-xl shadow-[var(--accent-primary)]/20 hover:scale-[1.02] active:scale-95 transition-all">
-                        View New Leads
-                    </Link>
+                <div className="flex items-center">
+                    <div className="px-6 py-3 rounded-2xl bg-[var(--accent-primary)]/5 border border-[var(--accent-primary)]/20 flex items-center gap-4 shadow-sm backdrop-blur-sm whitespace-nowrap">
+                        <span className="text-[10px] font-black text-[var(--accent-primary)] uppercase tracking-widest flex items-center gap-2">
+                            <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent-primary)] animate-pulse" />
+                            Today's Stats
+                        </span>
+                        <div className="w-px h-3 bg-[var(--accent-primary)]/20" />
+                        <span className="text-[9px] font-bold text-[var(--text-tertiary)]">Use date filters for weekly or monthly stats</span>
+                    </div>
                 </div>
             </div>
 
@@ -172,4 +177,4 @@ export default function ManagerDashboard() {
             </div>
         </div>
     );
-}
+}

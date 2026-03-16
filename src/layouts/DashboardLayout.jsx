@@ -105,13 +105,13 @@ export default function DashboardLayout() {
 
       <div
         className={`flex-1 flex flex-col transition-all duration-300 ${isSidebarOpen
-          ? (isSidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64')
+          ? (isSidebarCollapsed ? 'lg:ml-20' : 'lg:ml-72')
           : 'lg:ml-0'
           }`}
       >
         {/* Header */}
         <header
-          className="h-16 flex items-center justify-between px-6 transition-all duration-300 sticky top-0 z-[60] border-b bg-[var(--bg-secondary)] border-[var(--border-primary)] shadow-sm"
+          className="h-16 flex items-center justify-between px-6 transition-all duration-300 sticky top-0 z-[50] border-b bg-[var(--bg-secondary)] border-[var(--border-primary)] shadow-sm"
         >
           <div className="flex items-center gap-4">
             {/* Desktop sidebar toggle - shows when sidebar is closed */}

@@ -83,11 +83,16 @@ export const dashboardConfig = [
     pages: [
       { name: 'Dashboard', path: '', component: AdminDashboard, icon: <DashboardIcon />, showInSidebar: true },
       { name: 'Combined Leads', path: 'combined-leads', component: AdminCombinedLeads, icon: <CombinedIcon />, showInSidebar: true },
-      { name: 'Managers', path: 'manager-leads', component: AdminManagerLeads, icon: <LeadsIcon />, showInSidebar: true },
-      { name: 'Pending Requests', path: 'pending-requests', component: AdminPendingRequests, icon: <UsersIcon />, showInSidebar: true },
+
+
+      { name: 'Managers Leads', path: 'manager-leads', component: AdminManagerLeads, icon: <LeadsIcon />, showInSidebar: true },
       { name: 'Rejected Leads', path: 'rejection-requests', component: AdminRejectedLeads, icon: <RejectedIcon />, showInSidebar: true },
-      { name: 'Users Management', path: 'users', component: AdminUsersManagement, icon: <UsersIcon />, showInSidebar: false },
+
       { name: 'LQ Assign', path: 'super-admin', component: SuperAdminPortal, icon: <SettingsIcon />, showInSidebar: true, allowedRoles: ['Super Admin'] },
+
+      { name: 'Pending Requests', path: 'pending-requests', component: AdminPendingRequests, icon: <UsersIcon />, showInSidebar: true },
+
+      { name: 'Users Management', path: 'users', component: AdminUsersManagement, icon: <UsersIcon />, showInSidebar: false },
     ],
   },
   {

@@ -4,19 +4,19 @@ const LeadRow = ({ lead, count, onReject, onUpsell, onDetail, copiedId, onCopy }
     return (
         <tr className="hover:bg-[var(--bg-tertiary)]/5 transition-colors group">
             {/* Lead Info */}
-            <td className="px-4 py-3 w-[18%]">
+            <td className="px-4 py-3 w-[15%]">
                 <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 font-black text-[10px] shrink-0 shadow-inner group-hover:border-emerald-500/30 transition-all">
+                    <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center font-black text-[10px] shrink-0 shadow-inner group-hover:border-emerald-500/30 transition-all" style={{ color: 'var(--text-tertiary)' }}>
                         {count}
                     </div>
                     <div className="min-w-0">
-                        <div className="text-sm font-bold text-white tracking-tight truncate uppercase">{lead.name}</div>
+                        <div className="text-sm font-bold tracking-tight truncate uppercase" style={{ color: 'var(--text-primary)' }}>{lead.name}</div>
                     </div>
                 </div>
             </td>
 
             {/* Contact Info - Using responseSource only */}
-            <td className="px-4 py-3 w-[20%]">
+            <td className="px-4 py-3 w-[25%]">
                 <div className="space-y-1.5">
                     {(() => {
                         const emails = lead.responseSource?.emails?.length > 0 
@@ -56,7 +56,7 @@ const LeadRow = ({ lead, count, onReject, onUpsell, onDetail, copiedId, onCopy }
                                                 )}
                                             </svg>
                                         </div>
-                                        <span className="text-[11px] font-bold text-slate-400 group-hover/copy:text-white transition-colors tracking-tight truncate max-w-[120px]">{contact.value}</span>
+                                        <span className="text-[11px] font-bold group-hover/copy:text-white transition-colors tracking-tight" style={{ color: 'var(--text-secondary)' }}>{contact.value}</span>
                                         {copiedId === `${contact.type}-${lead._id}-${i}` && (
                                             <div className="absolute -right-12 px-1.5 py-0.5 rounded-md bg-emerald-500 text-white text-[8px] font-black uppercase tracking-widest animate-in fade-in slide-in-from-left-2 shadow-lg shadow-emerald-500/20">Copied</div>
                                         )}
@@ -85,7 +85,7 @@ const LeadRow = ({ lead, count, onReject, onUpsell, onDetail, copiedId, onCopy }
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                     </div>
-                    <span className="text-[8px] font-black text-slate-500 group-hover/detail:text-blue-400 uppercase tracking-tighter transition-colors">Details</span>
+                    <span className="text-[8px] font-black group-hover/detail:text-blue-400 uppercase tracking-tighter transition-colors" style={{ color: 'var(--text-tertiary)' }}>Details</span>
                 </button>
             </td>
 
@@ -94,14 +94,14 @@ const LeadRow = ({ lead, count, onReject, onUpsell, onDetail, copiedId, onCopy }
                 <div className="flex items-center gap-2.5">
                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-500/50 shadow-[0_0_8px_rgba(16,185,129,0.3)]" />
                     <div className="flex flex-col gap-0.5">
-                        <span className="text-[11px] font-bold text-slate-300 uppercase tracking-tight">
+                        <span className="text-[11px] font-bold uppercase tracking-tight" style={{ color: 'var(--text-secondary)' }}>
                             {new Date(lead.assignedAt || lead.createdAt).toLocaleDateString('en-US', {
                                 month: 'short',
                                 day: 'numeric',
                                 year: 'numeric'
                             })}
                         </span>
-                        <span className="text-[9px] font-medium text-slate-500">
+                        <span className="text-[9px] font-medium" style={{ color: 'var(--text-tertiary)' }}>
                             {new Date(lead.assignedAt || lead.createdAt).toLocaleTimeString('en-US', {
                                 hour: '2-digit',
                                 minute: '2-digit'
@@ -113,7 +113,7 @@ const LeadRow = ({ lead, count, onReject, onUpsell, onDetail, copiedId, onCopy }
 
 
             {/* Actions */}
-            <td className="px-4 py-3 w-[32%]">
+            <td className="px-4 py-3 w-[30%]">
                 <div className="flex items-center justify-end gap-2">
                     <button
                         onClick={() => onReject(lead)}

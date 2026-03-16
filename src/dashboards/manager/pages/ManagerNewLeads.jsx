@@ -150,7 +150,7 @@ export default function ManagerNewLeads() {
                     onRefresh={fetchLeads}
                     loading={loading}
                     stats={`${total} leads`}
-                    statsColor="blue"
+                    statsColor="emerald"
                 />
 
                 <AdminApprovedBanner leads={leads} onUpsell={handleUpsellClick} />

@@ -379,19 +379,20 @@ const VerifierLeads = () => {
                                     onClick={() => toggleExpand(lead._id)}
                                     className="px-6 py-5 flex items-center justify-between cursor-pointer transition-colors"
                                     style={{
-                                        backgroundColor: isExpanded ? 'rgba(0,0,0,0.2)' : 'transparent',
+                                        backgroundColor: isExpanded ? 'var(--bg-tertiary)' : 'transparent',
                                     }}
                                 >
                                     <div className="flex items-center gap-5 flex-1">
                                         {/* Serial Number and Icon */}
                                         <div className="relative">
-                                            <div className="absolute -top-2 -left-2 w-6 h-6 rounded-full bg-[var(--accent-primary)] text-white text-[10px] font-black flex items-center justify-center shadow-lg z-10 border-2 border-[var(--bg-secondary)]">
+                                            <div className="absolute -top-2 -left-2 w-6 h-6 rounded-full bg-[var(--accent-primary)] text-[var(--bg-primary)] text-[10px] font-black flex items-center justify-center shadow-lg z-10 border-2 border-[var(--bg-secondary)]">
                                                 {((currentPage - 1) * itemsPerPage) + index + 1}
                                             </div>
-                                            <div className="h-12 w-12 rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-lg transform transition-transform group-hover:scale-105"
+                                            <div className="h-12 w-12 rounded-2xl flex items-center justify-center font-bold text-xl shadow-lg transform transition-transform group-hover:scale-105"
                                                 style={{
-                                                    background: `linear-gradient(135deg, var(--color-secondary), var(--color-primary))`,
-                                                    border: '1px solid var(--border-primary)'
+                                                    background: `linear-gradient(135deg, var(--accent-primary), var(--accent-secondary))`,
+                                                    border: '1px solid var(--border-primary)',
+                                                    color: 'white' // Forced white for the icon on a brand gradient
                                                 }}>
                                                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -401,7 +402,7 @@ const VerifierLeads = () => {
 
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-baseline gap-3">
-                                                <h3 className="font-bold text-lg truncate tracking-tight text-white">
+                                                <h3 className="font-bold text-lg truncate tracking-tight" style={{ color: 'var(--text-primary)' }}>
                                                     Lead #{((currentPage - 1) * itemsPerPage) + index + 1}
                                                 </h3>
                                                 {isVerifier && (
@@ -428,7 +429,7 @@ const VerifierLeads = () => {
                                                     </span>
                                                 </div>
 
-                                                <div className="w-1 h-1 rounded-full bg-white/20"></div>
+                                                <div className="w-1 h-1 rounded-full opacity-20" style={{ backgroundColor: 'var(--text-primary)' }}></div>
 
                                                 <div className="flex items-center gap-1.5" style={{ color: 'var(--text-secondary)' }}>
                                                     <svg className="w-3.5 h-3.5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -447,7 +448,7 @@ const VerifierLeads = () => {
                                             <p className="text-[10px] uppercase font-bold tracking-wider opacity-50" style={{ color: 'var(--text-tertiary)' }}>
                                                 {lead.submittedDate ? 'Submitted Date' : 'Created At'}
                                             </p>
-                                            <p className="text-xs font-medium text-white">
+                                            <p className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>
                                                 {lead.submittedDate
                                                     ? lead.submittedDate
                                                     : (lead.createdAt
@@ -481,7 +482,7 @@ const VerifierLeads = () => {
 
                                                 {/* Inner Table Header */}
                                                 <div className="grid grid-cols-12 gap-4 px-5 py-3 text-[10px] uppercase font-black tracking-widest"
-                                                    style={{ backgroundColor: 'rgba(0,0,0,0.2)', color: 'var(--text-tertiary)' }}>
+                                                    style={{ backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-tertiary)' }}>
                                                     <div className="col-span-5">Email Address</div>
                                                     <div className="col-span-3">Status</div>
                                                     <div className="col-span-4 text-right">Verification</div>
@@ -505,7 +506,7 @@ const VerifierLeads = () => {
 
                                                                         {/* Email Column */}
                                                                         <div className="col-span-5 flex items-center gap-2 group/copy">
-                                                                            <span className="font-mono text-sm break-all font-medium text-white">
+                                                                            <span className="font-mono text-sm break-all font-medium" style={{ color: 'var(--text-primary)' }}>
                                                                                 {email}
                                                                             </span>
                                                                             <button

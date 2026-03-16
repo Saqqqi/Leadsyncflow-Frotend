@@ -24,15 +24,15 @@ const ApprovedLeadCard = ({ lead, onUpsell }) => {
 
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2 mb-1">
-                        <h3 className="text-[13px] font-black text-white truncate group-hover:text-red-400 transition-colors">{lead.name}</h3>
-                        <div className={`p-1 rounded-md bg-white/5 border border-white/10 transition-all ${expanded ? 'rotate-180' : ''}`}>
-                            <svg className="w-3 h-3 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <h3 className="text-[13px] font-black truncate group-hover:text-red-400 transition-colors" style={{ color: 'var(--text-primary)' }}>{lead.name}</h3>
+                        <div className={`p-1 rounded-md transition-all ${expanded ? 'rotate-180' : ''}`} style={{ backgroundColor: 'var(--bg-tertiary)', border: '1px solid var(--border-primary)' }}>
+                            <svg className="w-3 h-3" style={{ color: 'var(--text-tertiary)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
                             </svg>
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-3 mt-2 text-[10px] font-black uppercase text-white/90 tracking-widest bg-rose-500/20 px-2 py-1 rounded-md border border-rose-500/20 w-fit">
+                    <div className="flex items-center gap-3 mt-2 text-[10px] font-black uppercase tracking-widest bg-rose-500/20 px-2 py-1 rounded-md border border-rose-500/20 w-fit" style={{ color: 'var(--text-primary)' }}>
                         <span className="flex items-center gap-2">
                             <div className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
                             Returned By Admin: {new Date(lead.superAdminReturnPriorityUntil).toLocaleDateString('en-US', { timeZone: 'Asia/Karachi', month: 'short', day: 'numeric' })} • {new Date(lead.superAdminReturnPriorityUntil).toLocaleTimeString('en-US', { timeZone: 'Asia/Karachi', hour: '2-digit', minute: '2-digit' })}
@@ -56,12 +56,12 @@ const ApprovedLeadCard = ({ lead, onUpsell }) => {
                                                 onClick={(e) => handleCopy(emailObj.value, `rs-email-${idx}`, e)}
                                                 className="flex items-center gap-2 p-1.5 px-2.5 rounded-xl bg-white/5 border border-white/5 group/copy hover:border-blue-500/30 hover:bg-blue-500/[0.03] transition-all w-fit cursor-pointer relative"
                                             >
-                                                <div className="w-5 h-5 rounded bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0 transition-all group-hover/copy:bg-blue-500 group-hover/copy:text-white group-hover/copy:border-blue-500">
+                                                <div className="w-5 h-5 rounded flex items-center justify-center shrink-0 transition-all group-hover/copy:bg-blue-500 group-hover/copy:text-white group-hover/copy:border-blue-500" style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.2)', color: 'rgb(59, 130, 246)' }}>
                                                     <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                                                     </svg>
                                                 </div>
-                                                <span className="text-[10px] font-bold text-slate-400 group-hover/copy:text-white transition-colors tracking-tight leading-none">{emailObj.value}</span>
+                                                <span className="text-[10px] font-bold transition-colors tracking-tight leading-none" style={{ color: 'var(--text-secondary)' }}>{emailObj.value}</span>
 
                                                 <div className={`flex items-center gap-1 transition-all duration-300 ${copiedField === `rs-email-${idx}` ? 'opacity-100 translate-x-1' : 'opacity-0 scale-90 -translate-x-2 pointer-events-none'}`}>
                                                     <div className="px-1.5 py-0.5 rounded-md bg-emerald-500 text-white text-[8px] font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20">Copied</div>
@@ -78,12 +78,12 @@ const ApprovedLeadCard = ({ lead, onUpsell }) => {
                                                 onClick={(e) => handleCopy(lead.responseSource.email.value, `rs-email-single`, e)}
                                                 className="flex items-center gap-2 p-1.5 px-2.5 rounded-xl bg-white/5 border border-white/5 group/copy hover:border-blue-500/30 hover:bg-blue-500/[0.03] transition-all w-fit cursor-pointer relative"
                                             >
-                                                <div className="w-5 h-5 rounded bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0 transition-all group-hover/copy:bg-blue-500 group-hover/copy:text-white group-hover/copy:border-blue-500">
+                                                <div className="w-5 h-5 rounded flex items-center justify-center shrink-0 transition-all group-hover/copy:bg-blue-500 group-hover/copy:text-white group-hover/copy:border-blue-500" style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.2)', color: 'rgb(59, 130, 246)' }}>
                                                     <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                                                     </svg>
                                                 </div>
-                                                <span className="text-[10px] font-bold text-slate-400 group-hover/copy:text-white transition-colors tracking-tight leading-none">{lead.responseSource.email.value}</span>
+                                                <span className="text-[10px] font-bold transition-colors tracking-tight leading-none" style={{ color: 'var(--text-secondary)' }}>{lead.responseSource.email.value}</span>
 
                                                 <div className={`flex items-center gap-1 transition-all duration-300 ${copiedField === `rs-email-single` ? 'opacity-100 translate-x-1' : 'opacity-0 scale-90 -translate-x-2 pointer-events-none'}`}>
                                                     <div className="px-1.5 py-0.5 rounded-md bg-emerald-500 text-white text-[8px] font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20">Copied</div>
@@ -101,12 +101,12 @@ const ApprovedLeadCard = ({ lead, onUpsell }) => {
                                                 onClick={(e) => handleCopy(phoneObj.value, `rs-phone-${idx}`, e)}
                                                 className="flex items-center gap-2 p-1.5 px-2.5 rounded-xl bg-white/5 border border-white/5 group/copy hover:border-orange-500/30 hover:bg-orange-500/[0.03] transition-all w-fit cursor-pointer relative"
                                             >
-                                                <div className="w-5 h-5 rounded bg-orange-500/10 border border-orange-500/20 flex items-center justify-center shrink-0 transition-all group-hover/copy:bg-orange-500 group-hover/copy:text-white group-hover/copy:border-orange-500">
+                                                <div className="w-5 h-5 rounded flex items-center justify-center shrink-0 transition-all group-hover/copy:bg-orange-500 group-hover/copy:text-white group-hover/copy:border-orange-500" style={{ backgroundColor: 'rgba(249, 115, 22, 0.1)', border: '1px solid rgba(249, 115, 22, 0.2)', color: 'rgb(249, 115, 22)' }}>
                                                     <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                                                     </svg>
                                                 </div>
-                                                <span className="text-[10px] font-bold text-slate-400 group-hover/copy:text-white transition-colors tracking-tight leading-none">{phoneObj.value}</span>
+                                                <span className="text-[10px] font-bold transition-colors tracking-tight leading-none" style={{ color: 'var(--text-secondary)' }}>{phoneObj.value}</span>
 
                                                 <div className={`flex items-center gap-1 transition-all duration-300 ${copiedField === `rs-phone-${idx}` ? 'opacity-100 translate-x-1' : 'opacity-0 scale-90 -translate-x-2 pointer-events-none'}`}>
                                                     <div className="px-1.5 py-0.5 rounded-md bg-emerald-500 text-white text-[8px] font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20">Copied</div>
@@ -123,12 +123,12 @@ const ApprovedLeadCard = ({ lead, onUpsell }) => {
                                                 onClick={(e) => handleCopy(lead.responseSource.phone.value, `rs-phone-single`, e)}
                                                 className="flex items-center gap-2 p-1.5 px-2.5 rounded-xl bg-white/5 border border-white/5 group/copy hover:border-orange-500/30 hover:bg-orange-500/[0.03] transition-all w-fit cursor-pointer relative"
                                             >
-                                                <div className="w-5 h-5 rounded bg-orange-500/10 border border-orange-500/20 flex items-center justify-center shrink-0 transition-all group-hover/copy:bg-orange-500 group-hover/copy:text-white group-hover/copy:border-orange-500">
+                                                <div className="w-5 h-5 rounded flex items-center justify-center shrink-0 transition-all group-hover/copy:bg-orange-500 group-hover/copy:text-white group-hover/copy:border-orange-500" style={{ backgroundColor: 'rgba(249, 115, 22, 0.1)', border: '1px solid rgba(249, 115, 22, 0.2)', color: 'rgb(249, 115, 22)' }}>
                                                     <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                                                     </svg>
                                                 </div>
-                                                <span className="text-[10px] font-bold text-slate-400 group-hover/copy:text-white transition-colors tracking-tight leading-none">{lead.responseSource.phone.value}</span>
+                                                <span className="text-[10px] font-bold transition-colors tracking-tight leading-none" style={{ color: 'var(--text-secondary)' }}>{lead.responseSource.phone.value}</span>
 
                                                 <div className={`flex items-center gap-1 transition-all duration-300 ${copiedField === `rs-phone-single` ? 'opacity-100 translate-x-1' : 'opacity-0 scale-90 -translate-x-2 pointer-events-none'}`}>
                                                     <div className="px-1.5 py-0.5 rounded-md bg-emerald-500 text-white text-[8px] font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20">Copied</div>
@@ -149,16 +149,16 @@ const ApprovedLeadCard = ({ lead, onUpsell }) => {
                                     </h4>
                                     <div className="space-y-2 max-h-[180px] overflow-y-auto pr-1 flex flex-col gap-2 scrollbar-thin scrollbar-track-white/5 scrollbar-thumb-white/10">
                                         {(lead.comments || []).map((comment, idx) => (
-                                            <div key={idx} className="p-2.5 rounded-xl bg-black/30 border border-white/5 text-[10px] hover:border-white/10 transition-all">
+                                            <div key={idx} className="p-2.5 rounded-xl border transition-all" style={{ backgroundColor: 'var(--bg-tertiary)', borderColor: 'var(--border-primary)' }}>
                                                 <div className="flex items-center justify-between mb-1">
                                                     <span className="font-extrabold text-blue-400 uppercase tracking-tighter text-[8px]">{comment.createdByRole}</span>
-                                                    <span className="text-[8px] text-slate-500 font-bold">
+                                                    <span className="text-[8px] font-bold" style={{ color: 'var(--text-tertiary)' }}>
                                                         {new Date(comment.createdAt).toLocaleDateString('en-US', { timeZone: 'Asia/Karachi', month: 'short', day: 'numeric' })}
                                                         {' • '}
                                                         {new Date(comment.createdAt).toLocaleTimeString('en-US', { timeZone: 'Asia/Karachi', hour: '2-digit', minute: '2-digit' })}
                                                     </span>
                                                 </div>
-                                                <p className="text-slate-200 font-medium italic leading-relaxed text-[11px]">"{comment.text}"</p>
+                                                <p className="font-medium italic leading-relaxed text-[11px]" style={{ color: 'var(--text-secondary)' }}>"{comment.text}"</p>
                                             </div>
                                         ))}
                                         {(lead.comments || []).length === 0 && (
@@ -226,7 +226,7 @@ const AdminApprovedBanner = ({ leads = [], onUpsell }) => {
                     <div className="w-1.5 h-8 bg-emerald-500 rounded-full shadow-[0_0_15px_rgba(16,185,129,0.5)]"></div>
                     <div>
                         <div className="flex items-center gap-3">
-                            <h2 className="text-md font-black tracking-tight text-white uppercase italic tracking-widest">Admin Rejected Leads</h2>
+                            <h2 className="text-md font-black tracking-tight uppercase italic tracking-widest" style={{ color: 'var(--text-primary)' }}>Admin Rejected Leads</h2>
                         </div>
                     </div>
                 </div>

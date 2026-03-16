@@ -185,12 +185,10 @@ export default function SuperAdminPortal() {
                 <div className="bg-[var(--bg-secondary)] rounded-[28px] shadow-2xl border border-[var(--border-primary)] p-6 md:p-8 mb-8">
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                         <div>
-                            <h1 className="text-3xl font-black text-[var(--text-primary)]">
-                                Super Admin Dashboard
+                            <h1 className="text-3xl font-black tracking-tight text-[var(--text-primary)] whitespace-nowrap leading-tight">
+                                Assign<span className="text-emerald-500"> Lead Qualifiers</span>
                             </h1>
-                            <p className="text-[var(--text-secondary)] mt-1 text-sm uppercase tracking-[0.2em]">
-                                Manage Managers & Lead Qualifiers
-                            </p>
+
                         </div>
 
                         <div className="flex items-center gap-4 flex-wrap">
@@ -573,15 +571,11 @@ export default function SuperAdminPortal() {
                     <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(0,190,155,0.12),_transparent_55%)]" />
                     <div className="relative z-10 grid lg:grid-cols-[1.2fr_1fr] gap-8 items-center">
                         <div className="space-y-5">
-                            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--bg-tertiary)]/60 border border-[var(--border-primary)] text-[9px] font-black uppercase tracking-widest text-[var(--text-tertiary)]">
-                                Super Admin Control Center
-                            </div>
+
                             <h2 className="text-3xl font-black text-[var(--text-primary)]">
                                 Assign & Manage Lead Qualifiers
                             </h2>
-                            <p className="text-[12px] font-bold uppercase tracking-widest text-[var(--text-secondary)] opacity-70 max-w-xl">
-                                Assign LQs to managers • View all assigned LQs • Unassign LQs when needed • All data loads only when you choose an action
-                            </p>
+
                             <div className="flex flex-wrap gap-4">
                                 <button
                                     onClick={() => handleTabChange('assignment')}
@@ -604,12 +598,7 @@ export default function SuperAdminPortal() {
                                 </div>
                                 <div className="text-lg font-black text-[var(--text-primary)] mt-2">Assign LQs to Managers</div>
                                 <div className="mt-3 space-y-2">
-                                    <div className="text-[9px] font-bold uppercase tracking-widest text-[var(--text-secondary)]">
-                                        Select manager & multiple LQs
-                                    </div>
-                                    <div className="text-[9px] font-bold uppercase tracking-widest text-[var(--text-secondary)]">
-                                        Confirm assignment
-                                    </div>
+
                                 </div>
                             </div>
                             <div className="p-4 rounded-[24px] bg-[var(--bg-tertiary)]/50 border border-[var(--border-primary)]">
@@ -618,12 +607,7 @@ export default function SuperAdminPortal() {
                                 </div>
                                 <div className="text-lg font-black text-[var(--text-primary)] mt-2">See Assigned LQs</div>
                                 <div className="mt-3 space-y-2">
-                                    <div className="text-[9px] font-bold uppercase tracking-widest text-[var(--text-secondary)]">
-                                        View all current assignments
-                                    </div>
-                                    <div className="text-[9px] font-bold uppercase tracking-widest text-[var(--text-secondary)]">
-                                        Unassign LQs from managers
-                                    </div>
+
                                 </div>
                             </div>
                         </div>

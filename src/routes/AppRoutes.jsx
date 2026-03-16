@@ -2,6 +2,8 @@ import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from
 import { useEffect } from 'react';
 import SignupPage from '../auth/Signup';
 import LoginPage from '../auth/login';
+import ForgotPasswordPage from '../auth/ForgotPassword';
+import ResetPasswordPage from '../auth/ResetPassword';
 import LandingPage from '../pages/LandingPage';
 import DynamicRoutes from './DynamicRoutes';
 import TokenStatus from '../components/TokenStatus';
@@ -13,7 +15,9 @@ function AppRoutesWithTokenManagement() {
   const isPublicRoute =
     normalizedPath === '/' ||
     normalizedPath === '/login' ||
-    normalizedPath === '/signup';
+    normalizedPath === '/signup' ||
+    normalizedPath === '/forgot-password' ||
+    normalizedPath === '/reset-password';
 
   const navigate = useNavigate();
 
@@ -56,6 +60,8 @@ function AppRoutesWithTokenManagement() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/*" element={<DynamicRoutes />} />
       </Routes>
     </>

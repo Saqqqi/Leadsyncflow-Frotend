@@ -1,21 +1,50 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import AuthHeader from "../components/AuthHeader";
+import { authAPI } from "../api/auth.api";
 
 export default function ResetPassword() {
+    const { token } = useParams();
     const [passwords, setPasswords] = useState({ password: "", confirmPassword: "" });
     const [showPassword, setShowPassword] = useState(false);
     const [submitted, setSubmitted] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
 
     const handleChange = (e) => {
         const { name, value } = e.target;
         setPasswords(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        // Static design only
-        setSubmitted(true);
+        
+        if (passwords.password !== passwords.confirmPassword) {
+            setError("Passwords do not match");
+            return;
+        }
+
+        if (passwords.password.length < 6) {
+            setError("Password must be at least 6 characters");
+            return;
+        }
+
+        if (!token) {
+            setError("Reset token is missing. Please check your email link.");
+            return;
+        }
+
+        setLoading(true);
+        setError("");
+
+        try {
+            await authAPI.resetPassword(token, passwords);
+            setSubmitted(true);
+        } catch (err) {
+            setError(err.response?.data?.message || "Failed to reset password. The link may be invalid or expired.");
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -45,6 +74,11 @@ export default function ResetPassword() {
                             </div>
 
                             <form className="space-y-6" onSubmit={handleSubmit}>
+                                {error && (
+                                    <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-bold text-center animate-shake">
+                                        {error}
+                                    </div>
+                                )}
                                 {/* New Password */}
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60 ml-1" style={{ color: 'var(--text-secondary)' }}>New Password</label>
@@ -60,6 +94,7 @@ export default function ResetPassword() {
                                             required 
                                             value={passwords.password} 
                                             onChange={handleChange}
+                                            disabled={loading}
                                             className="w-full pl-12 pr-12 py-4 rounded-2xl border border-[var(--border-primary)] bg-[var(--bg-tertiary)]/30 focus:bg-transparent focus:outline-none focus:ring-2 focus:ring-[var(--accent-success)]/20 focus:border-[var(--accent-success)] transition-all font-bold text-sm"
                                             style={{ color: "var(--text-primary)" }}
                                             placeholder="••••••••" 
@@ -90,6 +125,7 @@ export default function ResetPassword() {
                                             required 
                                             value={passwords.confirmPassword} 
                                             onChange={handleChange}
+                                            disabled={loading}
                                             className="w-full pl-12 pr-12 py-4 rounded-2xl border border-[var(--border-primary)] bg-[var(--bg-tertiary)]/30 focus:bg-transparent focus:outline-none focus:ring-2 focus:ring-[var(--accent-success)]/20 focus:border-[var(--accent-success)] transition-all font-bold text-sm"
                                             style={{ color: "var(--text-primary)" }}
                                             placeholder="••••••••" 
@@ -100,13 +136,14 @@ export default function ResetPassword() {
                                 <div className="pt-4">
                                     <button
                                         type="submit"
-                                        className="w-full py-4 rounded-2xl text-xs font-black uppercase tracking-[0.2em] text-white transition-all duration-300 hover:shadow-2xl focus:outline-none transform hover:-translate-y-1 active:scale-95"
+                                        disabled={loading}
+                                        className="w-full py-4 rounded-2xl text-xs font-black uppercase tracking-[0.2em] text-white transition-all duration-300 hover:shadow-2xl focus:outline-none transform hover:-translate-y-1 active:scale-95 disabled:opacity-50 disabled:transform-none disabled:cursor-not-allowed"
                                         style={{
                                             background: "linear-gradient(135deg, var(--accent-success), #10b981)",
                                             boxShadow: "0 15px 30px -10px rgba(52,211,153,0.4)",
                                         }}
                                     >
-                                        Update Password
+                                        {loading ? "Updating..." : "Update Password"}
                                     </button>
                                 </div>
                             </form>

@@ -17,10 +17,10 @@ function AppRoutesWithTokenManagement() {
     normalizedPath === '/login' ||
     normalizedPath === '/signup' ||
     normalizedPath === '/forgot-password' ||
-    normalizedPath === '/reset-password';
-
+    normalizedPath.startsWith('/reset-password');
+ 
   const navigate = useNavigate();
-
+ 
   // Token validation & expiry handling (protected routes only)
   useEffect(() => {
     const handleExit = (message) => {
@@ -28,31 +28,31 @@ function AppRoutesWithTokenManagement() {
       tokenManager.clearAuthData();
       navigate('/', { replace: true });
     };
-
+ 
     if (isPublicRoute) {
       tokenManager.stopExpiryMonitoring();
       return;
     }
-
+ 
     const token = tokenManager.getToken();
-
+ 
     if (!token || !tokenManager.isCurrentTokenValid()) {
       handleExit('Token missing or expired');
       return;
     }
-
+ 
     const handleTokenExpired = (event) => {
       handleExit(event.detail?.message || 'Session expired');
     };
-
+ 
     window.addEventListener('tokenExpired', handleTokenExpired);
     tokenManager.startExpiryMonitoring();
-
+ 
     return () => {
       window.removeEventListener('tokenExpired', handleTokenExpired);
     };
   }, [location.pathname, isPublicRoute, navigate]);
-
+ 
   return (
     <>
       {/* Public & protected route handling */}
@@ -61,7 +61,7 @@ function AppRoutesWithTokenManagement() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-        <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
         <Route path="/*" element={<DynamicRoutes />} />
       </Routes>
     </>

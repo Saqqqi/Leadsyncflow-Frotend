@@ -1,15 +1,29 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import AuthHeader from "../components/AuthHeader";
+import { authAPI } from "../api/auth.api";
 
 export default function ForgotPassword() {
     const [email, setEmail] = useState("");
     const [submitted, setSubmitted] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
+    const [successMessage, setSuccessMessage] = useState("");
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        // Static design only, no API call
-        setSubmitted(true);
+        setLoading(true);
+        setError("");
+
+        try {
+            const response = await authAPI.forgotPassword(email);
+            setSuccessMessage(response.message);
+            setSubmitted(true);
+        } catch (err) {
+            setError(err.response?.data?.message || "Failed to send reset link. Please try again.");
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -26,7 +40,7 @@ export default function ForgotPassword() {
                         backgroundColor: 'var(--bg-secondary)',
                         borderColor: 'var(--border-primary)'
                     }}>
-                    
+
                     {!submitted ? (
                         <>
                             <div className="text-center mb-8">
@@ -39,6 +53,11 @@ export default function ForgotPassword() {
                             </div>
 
                             <form className="space-y-6" onSubmit={handleSubmit}>
+                                {error && (
+                                    <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-bold text-center animate-shake">
+                                        {error}
+                                    </div>
+                                )}
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60 ml-1" style={{ color: 'var(--text-secondary)' }}>Email Address</label>
                                     <div className="relative group">
@@ -47,15 +66,16 @@ export default function ForgotPassword() {
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                                             </svg>
                                         </div>
-                                        <input 
-                                            name="email" 
-                                            type="email" 
-                                            required 
-                                            value={email} 
+                                        <input
+                                            name="email"
+                                            type="email"
+                                            required
+                                            value={email}
                                             onChange={(e) => setEmail(e.target.value)}
                                             className="w-full pl-12 pr-4 py-4 rounded-2xl border border-[var(--border-primary)] bg-[var(--bg-tertiary)]/30 focus:bg-transparent focus:outline-none focus:ring-2 focus:ring-[var(--accent-success)]/20 focus:border-[var(--accent-success)] transition-all font-bold text-sm"
                                             style={{ color: "var(--text-primary)" }}
-                                            placeholder="you@company.com" 
+                                            placeholder="you@company.com"
+                                            disabled={loading}
                                         />
                                     </div>
                                 </div>
@@ -63,13 +83,14 @@ export default function ForgotPassword() {
                                 <div className="pt-4">
                                     <button
                                         type="submit"
-                                        className="w-full py-4 rounded-2xl text-xs font-black uppercase tracking-[0.2em] text-white transition-all duration-300 hover:shadow-2xl focus:outline-none transform hover:-translate-y-1 active:scale-95"
+                                        disabled={loading}
+                                        className="w-full py-4 rounded-2xl text-xs font-black uppercase tracking-[0.2em] text-white transition-all duration-300 hover:shadow-2xl focus:outline-none transform hover:-translate-y-1 active:scale-95 disabled:opacity-50 disabled:transform-none disabled:cursor-not-allowed"
                                         style={{
                                             background: "linear-gradient(135deg, var(--accent-success), #10b981)",
                                             boxShadow: "0 15px 30px -10px rgba(52,211,153,0.4)",
                                         }}
                                     >
-                                        Send Reset Link
+                                        {loading ? "Sending..." : "Send Reset Link"}
                                     </button>
                                 </div>
                             </form>
@@ -82,15 +103,14 @@ export default function ForgotPassword() {
                                 </svg>
                             </div>
                             <h2 className="text-2xl font-black mb-4 uppercase tracking-tight" style={{ color: 'var(--text-primary)' }}>
-                                Check your email
+                                Request Sent
                             </h2>
                             <p className="text-sm font-bold opacity-60 mb-8" style={{ color: 'var(--text-secondary)' }}>
-                                We've sent a password reset link to <br/>
-                                <span className="text-[var(--text-primary)]">{email}</span>
+                                {successMessage || "If an account exists, an email has been sent"}
                             </p>
-                            <Link to="/reset-password" 
+                            <Link to="/login"
                                 className="text-xs font-black uppercase tracking-[0.2em] text-[var(--accent-success)] hover:underline">
-                                Skip to Reset Password Page (Demo)
+                                Back to Login
                             </Link>
                         </div>
                     )}

@@ -25,6 +25,16 @@ export const authAPI = {
     return response.data;
   },
 
+  forgotPassword: async (email) => {
+    const response = await axiosInstance.post('/api/auth/forgot-password', { email });
+    return response.data;
+  },
+
+  resetPassword: async (token, passwordData) => {
+    const response = await axiosInstance.post(`/api/auth/reset-password/${token}`, passwordData);
+    return response.data;
+  },
+
 };
 
 export default authAPI;
